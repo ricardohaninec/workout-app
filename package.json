@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 8080",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 8080",
     "lint": "eslint",
-    "db:init": "bun scripts/init-db.ts"
+    "db:init": "bun scripts/init-db.ts",
+    "db:migrate": "bun scripts/migrate-exercise-sets.ts"
   },
   "dependencies": {
     "better-auth": "^1.5.4",

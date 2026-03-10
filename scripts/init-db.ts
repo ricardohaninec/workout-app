@@ -77,6 +77,15 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES user(id)
   );
 
+  CREATE TABLE IF NOT EXISTS exercise_set (
+    id TEXT PRIMARY KEY,
+    exercise_id TEXT NOT NULL,
+    sets INTEGER NOT NULL DEFAULT 1,
+    weight REAL NOT NULL DEFAULT 0,
+    position INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON DELETE CASCADE
+  );
+
   CREATE TABLE IF NOT EXISTS workout_exercise (
     workout_id TEXT NOT NULL,
     exercise_id TEXT NOT NULL,
@@ -93,6 +102,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_exercise_title ON exercise(title);
   CREATE INDEX IF NOT EXISTS idx_workout_exercise_workout_id ON workout_exercise(workout_id);
   CREATE INDEX IF NOT EXISTS idx_workout_exercise_exercise_id ON workout_exercise(exercise_id);
+  CREATE INDEX IF NOT EXISTS idx_exercise_set_exercise_id ON exercise_set(exercise_id);
 `);
 
 console.log("Database initialised at ./data/app.db");

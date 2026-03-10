@@ -14,6 +14,9 @@ export default function Header({ name, email }: Props) {
           <Link href="/dashboard" className="text-sm text-neutral-500 hover:text-neutral-900">
             My Workouts
           </Link>
+          <Link href="/exercises" className="text-sm text-neutral-500 hover:text-neutral-900">
+            My Exercises
+          </Link>
         </nav>
         <ProfileDropdown name={name} email={email} />
       </div>
