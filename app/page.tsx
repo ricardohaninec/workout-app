@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth-server";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await getSession();
+  if (session) redirect("/dashboard");
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <h1 className="text-4xl font-bold">Workout App</h1>
