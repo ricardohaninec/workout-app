@@ -20,6 +20,7 @@ export type Exercise = {
   id: string;
   user_id: string;
   title: string;
+  image_url: string | null;
   setGroups: ExerciseSet[];
   created_at: string;
   updated_at: string;

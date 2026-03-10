@@ -22,6 +22,13 @@ export async function PATCH(request: Request, { params }: Params) {
     run("UPDATE exercise SET title = ?, updated_at = datetime('now') WHERE id = ?", [title, id]);
   }
 
+  if ("image_url" in body) {
+    run("UPDATE exercise SET image_url = ?, updated_at = datetime('now') WHERE id = ?", [
+      body.image_url ?? null,
+      id,
+    ]);
+  }
+
   if (Array.isArray(body.setGroups)) {
     run("DELETE FROM exercise_set WHERE exercise_id = ?", [id]);
     (body.setGroups as { sets: number; weight: number }[]).forEach((sg, i) => {
@@ -33,7 +40,7 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   const updated = get<ExerciseRow>(
-    "SELECT id, user_id, title, created_at, updated_at FROM exercise WHERE id = ?",
+    "SELECT id, user_id, title, image_url, created_at, updated_at FROM exercise WHERE id = ?",
     [id]
   )!;
   return Response.json({

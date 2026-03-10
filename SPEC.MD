@@ -16,8 +16,9 @@ A web application where authenticated users can create, view, edit, delete, and 
 
 - Next.js (App Router) + Bun runtime
 - TypeScript
-- TailwindCSS
-- SQLite via Bun's SQLite client with raw SQL
+- TailwindCSS 4
+- SQLite via `better-sqlite3` with raw SQL
+- shadcn/ui component library
 
 ## 2. Architecture
 
@@ -28,22 +29,23 @@ A web application where authenticated users can create, view, edit, delete, and 
   - Client components for Workouts and exercises editor and interactive UI
   - Route Handlers (`app/api/.../route.ts`) for JSON APIs
 - **Runtime:** Bun (for dev & production)
-- **Database:** Single SQLite file (e.g., `data/app.db`) accessed via Bun's SQLite client
+- **Database:** Single SQLite file (`data/app.db`) accessed via `better-sqlite3`
 - **Auth:** better-auth integrated into Next.js (middleware + server helpers)
 
 ### 2.2 Application Layers
 
 **Presentation layer**
 - Next.js pages and components
-- TailwindCSS for styling
-- TipTap editor component
+- TailwindCSS 4 for styling
+- shadcn/ui for UI primitives (Button, Input, Label, Tabs, Checkbox, Dialog, DropdownMenu)
+- lucide-react for icons
 
 **API layer**
 - REST-like JSON endpoints for notes CRUD & sharing
 
 **Data access layer**
-- Raw SQL queries executed via Bun's SQLite client
-- A small helper module for DB access
+- Raw SQL queries executed via `better-sqlite3`
+- A small helper module for DB access (`lib/db.ts`)
 
 ## 3. Functional Requirements
 
@@ -255,18 +257,31 @@ CREATE TABLE verification (
 ```sql
 CREATE TABLE workout (
   id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
   title TEXT NOT NULL,
+  is_public INTEGER NOT NULL DEFAULT 0,
+  public_slug TEXT UNIQUE,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES user(id)
 );
 
 CREATE TABLE exercise (
   id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
   title TEXT NOT NULL,
-  sets INTEGER NOT NULL DEFAULT 0,
-  weights REAL NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES user(id)
+);
+
+CREATE TABLE exercise_set (
+  id TEXT PRIMARY KEY,
+  exercise_id TEXT NOT NULL,
+  sets INTEGER NOT NULL DEFAULT 1,
+  weight REAL NOT NULL DEFAULT 0,
+  position INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY (exercise_id) REFERENCES exercise(id)
 );
 
 CREATE TABLE workout_exercise (
@@ -278,10 +293,15 @@ CREATE TABLE workout_exercise (
 );
 ```
 
+**workout**
+
 | Field | Type | Description |
 |-------|------|-------------|
 | id | TEXT | Unique identifier for each workout (primary key) |
+| user_id | TEXT | Owner of the workout (foreign key → user.id) |
 | title | TEXT | The name of the workout |
+| is_public | INTEGER | Whether the workout is publicly shared (0 or 1) |
+| public_slug | TEXT | Unique slug for the public URL (optional) |
 | created_at | TEXT | Timestamp of when the workout was created |
 | updated_at | TEXT | Timestamp of when the workout was last updated |
 
@@ -290,11 +310,22 @@ CREATE TABLE workout_exercise (
 | Field | Type | Description |
 |-------|------|-------------|
 | id | TEXT | Unique identifier for each exercise (primary key) |
+| user_id | TEXT | Owner of the exercise (foreign key → user.id) |
 | title | TEXT | The name of the exercise |
-| sets | INTEGER | Number of sets for the exercise |
-| weights | REAL | Weight used for the exercise (in kg/lbs) |
 | created_at | TEXT | Timestamp of when the exercise was created |
 | updated_at | TEXT | Timestamp of when the exercise was last updated |
+
+**exercise_set** *(replaces simple sets/weights fields)*
+
+Exercises support multiple set groups (e.g. warm-up sets + working sets), each stored as a row.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | TEXT | Unique identifier (primary key) |
+| exercise_id | TEXT | Reference to the exercise (foreign key → exercise.id) |
+| sets | INTEGER | Number of reps/sets in this group |
+| weight | REAL | Weight for this set group (kg) |
+| position | INTEGER | Display order within the exercise |
 
 **workout_exercise** *(junction table)*
 
@@ -306,14 +337,24 @@ CREATE TABLE workout_exercise (
 
 ### 5.2 Indexes
 ```sql
+CREATE INDEX idx_workout_user_id ON workout(user_id);
 CREATE INDEX idx_workout_title ON workout(title);
 CREATE INDEX idx_workout_created_at ON workout(created_at);
+CREATE UNIQUE INDEX idx_workout_public_slug ON workout(public_slug);
 
+CREATE INDEX idx_exercise_user_id ON exercise(user_id);
 CREATE INDEX idx_exercise_title ON exercise(title);
+
+CREATE INDEX idx_exercise_set_exercise_id ON exercise_set(exercise_id);
 
 CREATE INDEX idx_workout_exercise_workout_id ON workout_exercise(workout_id);
 CREATE INDEX idx_workout_exercise_exercise_id ON workout_exercise(exercise_id);
 ```
+
+### 5.3 DB Initialization Scripts
+
+- `scripts/init-db.ts` — creates all tables and indexes from scratch
+- `scripts/migrate-exercise-sets.ts` — migration that moved exercise sets from inline columns to the `exercise_set` table
 
 ## 6. Backend: DB & API Layer
 
@@ -321,13 +362,12 @@ CREATE INDEX idx_workout_exercise_exercise_id ON workout_exercise(exercise_id);
 
 **File:** `lib/db.ts`
 
-- Initialize Bun SQLite client with DB file (`app.db`)
-- Export helper functions such as:
+- Initialize `better-sqlite3` client with DB file (`data/app.db`)
+- Export helper functions:
   - `getDb()` – returns singleton DB connection
-  - Utility wrappers for:
-    - `query<T>(sql, params?): T[]`
-    - `get<T>(sql, params?): T | undefined`
-    - `run(sql, params?)`
+  - `query<T>(sql, params?): T[]`
+  - `get<T>(sql, params?): T | undefined`
+  - `run(sql, params?)`
 
 ## 7. API Design (Next.js Route Handlers)
 
@@ -378,8 +418,9 @@ All `/api/notes` handlers (except public read) must:
     {
       "id": "exercise-id",
       "title": "Bench Press",
-      "sets": 4,
-      "weights": 80.0
+      "setGroups": [
+        { "id": "set-id", "sets": 4, "weight": 80.0, "position": 0 }
+      ]
     }
   ],
   "createdAt": "2025-01-01T12:00:00Z",
@@ -457,8 +498,9 @@ All `/api/notes` handlers (except public read) must:
   {
     "id": "exercise-id",
     "title": "Bench Press",
-    "sets": 4,
-    "weights": 80.0,
+    "setGroups": [
+      { "id": "set-id", "sets": 4, "weight": 80.0, "position": 0 }
+    ],
     "createdAt": "2025-01-01T12:00:00Z",
     "updatedAt": "2025-01-01T12:00:00Z"
   }
@@ -469,14 +511,15 @@ All `/api/notes` handlers (except public read) must:
 
 #### POST /api/exercises
 
-**Description:** Create a new exercise.
+**Description:** Create a new exercise with one or more set groups.
 
 **Request Body:**
 ```json
 {
   "title": "Bench Press",
-  "sets": 4,
-  "weights": 80.0
+  "setGroups": [
+    { "sets": 4, "weight": 80.0 }
+  ]
 }
 ```
 
@@ -485,8 +528,9 @@ All `/api/notes` handlers (except public read) must:
 {
   "id": "exercise-id",
   "title": "Bench Press",
-  "sets": 4,
-  "weights": 80.0,
+  "setGroups": [
+    { "id": "set-id", "sets": 4, "weight": 80.0, "position": 0 }
+  ],
   "createdAt": "2025-01-01T12:00:00Z",
   "updatedAt": "2025-01-01T12:00:00Z"
 }
@@ -496,14 +540,15 @@ All `/api/notes` handlers (except public read) must:
 
 #### PATCH /api/exercises/:id
 
-**Description:** Update an exercise.
+**Description:** Update an exercise title and/or set groups. Set groups are replaced wholesale.
 
 **Request Body:**
 ```json
 {
   "title": "Bench Press",
-  "sets": 5,
-  "weights": 85.0
+  "setGroups": [
+    { "sets": 5, "weight": 85.0 }
+  ]
 }
 ```
 
@@ -512,8 +557,9 @@ All `/api/notes` handlers (except public read) must:
 {
   "id": "exercise-id",
   "title": "Bench Press",
-  "sets": 5,
-  "weights": 85.0,
+  "setGroups": [
+    { "id": "set-id", "sets": 5, "weight": 85.0, "position": 0 }
+  ],
   "updatedAt": "2025-01-01T13:00:00Z"
 }
 ```
@@ -604,87 +650,65 @@ Assuming Next.js App Router structure:
 - `app/(auth)/login`, `app/(auth)/register` (if better-auth doesn't provide their own UI)
 
 ### 8.3 Components
-### Components
+
 **components/WorkoutList.tsx**
-- Props: `workouts: { id, title, createdAt, updatedAt }[]`
-- Renders list of workouts with links to `/workouts/[id]`
-- Shows workout title and last updated date
+- Props: `workouts: Workout[]`
+- Renders list of workouts with links to `/workout/[id]`
+- Shows title and last updated date
 
-**components/WorkoutCard.tsx**
-- Props: `workout: { id, title, exercises: [], createdAt, updatedAt }`
-- Displays workout title and a summary of attached exercises
-- Contains edit and delete action buttons
+**components/CreateWorkoutButton.tsx**
+- Client button that calls `POST /api/workouts` and navigates to the new workout editor
 
-**components/CreateWorkoutForm.tsx**
-- Controlled form with a `title` input field
-- On submit calls `POST /api/workouts`
-- Clears form and refreshes workout list on success
-
-**components/EditWorkoutForm.tsx**
-- Props: `workout: { id, title }`
-- Pre-fills form with existing workout data
-- On submit calls `PATCH /api/workouts/:id`
-
-**components/DeleteWorkoutButton.tsx**
-- Props: `workoutId: string`
-- Shows confirmation dialog before calling `DELETE /api/workouts/:id`
-- Redirects to `/workouts` on success
-
-**components/ExerciseList.tsx**
-- Props: `exercises: { id, title, sets, weights }[]`
-- Renders a list or table of exercises with sets and weights
-- Each row has edit and delete action buttons
-
-**components/ExerciseCard.tsx**
-- Props: `exercise: { id, title, sets, weights }`
-- Displays exercise title, sets, and weights
-- Contains edit and delete action buttons
-
-**components/CreateExerciseForm.tsx**
-- Controlled form with `title`, `sets`, and `weights` input fields
-- On submit calls `POST /api/exercises`
-- Clears form and refreshes exercise list on success
-
-**components/EditExerciseForm.tsx**
-- Props: `exercise: { id, title, sets, weights }`
-- Pre-fills form with existing exercise data
-- On submit calls `PATCH /api/exercises/:id`
-
-**components/DeleteExerciseButton.tsx**
-- Props: `exerciseId: string`
-- Shows confirmation dialog before calling `DELETE /api/exercises/:id`
-- Removes exercise from list on success
+**components/WorkoutEditor.tsx**
+- Props: `workoutId`, `initialTitle`, `initialIsPublic`, `initialSlug`, `savedExercises`
+- Inline-editable title, Save button (shown when dirty)
+- Share toggle — enables public URL and shows a copy-link banner
+- Delete button with confirmation modal (via `components/Modal.tsx`)
+- Exercise list showing saved exercises and pending (unsaved) exercises
+- Uses `AttachExerciseModal` to add exercises
 
 **components/AttachExerciseModal.tsx**
-- Props: `workoutId: string`
-- Lists available exercises to select from
-- On confirm calls `POST /api/workouts/:id/exercises`
-- Refreshes workout exercise list on success
+- Props: `onAdd: (exercise: PendingExercise) => void`
+- Two-tab modal ("New exercise" / "Existing exercise") built with shadcn Tabs
+- New tab: title + dynamic set groups (sets × weight)
+- Existing tab: searchable list of user's exercises
+- Calls `onAdd` with a `PendingExercise` object; actual API calls happen on save in `WorkoutEditor`
 
-**components/DetachExerciseButton.tsx**
-- Props: `workoutId: string, exerciseId: string`
-- Shows confirmation dialog before calling `DELETE /api/workouts/:id/exercises/:exerciseId`
-- Removes exercise from workout view on success
+**components/ExercisesManager.tsx**
+- Props: `initial: Exercise[]`
+- Full CRUD for the exercises library (on `/dashboard` exercises tab)
+- Create, edit, delete (single and bulk) via inline modals
+- Bulk select mode with checkboxes (shadcn Checkbox)
+- Uses `components/Modal.tsx` and shadcn Input/Label/Button
 
-### 9.2 Toolbar
+**components/ProfileDropdown.tsx**
+- Props: `name`, `email`
+- Avatar button (initials) with shadcn DropdownMenu
+- Shows user name/email and Log out action
 
-Buttons:
-- Bold, Italic
-- H1, H2, H3, paragraph
-- Bullet list
-- Inline code
-- Code block
-- Horizontal rule
+**components/Modal.tsx**
+- Generic modal wrapper used by WorkoutEditor, AttachExerciseModal, ExercisesManager
+- Props: `open`, `onClose`, `title`, `children`
 
-Each button calls the relevant TipTap chain: `editor.chain().focus().toggleBold().run()` etc.
+### 8.4 shadcn/ui Components (`components/ui/`)
 
-## 10. Styling (TailwindCSS)
+Installed via shadcn CLI and customized as needed:
 
-- Configure Tailwind in `tailwind.config.ts`
-- Use a minimal design:
-  - Neutral background, card-like note container
-  - Utility classes on components
-- Consider a prose style for read-only content (using `@tailwindcss/typography`)
+- `button.tsx` — Button with variants (default, outline, ghost, destructive) and sizes
+- `input.tsx` — Styled text/number input
+- `label.tsx` — Form label
+- `tabs.tsx` — Tabs, TabsList, TabsTrigger, TabsContent
+- `checkbox.tsx` — Checkbox with checked state
+- `dialog.tsx` — Dialog primitives (available but Modal.tsx is used instead)
+- `dropdown-menu.tsx` — DropdownMenu and related sub-components
+
+## 10. Styling (TailwindCSS 4 + shadcn/ui)
+
+- TailwindCSS 4 via PostCSS (`@tailwindcss/postcss`)
+- shadcn/ui provides design tokens (CSS variables) for colors, radius, etc.
+- `tw-animate-css` for animation utilities
+- `tailwind-merge` + `clsx` + `class-variance-authority` used by shadcn components for conditional class merging
+- Minimal design: neutral backgrounds, card-style bordered containers, no heavy color usage
 
 ## 11. Security Considerations
 
@@ -707,13 +731,23 @@ Each button calls the relevant TipTap chain: `editor.chain().focus().toggleBold(
 
 ## 12. Development Workflow
 
+```bash
+bun dev          # Start dev server at http://localhost:8080
+bun run build    # Production build
+bun run lint     # ESLint
+bun run db:init  # Initialize DB (scripts/init-db.ts)
+bun run db:migrate  # Run migrations (scripts/migrate-exercise-sets.ts)
+```
+
+### Setup Order
+
 1. Initialize Next.js app with Bun & TypeScript
-2. Set up TailwindCSS
-3. Integrate better-auth and session handling
-4. Implement SQLite DB initialization and migrations (e.g. via a `scripts/init-db.ts` or manual `.sql`)
-5. Build DB helpers and note repository
-6. Implement `/api/notes` and sharing APIs
-7. Build dashboard and note editor pages
-8. Integrate TipTap editor and toolbar
-9. Implement public note pages `/p/[slug]`
-10. Add polish (loading states, toast messages, error handling)
+2. Set up TailwindCSS 4
+3. Install and configure shadcn/ui
+4. Integrate better-auth and session handling
+5. Implement SQLite DB initialization via `scripts/init-db.ts`
+6. Build DB helpers (`lib/db.ts`) and type definitions (`lib/types.ts`)
+7. Implement workout and exercise API routes
+8. Build dashboard, workout editor, and exercises library pages
+9. Implement public workout pages `/p/[slug]`
+10. Add polish (loading states, confirmation modals, error handling)

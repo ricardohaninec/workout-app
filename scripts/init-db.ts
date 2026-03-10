@@ -72,6 +72,7 @@ db.exec(`
     title TEXT NOT NULL,
     sets INTEGER NOT NULL DEFAULT 0,
     weights REAL NOT NULL DEFAULT 0,
+    image_url TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES user(id)

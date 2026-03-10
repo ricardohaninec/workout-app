@@ -16,6 +16,60 @@ function toInputs(setGroups: ExerciseSet[]): SetGroupInput[] {
     : [{ sets: "", weight: "" }];
 }
 
+async function uploadImage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/api/exercises/upload", { method: "POST", body: fd });
+  if (!res.ok) throw new Error("Upload failed");
+  const { url } = await res.json();
+  return url as string;
+}
+
+function ImageUpload({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (url: string | null) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      onChange(url);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {value ? (
+        <div className="relative w-fit">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={value} alt="Exercise" className="h-32 w-32 rounded-md object-cover" />
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-800 text-[10px] text-white hover:bg-red-600"
+          >
+            ✕
+          </button>
+        </div>
+      ) : (
+        <label className="flex h-20 w-32 cursor-pointer items-center justify-center rounded-md border border-dashed border-neutral-300 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-600">
+          {uploading ? "Uploading…" : "+ Image"}
+          <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
+        </label>
+      )}
+    </div>
+  );
+}
+
 export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
   const [exercises, setExercises] = useState(initial);
 
@@ -23,12 +77,14 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [createTitle, setCreateTitle] = useState("");
   const [createSetGroups, setCreateSetGroups] = useState<SetGroupInput[]>([{ sets: "", weight: "" }]);
+  const [createImageUrl, setCreateImageUrl] = useState<string | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
 
   function closeCreate() {
     setCreateOpen(false);
     setCreateTitle("");
     setCreateSetGroups([{ sets: "", weight: "" }]);
+    setCreateImageUrl(null);
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -39,6 +95,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: createTitle.trim() || "Untitled Exercise",
+        image_url: createImageUrl,
         setGroups: createSetGroups.map((sg) => ({
           sets: Number(sg.sets) || 1,
           weight: Number(sg.weight) || 0,
@@ -61,6 +118,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
   const [editTarget, setEditTarget] = useState<Exercise | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editSetGroups, setEditSetGroups] = useState<SetGroupInput[]>([]);
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
   // Single delete state
@@ -104,6 +162,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
     setEditTarget(ex);
     setEditTitle(ex.title);
     setEditSetGroups(toInputs(ex.setGroups));
+    setEditImageUrl(ex.image_url);
   }
 
   function closeEdit() {
@@ -131,6 +190,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: editTitle.trim() || editTarget.title,
+        image_url: editImageUrl,
         setGroups: editSetGroups.map((sg) => ({
           sets: Number(sg.sets) || 1,
           weight: Number(sg.weight) || 0,
@@ -211,6 +271,14 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
                       className="mt-1"
                     />
                   )}
+                  {ex.image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={ex.image_url}
+                      alt={ex.title}
+                      className="h-14 w-14 shrink-0 rounded-md object-cover"
+                    />
+                  )}
                   <div>
                     <p className="font-medium">{ex.title}</p>
                     {ex.setGroups.length > 0 && (
@@ -257,6 +325,11 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
               onChange={(e) => setCreateTitle(e.target.value)}
               placeholder="e.g. Bench Press"
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Image <span className="text-neutral-400">(optional)</span></Label>
+            <ImageUpload value={createImageUrl} onChange={setCreateImageUrl} />
           </div>
 
           <div>
@@ -341,6 +414,11 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Image <span className="text-neutral-400">(optional)</span></Label>
+            <ImageUpload value={editImageUrl} onChange={setEditImageUrl} />
           </div>
 
           <div>
