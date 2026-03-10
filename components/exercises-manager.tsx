@@ -1,20 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { Exercise, ExerciseSet } from "@/lib/types";
-import Modal from "@/components/Modal";
+import type { Exercise } from "@/lib/types";
+import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-
-type SetGroupInput = { sets: string; weight: string };
-
-function toInputs(setGroups: ExerciseSet[]): SetGroupInput[] {
-  return setGroups.length > 0
-    ? setGroups.map((sg) => ({ sets: String(sg.sets), weight: String(sg.weight) }))
-    : [{ sets: "", weight: "" }];
-}
 
 async function uploadImage(file: File): Promise<string> {
   const fd = new FormData();
@@ -25,13 +17,7 @@ async function uploadImage(file: File): Promise<string> {
   return url as string;
 }
 
-function ImageUpload({
-  value,
-  onChange,
-}: {
-  value: string | null;
-  onChange: (url: string | null) => void;
-}) {
+function ImageUpload({ value, onChange }: { value: string | null; onChange: (url: string | null) => void }) {
   const [uploading, setUploading] = useState(false);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -39,8 +25,7 @@ function ImageUpload({
     if (!file) return;
     setUploading(true);
     try {
-      const url = await uploadImage(file);
-      onChange(url);
+      onChange(await uploadImage(file));
     } finally {
       setUploading(false);
     }
@@ -76,14 +61,12 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
   const [createTitle, setCreateTitle] = useState("");
-  const [createSetGroups, setCreateSetGroups] = useState<SetGroupInput[]>([{ sets: "", weight: "" }]);
   const [createImageUrl, setCreateImageUrl] = useState<string | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
 
   function closeCreate() {
     setCreateOpen(false);
     setCreateTitle("");
-    setCreateSetGroups([{ sets: "", weight: "" }]);
     setCreateImageUrl(null);
   }
 
@@ -93,14 +76,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
     const res = await fetch("/api/exercises", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: createTitle.trim() || "Untitled Exercise",
-        image_url: createImageUrl,
-        setGroups: createSetGroups.map((sg) => ({
-          sets: Number(sg.sets) || 1,
-          weight: Number(sg.weight) || 0,
-        })),
-      }),
+      body: JSON.stringify({ title: createTitle.trim() || "Untitled Exercise", image_url: createImageUrl }),
     });
     const created: Exercise = await res.json();
     setExercises((prev) => [...prev, created].sort((a, b) => a.title.localeCompare(b.title)));
@@ -117,7 +93,6 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
   // Edit state
   const [editTarget, setEditTarget] = useState<Exercise | null>(null);
   const [editTitle, setEditTitle] = useState("");
-  const [editSetGroups, setEditSetGroups] = useState<SetGroupInput[]>([]);
   const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
@@ -161,24 +136,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
   function openEdit(ex: Exercise) {
     setEditTarget(ex);
     setEditTitle(ex.title);
-    setEditSetGroups(toInputs(ex.setGroups));
     setEditImageUrl(ex.image_url);
-  }
-
-  function closeEdit() {
-    setEditTarget(null);
-  }
-
-  function addSetGroup() {
-    setEditSetGroups((prev) => [...prev, { sets: "", weight: "" }]);
-  }
-
-  function removeSetGroup(i: number) {
-    setEditSetGroups((prev) => prev.filter((_, j) => j !== i));
-  }
-
-  function updateSetGroup(i: number, field: keyof SetGroupInput, value: string) {
-    setEditSetGroups((prev) => prev.map((sg, j) => (j === i ? { ...sg, [field]: value } : sg)));
   }
 
   async function handleSaveEdit(e: React.FormEvent) {
@@ -188,19 +146,12 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
     const res = await fetch(`/api/exercises/${editTarget.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: editTitle.trim() || editTarget.title,
-        image_url: editImageUrl,
-        setGroups: editSetGroups.map((sg) => ({
-          sets: Number(sg.sets) || 1,
-          weight: Number(sg.weight) || 0,
-        })),
-      }),
+      body: JSON.stringify({ title: editTitle.trim() || editTarget.title, image_url: editImageUrl }),
     });
     const updated: Exercise = await res.json();
     setExercises((prev) => prev.map((ex) => (ex.id === updated.id ? updated : ex)));
     setEditLoading(false);
-    closeEdit();
+    setEditTarget(null);
   }
 
   async function handleDelete() {
@@ -261,37 +212,20 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
                 selecting ? "cursor-pointer select-none" : ""
               } ${selecting && selected.has(ex.id) ? "border-neutral-900 bg-neutral-50" : ""}`}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
                   {selecting && (
                     <Checkbox
                       checked={selected.has(ex.id)}
                       onCheckedChange={() => toggleSelect(ex.id)}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-1"
                     />
                   )}
                   {ex.image_url && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={ex.image_url}
-                      alt={ex.title}
-                      className="h-14 w-14 shrink-0 rounded-md object-cover"
-                    />
+                    <img src={ex.image_url} alt={ex.title} className="h-14 w-14 shrink-0 rounded-md object-cover" />
                   )}
-                  <div>
-                    <p className="font-medium">{ex.title}</p>
-                    {ex.setGroups.length > 0 && (
-                      <ul className="mt-1 flex flex-col gap-0.5">
-                        {ex.setGroups.map((sg) => (
-                          <li key={sg.id} className="text-sm text-neutral-500">
-                            <span className="font-medium text-neutral-700">{sg.sets}×</span>{" "}
-                            {sg.weight} kg
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  <p className="font-medium">{ex.title}</p>
                 </div>
                 {!selecting && (
                   <div className="flex shrink-0 gap-2">
@@ -326,61 +260,10 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
               placeholder="e.g. Bench Press"
             />
           </div>
-
           <div className="flex flex-col gap-1.5">
             <Label>Image <span className="text-neutral-400">(optional)</span></Label>
             <ImageUpload value={createImageUrl} onChange={setCreateImageUrl} />
           </div>
-
-          <div>
-            <Label className="mb-2 block">Sets</Label>
-            <div className="flex flex-col gap-2">
-              {createSetGroups.map((sg, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={sg.sets}
-                    onChange={(e) => setCreateSetGroups((prev) => prev.map((s, j) => j === i ? { ...s, sets: e.target.value } : s))}
-                    placeholder="Sets"
-                    className="w-20"
-                  />
-                  <span className="text-sm text-neutral-400">×</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    step={0.5}
-                    value={sg.weight}
-                    onChange={(e) => setCreateSetGroups((prev) => prev.map((s, j) => j === i ? { ...s, weight: e.target.value } : s))}
-                    placeholder="kg"
-                    className="w-24"
-                  />
-                  <span className="text-xs text-neutral-400">kg</span>
-                  {createSetGroups.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => setCreateSetGroups((prev) => prev.filter((_, j) => j !== i))}
-                      className="ml-auto text-neutral-400 hover:text-red-500"
-                    >
-                      ✕
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setCreateSetGroups((prev) => [...prev, { sets: "", weight: "" }])}
-              className="mt-2 text-neutral-500"
-            >
-              + Add set group
-            </Button>
-          </div>
-
           <Button type="submit" disabled={createLoading}>
             {createLoading ? "Creating…" : "Create"}
           </Button>
@@ -392,7 +275,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
         <p className="mb-6 text-sm text-neutral-600">
           Are you sure you want to delete{" "}
           <span className="font-medium">{selected.size} exercise{selected.size !== 1 ? "s" : ""}</span>?
-          They will also be removed from any workouts they belong to.
+          Workout items referencing these exercises will not be automatically deleted.
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>
@@ -405,7 +288,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
       </Modal>
 
       {/* Edit modal */}
-      <Modal open={!!editTarget} onClose={closeEdit} title="Edit Exercise">
+      <Modal open={!!editTarget} onClose={() => setEditTarget(null)} title="Edit Exercise">
         <form onSubmit={handleSaveEdit} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label>Title</Label>
@@ -415,61 +298,10 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
               onChange={(e) => setEditTitle(e.target.value)}
             />
           </div>
-
           <div className="flex flex-col gap-1.5">
             <Label>Image <span className="text-neutral-400">(optional)</span></Label>
             <ImageUpload value={editImageUrl} onChange={setEditImageUrl} />
           </div>
-
-          <div>
-            <Label className="mb-2 block">Sets</Label>
-            <div className="flex flex-col gap-2">
-              {editSetGroups.map((sg, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={sg.sets}
-                    onChange={(e) => updateSetGroup(i, "sets", e.target.value)}
-                    placeholder="Sets"
-                    className="w-20"
-                  />
-                  <span className="text-sm text-neutral-400">×</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    step={0.5}
-                    value={sg.weight}
-                    onChange={(e) => updateSetGroup(i, "weight", e.target.value)}
-                    placeholder="kg"
-                    className="w-24"
-                  />
-                  <span className="text-xs text-neutral-400">kg</span>
-                  {editSetGroups.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => removeSetGroup(i)}
-                      className="ml-auto text-neutral-400 hover:text-red-500"
-                    >
-                      ✕
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={addSetGroup}
-              className="mt-2 text-neutral-500"
-            >
-              + Add set group
-            </Button>
-          </div>
-
           <Button type="submit" disabled={editLoading}>
             {editLoading ? "Saving…" : "Save"}
           </Button>
@@ -480,8 +312,8 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Exercise">
         <p className="mb-6 text-sm text-neutral-600">
           Are you sure you want to delete{" "}
-          <span className="font-medium">"{deleteTarget?.title}"</span>? It will also be removed
-          from any workouts it belongs to.
+          <span className="font-medium">&quot;{deleteTarget?.title}&quot;</span>?
+          Workout items referencing this exercise will not be automatically deleted.
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setDeleteTarget(null)}>

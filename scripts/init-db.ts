@@ -70,40 +70,45 @@ db.exec(`
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     title TEXT NOT NULL,
-    sets INTEGER NOT NULL DEFAULT 0,
-    weights REAL NOT NULL DEFAULT 0,
     image_url TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES user(id)
   );
 
-  CREATE TABLE IF NOT EXISTS exercise_set (
+  CREATE TABLE IF NOT EXISTS workout_item (
     id TEXT PRIMARY KEY,
-    exercise_id TEXT NOT NULL,
-    sets INTEGER NOT NULL DEFAULT 1,
-    weight REAL NOT NULL DEFAULT 0,
-    position INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE IF NOT EXISTS workout_exercise (
     workout_id TEXT NOT NULL,
     exercise_id TEXT NOT NULL,
-    PRIMARY KEY (workout_id, exercise_id),
-    FOREIGN KEY (workout_id) REFERENCES workout(id),
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (workout_id) REFERENCES workout(id) ON DELETE CASCADE,
     FOREIGN KEY (exercise_id) REFERENCES exercise(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS workout_item_set (
+    id TEXT PRIMARY KEY,
+    workout_item_id TEXT NOT NULL,
+    reps INTEGER NOT NULL DEFAULT 1,
+    weight REAL NOT NULL DEFAULT 0,
+    position INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (workout_item_id) REFERENCES workout_item(id) ON DELETE CASCADE
   );
 
   -- Indexes
   CREATE INDEX IF NOT EXISTS idx_workout_user_id ON workout(user_id);
   CREATE INDEX IF NOT EXISTS idx_workout_title ON workout(title);
   CREATE INDEX IF NOT EXISTS idx_workout_created_at ON workout(created_at);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_workout_public_slug ON workout(public_slug);
+
   CREATE INDEX IF NOT EXISTS idx_exercise_user_id ON exercise(user_id);
   CREATE INDEX IF NOT EXISTS idx_exercise_title ON exercise(title);
-  CREATE INDEX IF NOT EXISTS idx_workout_exercise_workout_id ON workout_exercise(workout_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_exercise_exercise_id ON workout_exercise(exercise_id);
-  CREATE INDEX IF NOT EXISTS idx_exercise_set_exercise_id ON exercise_set(exercise_id);
+
+  CREATE INDEX IF NOT EXISTS idx_workout_item_workout_id ON workout_item(workout_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_item_exercise_id ON workout_item(exercise_id);
+
+  CREATE INDEX IF NOT EXISTS idx_workout_item_set_workout_item_id ON workout_item_set(workout_item_id);
 `);
 
 console.log("Database initialised at ./data/app.db");

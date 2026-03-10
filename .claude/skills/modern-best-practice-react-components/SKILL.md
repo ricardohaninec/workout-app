@@ -8,8 +8,10 @@ description: Build clean, modern React components that apply common best practic
 We're using modern React (19+) and we're following common best practices focused on
 clarity, correctness, and maintainability.
 
+
 ## Component Structure & Style
 
+- **PREFER** the name of the files of the components must be in a kebab-case.
 - **PREFER** small, focused components with a single responsibility
 - **PREFER** named `function` components over arrow functions
   - Exception: anonymous callbacks, inline render props, and closures

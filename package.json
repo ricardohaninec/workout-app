@@ -8,7 +8,7 @@
     "start": "next start --port 8080",
     "lint": "eslint",
     "db:init": "bun scripts/init-db.ts",
-    "db:migrate": "bun scripts/migrate-exercise-sets.ts"
+    "db:migrate": "bun scripts/migrate-workout-items.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",

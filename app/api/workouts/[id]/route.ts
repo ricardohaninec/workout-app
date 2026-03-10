@@ -1,40 +1,45 @@
 import { auth } from "@/lib/auth";
 import { get, query, run } from "@/lib/db";
-import type { Exercise, ExerciseSet, Workout } from "@/lib/types";
+import type { Workout, WorkoutItem, WorkoutItemSet } from "@/lib/types";
 
-type ExerciseRow = Omit<Exercise, "setGroups">;
+type Params = { params: Promise<{ id: string }> };
 
-function withSetGroups(exercises: ExerciseRow[]): Exercise[] {
-  return exercises.map((ex) => ({
-    ...ex,
-    setGroups: query<ExerciseSet>(
-      "SELECT * FROM exercise_set WHERE exercise_id = ? ORDER BY position ASC",
-      [ex.id]
+function buildWorkoutItems(workoutId: string): WorkoutItem[] {
+  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string; exercise_title: string };
+  const rows = query<ItemRow>(
+    `SELECT wi.id, wi.workout_id, wi.exercise_id, wi.position, wi.created_at, wi.updated_at,
+            e.title AS exercise_title
+     FROM workout_item wi
+     JOIN exercise e ON e.id = wi.exercise_id
+     WHERE wi.workout_id = ?
+     ORDER BY wi.position ASC`,
+    [workoutId]
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    workout_id: row.workout_id,
+    exercise_id: row.exercise_id,
+    position: row.position,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    exercise: { id: row.exercise_id, title: row.exercise_title },
+    sets: query<WorkoutItemSet>(
+      "SELECT * FROM workout_item_set WHERE workout_item_id = ? ORDER BY position ASC",
+      [row.id]
     ),
   }));
 }
-
-type Params = { params: Promise<{ id: string }> };
 
 export async function GET(request: Request, { params }: Params) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const workout = get<Workout>(
-    "SELECT * FROM workout WHERE id = ? AND user_id = ?",
-    [id, session.user.id]
-  );
+  const workout = get<Workout>("SELECT * FROM workout WHERE id = ? AND user_id = ?", [id, session.user.id]);
   if (!workout) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const rows = query<ExerciseRow>(
-    `SELECT e.id, e.user_id, e.title, e.created_at, e.updated_at FROM exercise e
-     JOIN workout_exercise we ON we.exercise_id = e.id
-     WHERE we.workout_id = ?`,
-    [id]
-  );
-
-  return Response.json({ ...workout, exercises: withSetGroups(rows) });
+  return Response.json({ ...workout, workoutItems: buildWorkoutItems(id) });
 }
 
 export async function PATCH(request: Request, { params }: Params) {
@@ -42,10 +47,7 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const workout = get<Workout>(
-    "SELECT * FROM workout WHERE id = ? AND user_id = ?",
-    [id, session.user.id]
-  );
+  const workout = get<Workout>("SELECT * FROM workout WHERE id = ? AND user_id = ?", [id, session.user.id]);
   if (!workout) return Response.json({ error: "Not found" }, { status: 404 });
 
   const body = await request.json().catch(() => ({}));
@@ -71,13 +73,10 @@ export async function DELETE(request: Request, { params }: Params) {
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const workout = get<Workout>(
-    "SELECT * FROM workout WHERE id = ? AND user_id = ?",
-    [id, session.user.id]
-  );
+  const workout = get<Workout>("SELECT * FROM workout WHERE id = ? AND user_id = ?", [id, session.user.id]);
   if (!workout) return Response.json({ error: "Not found" }, { status: 404 });
 
-  run("DELETE FROM workout_exercise WHERE workout_id = ?", [id]);
+  // workout_item and workout_item_set cascade on workout delete
   run("DELETE FROM workout WHERE id = ?", [id]);
 
   return Response.json({ message: "Workout deleted successfully." });

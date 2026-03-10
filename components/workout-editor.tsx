@@ -2,27 +2,28 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { Exercise, PendingExercise, Workout } from "@/lib/types";
-import AttachExerciseModal from "@/components/AttachExerciseModal";
-import Modal from "@/components/Modal";
+import type { PendingWorkoutItem, Workout, WorkoutItem } from "@/lib/types";
+import AddWorkoutItemModal from "@/components/add-workout-item-modal";
+import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function WorkoutEditor({
   workoutId,
   initialTitle,
   initialIsPublic,
   initialSlug,
-  savedExercises,
+  savedItems,
 }: {
   workoutId: string;
   initialTitle: string;
   initialIsPublic: boolean;
   initialSlug: string | null;
-  savedExercises: Exercise[];
+  savedItems: WorkoutItem[];
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
-  const [pending, setPending] = useState<PendingExercise[]>([]);
+  const [pending, setPending] = useState<PendingWorkoutItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [slug, setSlug] = useState(initialSlug);
@@ -45,25 +46,25 @@ export default function WorkoutEditor({
       });
     }
 
-    for (const ex of pending) {
+    for (const item of pending) {
       let exerciseId: string;
 
-      if (ex.type === "new") {
+      if (item.type === "new") {
         const res = await fetch("/api/exercises", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: ex.title, setGroups: ex.setGroups }),
+          body: JSON.stringify({ title: item.exerciseTitle }),
         });
         const created = await res.json();
         exerciseId = created.id;
       } else {
-        exerciseId = ex.exerciseId;
+        exerciseId = item.exerciseId;
       }
 
-      await fetch(`/api/workouts/${workoutId}/exercises`, {
+      await fetch(`/api/workouts/${workoutId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exerciseId }),
+        body: JSON.stringify({ exerciseId, sets: item.sets }),
       });
     }
 
@@ -108,7 +109,7 @@ export default function WorkoutEditor({
             </Button>
           )}
           <Button
-            variant={isPublic ? "outline" : "outline"}
+            variant="outline"
             size="sm"
             onClick={handleShare}
             disabled={shareLoading}
@@ -156,53 +157,77 @@ export default function WorkoutEditor({
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold">Exercises</h2>
-          <AttachExerciseModal onAdd={(ex) => setPending((prev) => [...prev, ex])} />
+          <AddWorkoutItemModal onAdd={(item) => setPending((prev) => [...prev, item])} />
         </div>
 
-        {savedExercises.length === 0 && pending.length === 0 ? (
+        {savedItems.length === 0 && pending.length === 0 ? (
           <p className="text-neutral-500">No exercises yet.</p>
         ) : (
           <ul className="flex flex-col gap-3">
-            {savedExercises.map((ex) => (
-              <li key={ex.id} className="rounded-lg border p-4">
-                <p className="mb-2 font-medium">{ex.title}</p>
-                <ul className="flex flex-col gap-1">
-                  {ex.setGroups.map((sg) => (
-                    <li key={sg.id} className="text-sm text-neutral-500">
-                      <span className="font-medium text-neutral-700">{sg.sets}×</span>{" "}
-                      {sg.weight} kg
-                    </li>
-                  ))}
-                </ul>
+            {savedItems.map((item) => (
+              <li key={item.id}>
+                <Card className="flex flex-row justify-between py-0 gap-0 min-h-36">
+                  <div className="flex flex-col justify-center h-full py-2">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold">{item.exercise.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="flex flex-col gap-1">
+                        {item.sets.map((s, i) => (
+                          <li key={s.id} className="text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">Set {i + 1}:</span>{" "}
+                            {s.reps} reps × {s.weight} kg
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </div>
+                  {item.exercise.image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.exercise.image_url} alt={item.exercise.title} className="w-48 shrink-0 rounded-r-xl object-cover" />
+                  )}
+                </Card>
               </li>
             ))}
 
-            {pending.map((ex) => (
-              <li key={ex.tempId} className="rounded-lg border border-dashed border-neutral-300 p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="font-medium text-neutral-600">{ex.title}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
-                      unsaved
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => setPending((prev) => prev.filter((p) => p.tempId !== ex.tempId))}
-                      className="text-neutral-400 hover:text-red-500"
-                    >
-                      ✕
-                    </Button>
+            {pending.map((item) => (
+              <li key={item.tempId}>
+                <Card className="flex flex-row justify-between py-0 gap-0 border-dashed min-h-36">
+                  <div className="flex flex-col justify-between flex-1 py-2">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold flex items-center justify-between">
+                        <span>{item.exerciseTitle}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            unsaved
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setPending((prev) => prev.filter((p) => p.tempId !== item.tempId))}
+                            className="text-muted-foreground hover:text-red-500"
+                          >
+                            ✕
+                          </Button>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="flex flex-col gap-1">
+                        {item.sets.map((s, i) => (
+                          <li key={i} className="text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">Set {i + 1}:</span>{" "}
+                            {s.reps} reps × {s.weight} kg
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
                   </div>
-                </div>
-                <ul className="flex flex-col gap-1">
-                  {ex.setGroups.map((sg, i) => (
-                    <li key={i} className="text-sm text-neutral-500">
-                      <span className="font-medium text-neutral-700">{sg.sets}×</span>{" "}
-                      {sg.weight} kg
-                    </li>
-                  ))}
-                </ul>
+                  {item.exerciseImageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.exerciseImageUrl} alt={item.exerciseTitle} className="w-48 shrink-0 rounded-r-xl object-cover" />
+                  )}
+                </Card>
               </li>
             ))}
           </ul>
@@ -211,7 +236,7 @@ export default function WorkoutEditor({
 
       <Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete Workout">
         <p className="mb-6 text-sm text-neutral-600">
-          Are you sure you want to delete <span className="font-medium">"{title}"</span>? This
+          Are you sure you want to delete <span className="font-medium">&quot;{title}&quot;</span>? This
           action cannot be undone.
         </p>
         <div className="flex justify-end gap-2">
