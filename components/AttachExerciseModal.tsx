@@ -1,37 +1,30 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import type { Exercise } from "@/lib/types";
+import { useEffect, useState } from "react";
+import type { Exercise, PendingExercise } from "@/lib/types";
+import Modal from "@/components/Modal";
 
 type Tab = "new" | "existing";
+type SetGroup = { sets: string; weight: string };
 
-export default function AttachExerciseModal({ workoutId }: { workoutId: string }) {
-  const router = useRouter();
-  const dialogRef = useRef<HTMLDialogElement>(null);
+const DEFAULT_SET_GROUPS: SetGroup[] = [{ sets: "", weight: "" }];
+
+export default function AttachExerciseModal({
+  onAdd,
+}: {
+  onAdd: (exercise: PendingExercise) => void;
+}) {
+  const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("new");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // "new exercise" form state
   const [title, setTitle] = useState("");
-  const [sets, setSets] = useState("");
-  const [weights, setWeights] = useState("");
-
-  // "existing exercise" state
+  const [setGroups, setSetGroups] = useState<SetGroup[]>(DEFAULT_SET_GROUPS);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState("");
 
-  function open() {
-    setError(null);
-    dialogRef.current?.showModal();
-  }
-
   function close() {
-    dialogRef.current?.close();
+    setOpen(false);
     setTitle("");
-    setSets("");
-    setWeights("");
+    setSetGroups(DEFAULT_SET_GROUPS);
     setSearch("");
     setTab("new");
   }
@@ -45,46 +38,43 @@ export default function AttachExerciseModal({ workoutId }: { workoutId: string }
     }
   }, [tab]);
 
-  async function attach(exerciseId: string) {
-    setLoading(true);
-    setError(null);
-    const res = await fetch(`/api/workouts/${workoutId}/exercises`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ exerciseId }),
-    });
-    setLoading(false);
-    if (res.ok) {
-      close();
-      router.refresh();
-    } else {
-      setError("Failed to attach exercise.");
-    }
+  function addSetGroup() {
+    setSetGroups((prev) => [...prev, { sets: "", weight: "" }]);
   }
 
-  async function handleCreateAndAttach(e: React.FormEvent) {
+  function removeSetGroup(index: number) {
+    setSetGroups((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateSetGroup(index: number, field: keyof SetGroup, value: string) {
+    setSetGroups((prev) =>
+      prev.map((sg, i) => (i === index ? { ...sg, [field]: value } : sg))
+    );
+  }
+
+  function handleNew(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const res = await fetch("/api/exercises", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: title.trim() || "Untitled Exercise",
-        sets: Number(sets) || 0,
-        weights: Number(weights) || 0,
-      }),
+    onAdd({
+      type: "new",
+      tempId: crypto.randomUUID(),
+      title: title.trim() || "Untitled Exercise",
+      setGroups: setGroups.map((sg) => ({
+        sets: Number(sg.sets) || 1,
+        weight: Number(sg.weight) || 0,
+      })),
     });
+    close();
+  }
 
-    if (!res.ok) {
-      setError("Failed to create exercise.");
-      setLoading(false);
-      return;
-    }
-
-    const exercise: Exercise = await res.json();
-    await attach(exercise.id);
+  function handleExisting(ex: Exercise) {
+    onAdd({
+      type: "existing",
+      tempId: crypto.randomUUID(),
+      exerciseId: ex.id,
+      title: ex.title,
+      setGroups: ex.setGroups,
+    });
+    close();
   }
 
   const filtered = exercises.filter((e) =>
@@ -94,23 +84,13 @@ export default function AttachExerciseModal({ workoutId }: { workoutId: string }
   return (
     <>
       <button
-        onClick={open}
+        onClick={() => setOpen(true)}
         className="rounded-md bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700"
       >
         + Add Exercise
       </button>
 
-      <dialog
-        ref={dialogRef}
-        className="w-full max-w-md rounded-xl border bg-white p-6 shadow-xl backdrop:bg-black/40"
-        onClose={close}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Add Exercise</h2>
-          <button onClick={close} className="text-neutral-400 hover:text-neutral-700">✕</button>
-        </div>
-
-        {/* Tabs */}
+      <Modal open={open} onClose={close} title="Add Exercise">
         <div className="mb-4 flex gap-1 rounded-lg bg-neutral-100 p-1">
           {(["new", "existing"] as Tab[]).map((t) => (
             <button
@@ -126,7 +106,7 @@ export default function AttachExerciseModal({ workoutId }: { workoutId: string }
         </div>
 
         {tab === "new" && (
-          <form onSubmit={handleCreateAndAttach} className="flex flex-col gap-3">
+          <form onSubmit={handleNew} className="flex flex-col gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium">Title</label>
               <input
@@ -137,38 +117,57 @@ export default function AttachExerciseModal({ workoutId }: { workoutId: string }
                 className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
               />
             </div>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium">Sets</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={sets}
-                  onChange={(e) => setSets(e.target.value)}
-                  placeholder="4"
-                  className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
-                />
+
+            <div>
+              <label className="mb-2 block text-sm font-medium">Sets</label>
+              <div className="flex flex-col gap-2">
+                {setGroups.map((sg, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      value={sg.sets}
+                      onChange={(e) => updateSetGroup(i, "sets", e.target.value)}
+                      placeholder="Sets"
+                      className="w-20 rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
+                    />
+                    <span className="text-sm text-neutral-400">×</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      value={sg.weight}
+                      onChange={(e) => updateSetGroup(i, "weight", e.target.value)}
+                      placeholder="kg"
+                      className="w-24 rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
+                    />
+                    <span className="text-xs text-neutral-400">kg</span>
+                    {setGroups.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeSetGroup(i)}
+                        className="ml-auto text-neutral-400 hover:text-red-500"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-              <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium">Weight (kg)</label>
-                <input
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={weights}
-                  onChange={(e) => setWeights(e.target.value)}
-                  placeholder="80"
-                  className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={addSetGroup}
+                className="mt-2 text-sm text-neutral-500 hover:text-neutral-900"
+              >
+                + Add set group
+              </button>
             </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
+
             <button
               type="submit"
-              disabled={loading}
-              className="rounded-md bg-neutral-900 py-2 text-sm text-white hover:bg-neutral-700 disabled:opacity-50"
+              className="rounded-md bg-neutral-900 py-2 text-sm text-white hover:bg-neutral-700"
             >
-              {loading ? "Adding…" : "Create & Add"}
+              Add
             </button>
           </form>
         )}
@@ -182,7 +181,6 @@ export default function AttachExerciseModal({ workoutId }: { workoutId: string }
               placeholder="Search exercises…"
               className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
             <ul className="max-h-56 overflow-y-auto flex flex-col gap-1">
               {filtered.length === 0 && (
                 <li className="py-4 text-center text-sm text-neutral-400">No exercises found.</li>
@@ -190,21 +188,22 @@ export default function AttachExerciseModal({ workoutId }: { workoutId: string }
               {filtered.map((ex) => (
                 <li key={ex.id}>
                   <button
-                    onClick={() => attach(ex.id)}
-                    disabled={loading}
-                    className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-neutral-100 disabled:opacity-50"
+                    onClick={() => handleExisting(ex)}
+                    className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-neutral-100"
                   >
                     <span className="font-medium">{ex.title}</span>
-                    <span className="ml-2 text-xs text-neutral-400">
-                      {ex.sets} sets · {ex.weights} kg
-                    </span>
+                    {ex.setGroups.length > 0 && (
+                      <span className="ml-2 text-xs text-neutral-400">
+                        {ex.setGroups.map((sg) => `${sg.sets}×${sg.weight}kg`).join(", ")}
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}
             </ul>
           </div>
         )}
-      </dialog>
+      </Modal>
     </>
   );
 }

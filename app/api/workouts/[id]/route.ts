@@ -1,6 +1,18 @@
 import { auth } from "@/lib/auth";
 import { get, query, run } from "@/lib/db";
-import type { Exercise, Workout } from "@/lib/types";
+import type { Exercise, ExerciseSet, Workout } from "@/lib/types";
+
+type ExerciseRow = Omit<Exercise, "setGroups">;
+
+function withSetGroups(exercises: ExerciseRow[]): Exercise[] {
+  return exercises.map((ex) => ({
+    ...ex,
+    setGroups: query<ExerciseSet>(
+      "SELECT * FROM exercise_set WHERE exercise_id = ? ORDER BY position ASC",
+      [ex.id]
+    ),
+  }));
+}
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -15,14 +27,14 @@ export async function GET(request: Request, { params }: Params) {
   );
   if (!workout) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const exercises = query<Exercise>(
-    `SELECT e.* FROM exercise e
+  const rows = query<ExerciseRow>(
+    `SELECT e.id, e.user_id, e.title, e.created_at, e.updated_at FROM exercise e
      JOIN workout_exercise we ON we.exercise_id = e.id
      WHERE we.workout_id = ?`,
     [id]
   );
 
-  return Response.json({ ...workout, exercises });
+  return Response.json({ ...workout, exercises: withSetGroups(rows) });
 }
 
 export async function PATCH(request: Request, { params }: Params) {
@@ -39,9 +51,15 @@ export async function PATCH(request: Request, { params }: Params) {
   const body = await request.json().catch(() => ({}));
   const title = (body.title as string | undefined)?.trim();
   if (title) {
+    run("UPDATE workout SET title = ?, updated_at = datetime('now') WHERE id = ?", [title, id]);
+  }
+
+  if (typeof body.is_public === "boolean") {
+    const enable = body.is_public;
+    const slug = enable ? (workout.public_slug ?? crypto.randomUUID().replace(/-/g, "").slice(0, 16)) : workout.public_slug;
     run(
-      "UPDATE workout SET title = ?, updated_at = datetime('now') WHERE id = ?",
-      [title, id]
+      "UPDATE workout SET is_public = ?, public_slug = ?, updated_at = datetime('now') WHERE id = ?",
+      [enable ? 1 : 0, slug, id]
     );
   }
 
