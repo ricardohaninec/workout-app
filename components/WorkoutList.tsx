@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Workout } from "@/lib/types";
 import Modal from "@/components/Modal";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function WorkoutList({ workouts: initial }: { workouts: Workout[] }) {
   const router = useRouter();
@@ -57,12 +59,9 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
       <div className="mb-4 flex items-center justify-between">
         {selecting ? (
           <div className="flex items-center gap-3">
-            <button
-              onClick={toggleSelectAll}
-              className="text-sm text-neutral-500 hover:text-neutral-900"
-            >
+            <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
               {allSelected ? "Deselect all" : "Select all"}
-            </button>
+            </Button>
             <span className="text-sm text-neutral-400">{selected.size} selected</span>
           </div>
         ) : (
@@ -70,19 +69,17 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
         )}
         <div className="flex gap-2">
           {selecting && selected.size > 0 && (
-            <button
-              onClick={() => setBulkDeleteOpen(true)}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700"
-            >
+            <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
               Delete {selected.size}
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={selecting ? exitSelecting : () => setSelecting(true)}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-neutral-100"
           >
             {selecting ? "Cancel" : "Select"}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -98,12 +95,10 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
             {selecting ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selected.has(w.id)}
-                    onChange={() => toggleSelect(w.id)}
+                    onCheckedChange={() => toggleSelect(w.id)}
                     onClick={(e) => e.stopPropagation()}
-                    className="h-4 w-4 cursor-pointer accent-neutral-900"
                   />
                   <span className="font-medium">{w.title}</span>
                 </div>
@@ -135,19 +130,12 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
           ? This action cannot be undone.
         </p>
         <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setBulkDeleteOpen(false)}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-neutral-100"
-          >
+          <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>
             Cancel
-          </button>
-          <button
-            onClick={handleBulkDelete}
-            disabled={bulkDeleteLoading}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleteLoading}>
             {bulkDeleteLoading ? "Deleting…" : `Delete ${selected.size}`}
-          </button>
+          </Button>
         </div>
       </Modal>
     </>

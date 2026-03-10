@@ -3,6 +3,10 @@
 import { useState } from "react";
 import type { Exercise, ExerciseSet } from "@/lib/types";
 import Modal from "@/components/Modal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type SetGroupInput = { sets: string; weight: string };
 
@@ -156,9 +160,9 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
       <div className="mb-4 flex items-center justify-between">
         {selecting ? (
           <div className="flex items-center gap-3">
-            <button onClick={toggleSelectAll} className="text-sm text-neutral-500 hover:text-neutral-900">
+            <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
               {allSelected ? "Deselect all" : "Select all"}
-            </button>
+            </Button>
             <span className="text-sm text-neutral-400">{selected.size} selected</span>
           </div>
         ) : (
@@ -166,26 +170,21 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
         )}
         <div className="flex gap-2">
           {selecting && selected.size > 0 && (
-            <button
-              onClick={() => setBulkDeleteOpen(true)}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700"
-            >
+            <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
               Delete {selected.size}
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={selecting ? exitSelecting : () => setSelecting(true)}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-neutral-100"
           >
             {selecting ? "Cancel" : "Select"}
-          </button>
+          </Button>
           {!selecting && (
-            <button
-              onClick={() => setCreateOpen(true)}
-              className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm text-white hover:bg-neutral-700"
-            >
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
               + New Exercise
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -205,12 +204,11 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                   {selecting && (
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selected.has(ex.id)}
-                      onChange={() => toggleSelect(ex.id)}
+                      onCheckedChange={() => toggleSelect(ex.id)}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-1 h-4 w-4 cursor-pointer accent-neutral-900"
+                      className="mt-1"
                     />
                   )}
                   <div>
@@ -229,18 +227,17 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
                 </div>
                 {!selecting && (
                   <div className="flex shrink-0 gap-2">
-                    <button
-                      onClick={() => openEdit(ex)}
-                      className="rounded-md border px-3 py-1 text-sm hover:bg-neutral-100"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => openEdit(ex)}>
                       Edit
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setDeleteTarget(ex)}
-                      className="rounded-md border border-red-200 px-3 py-1 text-sm text-red-600 hover:bg-red-50"
+                      className="border-red-200 text-red-600 hover:bg-red-50"
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -252,69 +249,68 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
       {/* Create modal */}
       <Modal open={createOpen} onClose={closeCreate} title="New Exercise">
         <form onSubmit={handleCreate} className="flex flex-col gap-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Title</label>
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label>Title</Label>
+            <Input
               type="text"
               value={createTitle}
               onChange={(e) => setCreateTitle(e.target.value)}
               placeholder="e.g. Bench Press"
-              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium">Sets</label>
+            <Label className="mb-2 block">Sets</Label>
             <div className="flex flex-col gap-2">
               {createSetGroups.map((sg, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input
+                  <Input
                     type="number"
                     min={1}
                     value={sg.sets}
                     onChange={(e) => setCreateSetGroups((prev) => prev.map((s, j) => j === i ? { ...s, sets: e.target.value } : s))}
                     placeholder="Sets"
-                    className="w-20 rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
+                    className="w-20"
                   />
                   <span className="text-sm text-neutral-400">×</span>
-                  <input
+                  <Input
                     type="number"
                     min={0}
                     step={0.5}
                     value={sg.weight}
                     onChange={(e) => setCreateSetGroups((prev) => prev.map((s, j) => j === i ? { ...s, weight: e.target.value } : s))}
                     placeholder="kg"
-                    className="w-24 rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
+                    className="w-24"
                   />
                   <span className="text-xs text-neutral-400">kg</span>
                   {createSetGroups.length > 1 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => setCreateSetGroups((prev) => prev.filter((_, j) => j !== i))}
                       className="ml-auto text-neutral-400 hover:text-red-500"
                     >
                       ✕
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setCreateSetGroups((prev) => [...prev, { sets: "", weight: "" }])}
-              className="mt-2 text-sm text-neutral-500 hover:text-neutral-900"
+              className="mt-2 text-neutral-500"
             >
               + Add set group
-            </button>
+            </Button>
           </div>
 
-          <button
-            type="submit"
-            disabled={createLoading}
-            className="rounded-md bg-neutral-900 py-2 text-sm text-white hover:bg-neutral-700 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={createLoading}>
             {createLoading ? "Creating…" : "Create"}
-          </button>
+          </Button>
         </form>
       </Modal>
 
@@ -326,87 +322,79 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
           They will also be removed from any workouts they belong to.
         </p>
         <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setBulkDeleteOpen(false)}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-neutral-100"
-          >
+          <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>
             Cancel
-          </button>
-          <button
-            onClick={handleBulkDelete}
-            disabled={bulkDeleteLoading}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleteLoading}>
             {bulkDeleteLoading ? "Deleting…" : `Delete ${selected.size}`}
-          </button>
+          </Button>
         </div>
       </Modal>
 
       {/* Edit modal */}
       <Modal open={!!editTarget} onClose={closeEdit} title="Edit Exercise">
         <form onSubmit={handleSaveEdit} className="flex flex-col gap-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Title</label>
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label>Title</Label>
+            <Input
               type="text"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium">Sets</label>
+            <Label className="mb-2 block">Sets</Label>
             <div className="flex flex-col gap-2">
               {editSetGroups.map((sg, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input
+                  <Input
                     type="number"
                     min={1}
                     value={sg.sets}
                     onChange={(e) => updateSetGroup(i, "sets", e.target.value)}
                     placeholder="Sets"
-                    className="w-20 rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
+                    className="w-20"
                   />
                   <span className="text-sm text-neutral-400">×</span>
-                  <input
+                  <Input
                     type="number"
                     min={0}
                     step={0.5}
                     value={sg.weight}
                     onChange={(e) => updateSetGroup(i, "weight", e.target.value)}
                     placeholder="kg"
-                    className="w-24 rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900"
+                    className="w-24"
                   />
                   <span className="text-xs text-neutral-400">kg</span>
                   {editSetGroups.length > 1 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => removeSetGroup(i)}
                       className="ml-auto text-neutral-400 hover:text-red-500"
                     >
                       ✕
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={addSetGroup}
-              className="mt-2 text-sm text-neutral-500 hover:text-neutral-900"
+              className="mt-2 text-neutral-500"
             >
               + Add set group
-            </button>
+            </Button>
           </div>
 
-          <button
-            type="submit"
-            disabled={editLoading}
-            className="rounded-md bg-neutral-900 py-2 text-sm text-white hover:bg-neutral-700 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={editLoading}>
             {editLoading ? "Saving…" : "Save"}
-          </button>
+          </Button>
         </form>
       </Modal>
 
@@ -418,19 +406,12 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
           from any workouts it belongs to.
         </p>
         <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setDeleteTarget(null)}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-neutral-100"
-          >
+          <Button variant="outline" onClick={() => setDeleteTarget(null)}>
             Cancel
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleteLoading}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={deleteLoading}>
             {deleteLoading ? "Deleting…" : "Delete"}
-          </button>
+          </Button>
         </div>
       </Modal>
     </>

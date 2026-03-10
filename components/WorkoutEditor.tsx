@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { Exercise, PendingExercise, Workout } from "@/lib/types";
 import AttachExerciseModal from "@/components/AttachExerciseModal";
 import Modal from "@/components/Modal";
+import { Button } from "@/components/ui/button";
 
 export default function WorkoutEditor({
   workoutId,
@@ -102,31 +103,27 @@ export default function WorkoutEditor({
         />
         <div className="flex gap-2">
           {isDirty && (
-            <button
-              onClick={save}
-              disabled={saving}
-              className="rounded-md bg-neutral-900 px-3 py-1 text-sm text-white hover:bg-neutral-700 disabled:opacity-50"
-            >
+            <Button onClick={save} disabled={saving} size="sm">
               {saving ? "Saving…" : "Save"}
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant={isPublic ? "outline" : "outline"}
+            size="sm"
             onClick={handleShare}
             disabled={shareLoading}
-            className={`rounded-md border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
-              isPublic
-                ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
-                : "hover:bg-neutral-100"
-            }`}
+            className={isPublic ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100" : ""}
           >
             {shareLoading ? "…" : isPublic ? "Shared ✓" : "Share"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setDeleteOpen(true)}
-            className="rounded-md border border-red-200 px-3 py-1 text-sm text-red-600 hover:bg-red-50"
+            className="border-red-200 text-red-600 hover:bg-red-50"
           >
             Delete
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -141,16 +138,18 @@ export default function WorkoutEditor({
           >
             {origin ? `${origin}/p/${slug}` : `/p/${slug}`}
           </a>
-          <button
+          <Button
+            variant="outline"
+            size="xs"
             onClick={async () => {
               await navigator.clipboard.writeText(`${origin}/p/${slug}`);
               setCopied(true);
               setTimeout(() => setCopied(false), 2500);
             }}
-            className="shrink-0 rounded-md border border-green-300 px-2 py-0.5 text-xs text-green-700 hover:bg-green-100"
+            className="shrink-0 border-green-300 text-green-700 hover:bg-green-100"
           >
             {copied ? "Copied!" : "Copy"}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -186,12 +185,14 @@ export default function WorkoutEditor({
                     <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
                       unsaved
                     </span>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => setPending((prev) => prev.filter((p) => p.tempId !== ex.tempId))}
-                      className="text-neutral-400 hover:text-red-500 text-sm"
+                      className="text-neutral-400 hover:text-red-500"
                     >
                       ✕
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 <ul className="flex flex-col gap-1">
@@ -214,18 +215,12 @@ export default function WorkoutEditor({
           action cannot be undone.
         </p>
         <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setDeleteOpen(false)}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-neutral-100"
-          >
+          <Button variant="outline" onClick={() => setDeleteOpen(false)}>
             Cancel
-          </button>
-          <button
-            onClick={handleDelete}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-          >
+          </Button>
+          <Button variant="destructive" onClick={handleDelete}>
             Delete
-          </button>
+          </Button>
         </div>
       </Modal>
     </main>
