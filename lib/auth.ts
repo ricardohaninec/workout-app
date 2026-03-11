@@ -7,6 +7,8 @@ const MAX_USERS = 20;
 
 export const auth = betterAuth({
   database: pool,
+  baseURL: process.env.BETTER_AUTH_URL,
+  trustedOrigins: process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : [],
   emailAndPassword: { enabled: true },
   plugins: [nextCookies()],
   hooks: {
