@@ -16,7 +16,7 @@ A Next.js workout tracking application built with React 19, TypeScript, and Post
 ### Prerequisites
 
 - [Bun](https://bun.sh) installed
-- [Docker](https://www.docker.com) installed (for the local database)
+- [Docker](https://www.docker.com) installed (for the local database).
 
 ### 1. Install dependencies
 
