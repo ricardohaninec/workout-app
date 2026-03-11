@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { get, run } from "@/lib/db";
 import type { Exercise } from "@/lib/types";
+import { del } from "@vercel/blob";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,6 +20,9 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   if ("image_url" in body) {
+    if (body.image_url == null && exercise.image_url) {
+      await del(exercise.image_url).catch(() => {});
+    }
     await run("UPDATE exercise SET image_url = $1, updated_at = NOW() WHERE id = $2", [body.image_url ?? null, id]);
   }
 
@@ -33,6 +37,9 @@ export async function DELETE(request: Request, { params }: Params) {
   const exercise = await get<Exercise>("SELECT * FROM exercise WHERE id = $1 AND user_id = $2", [id, session.user.id]);
   if (!exercise) return Response.json({ error: "Not found" }, { status: 404 });
 
+  if (exercise.image_url) {
+    await del(exercise.image_url).catch(() => {});
+  }
   await run("DELETE FROM exercise WHERE id = $1", [id]);
 
   return Response.json({ message: "Exercise deleted successfully." });
