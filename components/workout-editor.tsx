@@ -2,6 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
 import type { PendingWorkoutItem, Workout, WorkoutItem } from "@/lib/types";
 import AddWorkoutItemModal from "@/components/add-workout-item-modal";
 import Modal from "@/components/modal";
@@ -11,6 +27,38 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkoutItemCard from "@/components/workout-item-card";
+
+function SortableItem({
+  item,
+  onEdit,
+  onRemove,
+}: {
+  item: WorkoutItem;
+  onEdit: (item: WorkoutItem) => void;
+  onRemove: (item: WorkoutItem) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`relative ${isDragging ? "z-50 opacity-80" : ""}`}
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-600 touch-none"
+        aria-label="Drag to reorder"
+      >
+        <GripVertical size={18} />
+      </div>
+      <div className="pl-7">
+        <WorkoutItemCard item={item} onEdit={onEdit} onRemove={onRemove} />
+      </div>
+    </li>
+  );
+}
 
 type SetRow = { reps: string; weight: string };
 
@@ -42,8 +90,27 @@ export default function WorkoutEditor({
   const [title, setTitle] = useState(initialTitle);
   const [imageUrl, setImageUrl] = useState<string | null>(initialImageUrl);
   const [imageUploading, setImageUploading] = useState(false);
+  const [items, setItems] = useState<WorkoutItem[]>(savedItems);
   const [pending, setPending] = useState<PendingWorkoutItem[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex((i) => i.id === active.id);
+    const newIndex = items.findIndex((i) => i.id === over.id);
+    const reordered = arrayMove(items, oldIndex, newIndex);
+    setItems(reordered);
+
+    await fetch(`/api/workouts/${workoutId}/items/reorder`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemIds: reordered.map((i) => i.id) }),
+    });
+  }
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [slug, setSlug] = useState(initialSlug);
   const [shareLoading, setShareLoading] = useState(false);
@@ -51,6 +118,7 @@ export default function WorkoutEditor({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [origin, setOrigin] = useState("");
   useEffect(() => { setOrigin(window.location.origin); }, []);
+  useEffect(() => { setItems(savedItems); }, [savedItems]);
 
   // Edit item state
   const [editItem, setEditItem] = useState<WorkoutItem | null>(null);
@@ -266,15 +334,17 @@ export default function WorkoutEditor({
           <AddWorkoutItemModal onAdd={(item) => setPending((prev) => [...prev, item])} />
         </div>
 
-        {savedItems.length === 0 && pending.length === 0 ? (
+        {items.length === 0 && pending.length === 0 ? (
           <p className="text-neutral-500">No exercises yet.</p>
         ) : (
           <ul className="flex flex-col gap-4">
-            {savedItems.map((item) => (
-              <li key={item.id}>
-                <WorkoutItemCard item={item} onEdit={openEdit} onRemove={setRemoveItem} />
-              </li>
-            ))}
+            <DndContext id="workout-items-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                {items.map((item) => (
+                  <SortableItem key={item.id} item={item} onEdit={openEdit} onRemove={setRemoveItem} />
+                ))}
+              </SortableContext>
+            </DndContext>
 
             {pending.map((item) => (
               <li key={item.tempId}>
