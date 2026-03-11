@@ -83,40 +83,53 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
         </div>
       </div>
 
-      <ul className="flex flex-col gap-3">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {workouts.map((w) => (
           <li
             key={w.id}
             onClick={selecting ? () => toggleSelect(w.id) : undefined}
-            className={`rounded-lg border p-4 transition-colors ${
+            className={`overflow-hidden rounded-xl border bg-white transition-colors ${
               selecting ? "cursor-pointer select-none" : ""
-            } ${selecting && selected.has(w.id) ? "border-neutral-900 bg-neutral-50" : ""}`}
+            } ${selecting && selected.has(w.id) ? "border-neutral-900 ring-2 ring-neutral-900" : ""}`}
           >
-            {selecting ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            {/* Cover image */}
+            {w.image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={w.image_url} alt={w.title} className="h-44 w-full object-cover" />
+            ) : (
+              <div className="flex h-44 items-center justify-center bg-neutral-100 text-neutral-300">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6.5 6.5h.01M17.5 6.5h.01M6.5 17.5h.01M17.5 17.5h.01M3 12h18M12 3v18M3 6.5h18M3 17.5h18" />
+                </svg>
+              </div>
+            )}
+
+            <div className="p-4">
+              <div className="mb-1 flex items-start justify-between gap-2">
+                <span className="font-semibold leading-tight">{w.title}</span>
+                {w.is_public ? (
+                  <span className="shrink-0 rounded-full border px-2 py-0.5 text-xs text-neutral-500">
+                    Public
+                  </span>
+                ) : null}
+                {selecting && (
                   <Checkbox
                     checked={selected.has(w.id)}
                     onCheckedChange={() => toggleSelect(w.id)}
                     onClick={(e) => e.stopPropagation()}
+                    className="shrink-0"
                   />
-                  <span className="font-medium">{w.title}</span>
-                </div>
-                <span className="text-xs text-neutral-400">
-                  {new Date(w.updated_at).toLocaleDateString()}
-                </span>
+                )}
               </div>
-            ) : (
-              <Link
-                href={`/workout/${w.id}`}
-                className="flex items-center justify-between hover:bg-neutral-50"
-              >
-                <span className="font-medium">{w.title}</span>
-                <span className="text-xs text-neutral-400">
-                  {new Date(w.updated_at).toLocaleDateString()}
-                </span>
-              </Link>
-            )}
+              <p className="mb-4 text-xs text-neutral-400">
+                Updated {new Date(w.updated_at).toLocaleDateString()}
+              </p>
+              {!selecting && (
+                <Link href={`/workout/${w.id}`}>
+                  <Button className="w-full">Open Workout</Button>
+                </Link>
+              )}
+            </div>
           </li>
         ))}
       </ul>

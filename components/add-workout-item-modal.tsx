@@ -232,10 +232,10 @@ function SetsEditor({ sets, onChange }: { sets: { reps: string; weight: string }
               step={0.5}
               value={s.weight}
               onChange={(e) => onChange(sets.map((r, j) => j === i ? { ...r, weight: e.target.value } : r))}
-              placeholder="kg"
+              placeholder="lb"
               className="w-24"
             />
-            <span className="text-xs text-neutral-400">kg</span>
+            <span className="text-xs text-neutral-400">lb</span>
             {sets.length > 1 && (
               <Button
                 type="button"

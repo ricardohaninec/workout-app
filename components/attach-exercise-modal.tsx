@@ -128,10 +128,10 @@ export default function AttachExerciseModal({
                         step={0.5}
                         value={sg.weight}
                         onChange={(e) => updateSetGroup(i, "weight", e.target.value)}
-                        placeholder="kg"
+                        placeholder="lb"
                         className="w-24"
                       />
-                      <span className="text-xs text-neutral-400">kg</span>
+                      <span className="text-xs text-neutral-400">lb</span>
                       {setGroups.length > 1 && (
                         <Button
                           type="button"
@@ -183,7 +183,7 @@ export default function AttachExerciseModal({
                       <span className="font-medium">{ex.title}</span>
                       {ex.setGroups.length > 0 && (
                         <span className="ml-2 text-xs text-neutral-400">
-                          {ex.setGroups.map((sg) => `${sg.sets}×${sg.weight}kg`).join(", ")}
+                          {ex.setGroups.map((sg) => `${sg.sets}×${sg.weight}lb`).join(", ")}
                         </span>
                       )}
                     </Button>

@@ -56,6 +56,10 @@ export async function PATCH(request: Request, { params }: Params) {
     run("UPDATE workout SET title = ?, updated_at = datetime('now') WHERE id = ?", [title, id]);
   }
 
+  if ("image_url" in body) {
+    run("UPDATE workout SET image_url = ?, updated_at = datetime('now') WHERE id = ?", [body.image_url ?? null, id]);
+  }
+
   if (typeof body.is_public === "boolean") {
     const enable = body.is_public;
     const slug = enable ? (workout.public_slug ?? crypto.randomUUID().replace(/-/g, "").slice(0, 16)) : workout.public_slug;

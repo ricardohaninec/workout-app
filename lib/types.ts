@@ -2,6 +2,7 @@ export type Workout = {
   id: string;
   user_id: string;
   title: string;
+  image_url: string | null;
   is_public: number;
   public_slug: string | null;
   created_at: string;

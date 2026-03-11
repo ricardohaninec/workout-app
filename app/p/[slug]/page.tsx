@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { get, query } from "@/lib/db";
 import type { Workout, WorkoutItem, WorkoutItemSet } from "@/lib/types";
+import WorkoutItemCard from "@/components/workout-item-card";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -16,10 +17,10 @@ export default async function PublicWorkoutPage({ params }: Props) {
   );
   if (!workout) notFound();
 
-  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string; exercise_title: string };
+  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string; exercise_title: string; exercise_image_url: string | null };
   const rows = query<ItemRow>(
     `SELECT wi.id, wi.workout_id, wi.exercise_id, wi.position, wi.created_at, wi.updated_at,
-            e.title AS exercise_title
+            e.title AS exercise_title, e.image_url AS exercise_image_url
      FROM workout_item wi
      JOIN exercise e ON e.id = wi.exercise_id
      WHERE wi.workout_id = ?
@@ -34,7 +35,7 @@ export default async function PublicWorkoutPage({ params }: Props) {
     position: row.position,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    exercise: { id: row.exercise_id, title: row.exercise_title },
+    exercise: { id: row.exercise_id, title: row.exercise_title, image_url: row.exercise_image_url },
     sets: query<WorkoutItemSet>(
       "SELECT * FROM workout_item_set WHERE workout_item_id = ? ORDER BY position ASC",
       [row.id]
@@ -51,18 +52,10 @@ export default async function PublicWorkoutPage({ params }: Props) {
         {workoutItems.length === 0 ? (
           <p className="text-neutral-500">No exercises.</p>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-4">
             {workoutItems.map((item) => (
-              <li key={item.id} className="rounded-lg border p-4">
-                <p className="mb-2 font-medium">{item.exercise.title}</p>
-                <ul className="flex flex-col gap-1">
-                  {item.sets.map((s, i) => (
-                    <li key={s.id} className="text-sm text-neutral-500">
-                      <span className="font-medium text-neutral-700">Set {i + 1}:</span>{" "}
-                      {s.reps} reps × {s.weight} kg
-                    </li>
-                  ))}
-                </ul>
+              <li key={item.id}>
+                <WorkoutItemCard item={item} />
               </li>
             ))}
           </ul>

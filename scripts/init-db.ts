@@ -59,6 +59,7 @@ db.exec(`
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     title TEXT NOT NULL,
+    image_url TEXT,
     is_public INTEGER NOT NULL DEFAULT 0,
     public_slug TEXT UNIQUE,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),

@@ -45,6 +45,7 @@ export default async function WorkoutPage({ params }: Props) {
     <WorkoutEditor
       workoutId={id}
       initialTitle={workout.title}
+      initialImageUrl={workout.image_url}
       initialIsPublic={workout.is_public === 1}
       initialSlug={workout.public_slug}
       savedItems={savedItems}
