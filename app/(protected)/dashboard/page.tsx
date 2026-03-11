@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   );
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
+    <main className="mx-auto max-w-3xl p-4 sm:p-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">My Workouts</h1>
         <CreateWorkoutButton />

@@ -45,7 +45,7 @@ export default async function PublicWorkoutPage({ params }: Props) {
   );
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
+    <main className="mx-auto max-w-3xl p-4 sm:p-8">
       {workout.image_url && (
         <div className="mb-6 w-full h-48 rounded-xl overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}

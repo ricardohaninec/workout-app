@@ -6,7 +6,7 @@ export default async function HomePage() {
   const session = await getSession();
   if (session) redirect("/dashboard");
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
       <h1 className="text-4xl font-bold">Workout App</h1>
       <p className="text-neutral-500">Track your workouts and exercises.</p>
       <div className="flex gap-4">

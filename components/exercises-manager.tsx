@@ -213,8 +213,8 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
                 selecting ? "cursor-pointer select-none" : ""
               } ${selecting && selected.has(ex.id) ? "border-neutral-900 bg-neutral-50" : ""}`}
             >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
                   {selecting && (
                     <Checkbox
                       checked={selected.has(ex.id)}
@@ -230,7 +230,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
                       <PlaceholderImage size={20} />
                     </div>
                   )}
-                  <p className="font-medium">{ex.title}</p>
+                  <p className="font-medium truncate min-w-0">{ex.title}</p>
                 </div>
                 {!selecting && (
                   <div className="flex shrink-0 gap-2">

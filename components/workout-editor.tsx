@@ -246,15 +246,15 @@ export default function WorkoutEditor({
   }
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-center justify-between">
+    <main className="mx-auto max-w-3xl p-4 sm:p-8">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="text-2xl font-bold bg-transparent outline-none border-b border-transparent hover:border-neutral-300 focus:border-neutral-900 transition-colors w-full max-w-sm"
+          className="text-2xl font-bold bg-transparent outline-none border-b border-transparent hover:border-neutral-300 focus:border-neutral-900 transition-colors w-full min-w-0"
         />
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           {isDirty && (
             <Button onClick={save} disabled={saving} size="sm">
               {saving ? "Saving…" : "Save"}
