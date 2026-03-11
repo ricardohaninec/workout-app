@@ -44,6 +44,12 @@ export default async function PublicWorkoutPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-3xl p-8">
+      {workout.image_url && (
+        <div className="mb-6 w-full h-48 rounded-xl overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={workout.image_url} alt={workout.title} className="h-full w-full object-cover" />
+        </div>
+      )}
       <p className="mb-1 text-xs text-neutral-400">Public workout</p>
       <h1 className="mb-1 text-2xl font-bold">{workout.title}</h1>
       <p className="mb-6 text-sm text-neutral-500">by {workout.user_name}</p>

@@ -7,6 +7,7 @@ import type { Workout } from "@/lib/types";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import PlaceholderImage from "@/components/icons/placeholder-image";
 
 export default function WorkoutList({ workouts: initial }: { workouts: Workout[] }) {
   const router = useRouter();
@@ -97,10 +98,8 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
               // eslint-disable-next-line @next/next/no-img-element
               <img src={w.image_url} alt={w.title} className="h-44 w-full object-cover" />
             ) : (
-              <div className="flex h-44 items-center justify-center bg-neutral-100 text-neutral-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6.5 6.5h.01M17.5 6.5h.01M6.5 17.5h.01M17.5 17.5h.01M3 12h18M12 3v18M3 6.5h18M3 17.5h18" />
-                </svg>
+              <div className="flex h-44 items-center justify-center bg-neutral-100">
+                <PlaceholderImage />
               </div>
             )}
 

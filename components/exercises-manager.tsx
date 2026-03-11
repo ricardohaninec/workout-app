@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PlaceholderImage from "@/components/icons/placeholder-image";
 import type { Exercise } from "@/lib/types";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
@@ -221,9 +222,13 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
                       onClick={(e) => e.stopPropagation()}
                     />
                   )}
-                  {ex.image_url && (
+                  {ex.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={ex.image_url} alt={ex.title} className="h-14 w-14 shrink-0 rounded-md object-cover" />
+                  ) : (
+                    <div className="h-14 w-14 shrink-0 rounded-md bg-neutral-100 flex items-center justify-center">
+                      <PlaceholderImage size={20} />
+                    </div>
                   )}
                   <p className="font-medium">{ex.title}</p>
                 </div>

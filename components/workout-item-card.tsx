@@ -1,4 +1,5 @@
 import type { WorkoutItem } from "@/lib/types";
+import PlaceholderImage from "@/components/icons/placeholder-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +33,9 @@ export default function WorkoutItemCard({
             className="h-full w-full object-cover brightness-90"
           />
         ) : (
-          <div className="h-full w-full bg-neutral-200" />
+          <div className="h-full w-full bg-neutral-100 flex items-center justify-center">
+            <PlaceholderImage />
+          </div>
         )}
       </div>
       <CardHeader>
