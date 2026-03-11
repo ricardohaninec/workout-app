@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Workout } from "@/lib/types";
-import Modal from "@/components/Modal";
+import Modal from "@/components/modal";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function WorkoutList({ workouts: initial }: { workouts: Workout[] }) {
   const router = useRouter();
@@ -57,12 +59,9 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
       <div className="mb-4 flex items-center justify-between">
         {selecting ? (
           <div className="flex items-center gap-3">
-            <button
-              onClick={toggleSelectAll}
-              className="text-sm text-neutral-500 hover:text-neutral-900"
-            >
+            <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
               {allSelected ? "Deselect all" : "Select all"}
-            </button>
+            </Button>
             <span className="text-sm text-neutral-400">{selected.size} selected</span>
           </div>
         ) : (
@@ -70,58 +69,67 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
         )}
         <div className="flex gap-2">
           {selecting && selected.size > 0 && (
-            <button
-              onClick={() => setBulkDeleteOpen(true)}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700"
-            >
+            <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
               Delete {selected.size}
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={selecting ? exitSelecting : () => setSelecting(true)}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-neutral-100"
           >
             {selecting ? "Cancel" : "Select"}
-          </button>
+          </Button>
         </div>
       </div>
 
-      <ul className="flex flex-col gap-3">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {workouts.map((w) => (
           <li
             key={w.id}
             onClick={selecting ? () => toggleSelect(w.id) : undefined}
-            className={`rounded-lg border p-4 transition-colors ${
+            className={`overflow-hidden rounded-xl border bg-white transition-colors ${
               selecting ? "cursor-pointer select-none" : ""
-            } ${selecting && selected.has(w.id) ? "border-neutral-900 bg-neutral-50" : ""}`}
+            } ${selecting && selected.has(w.id) ? "border-neutral-900 ring-2 ring-neutral-900" : ""}`}
           >
-            {selecting ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(w.id)}
-                    onChange={() => toggleSelect(w.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-4 w-4 cursor-pointer accent-neutral-900"
-                  />
-                  <span className="font-medium">{w.title}</span>
-                </div>
-                <span className="text-xs text-neutral-400">
-                  {new Date(w.updated_at).toLocaleDateString()}
-                </span>
-              </div>
+            {/* Cover image */}
+            {w.image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={w.image_url} alt={w.title} className="h-44 w-full object-cover" />
             ) : (
-              <Link
-                href={`/workout/${w.id}`}
-                className="flex items-center justify-between hover:bg-neutral-50"
-              >
-                <span className="font-medium">{w.title}</span>
-                <span className="text-xs text-neutral-400">
-                  {new Date(w.updated_at).toLocaleDateString()}
-                </span>
-              </Link>
+              <div className="flex h-44 items-center justify-center bg-neutral-100 text-neutral-300">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6.5 6.5h.01M17.5 6.5h.01M6.5 17.5h.01M17.5 17.5h.01M3 12h18M12 3v18M3 6.5h18M3 17.5h18" />
+                </svg>
+              </div>
             )}
+
+            <div className="p-4">
+              <div className="mb-1 flex items-start justify-between gap-2">
+                <span className="font-semibold leading-tight">{w.title}</span>
+                {w.is_public ? (
+                  <span className="shrink-0 rounded-full border px-2 py-0.5 text-xs text-neutral-500">
+                    Public
+                  </span>
+                ) : null}
+                {selecting && (
+                  <Checkbox
+                    checked={selected.has(w.id)}
+                    onCheckedChange={() => toggleSelect(w.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="shrink-0"
+                  />
+                )}
+              </div>
+              <p className="mb-4 text-xs text-neutral-400">
+                Updated {new Date(w.updated_at).toLocaleDateString()}
+              </p>
+              {!selecting && (
+                <Link href={`/workout/${w.id}`}>
+                  <Button className="w-full">Open Workout</Button>
+                </Link>
+              )}
+            </div>
           </li>
         ))}
       </ul>
@@ -135,19 +143,12 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
           ? This action cannot be undone.
         </p>
         <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setBulkDeleteOpen(false)}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-neutral-100"
-          >
+          <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>
             Cancel
-          </button>
-          <button
-            onClick={handleBulkDelete}
-            disabled={bulkDeleteLoading}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleteLoading}>
             {bulkDeleteLoading ? "Deleting…" : `Delete ${selected.size}`}
-          </button>
+          </Button>
         </div>
       </Modal>
     </>

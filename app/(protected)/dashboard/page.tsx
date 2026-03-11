@@ -1,8 +1,8 @@
 import { query } from "@/lib/db";
 import { requireSession } from "@/lib/auth-server";
 import type { Workout } from "@/lib/types";
-import WorkoutList from "@/components/WorkoutList";
-import CreateWorkoutButton from "@/components/CreateWorkoutButton";
+import WorkoutList from "@/components/workout-list";
+import CreateWorkoutButton from "@/components/create-workout-button";
 
 export default async function DashboardPage() {
   const session = await requireSession();

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function CreateWorkoutButton() {
   const router = useRouter();
@@ -19,12 +20,8 @@ export default function CreateWorkoutButton() {
   }
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={loading}
-      className="rounded-md bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700 disabled:opacity-50"
-    >
+    <Button onClick={handleClick} disabled={loading}>
       {loading ? "Creating…" : "+ New Workout"}
-    </button>
+    </Button>
   );
 }
