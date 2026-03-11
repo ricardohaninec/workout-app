@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Workout App
 
-## Getting Started
+A Next.js workout tracking application built with React 19, TypeScript, and PostgreSQL.
 
-First, run the development server:
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS 4
+- **Database**: PostgreSQL (via `pg`)
+- **Auth**: better-auth
+- **Package Manager**: Bun
+
+## Running Locally
+
+### Prerequisites
+
+- [Bun](https://bun.sh) installed
+- [Docker](https://www.docker.com) installed (for the local database)
+
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+### 2. Set up environment variables
+
+Create a `.env.local` file in the project root:
+
+```env
+BETTER_AUTH_SECRET=your_secret_here
+BETTER_AUTH_URL=http://localhost:8080
+
+# Local database (Docker)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5433/workout
+
+# Production (Supabase) — swap this in when deploying
+# DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-1-<region>.pooler.supabase.com:6543/postgres
+```
+
+### 3. Start the database
+
+```bash
+bun db:up
+```
+
+This starts a PostgreSQL 16 container on port `5433` (to avoid conflicts with any local PostgreSQL on 5432).
+
+### 4. Initialise the schema
+
+```bash
+bun db:init
+```
+
+### 5. Start the development server
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:8080](http://localhost:8080) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bun dev          # Start development server (port 8080)
+bun run build    # Build for production
+bun run lint     # Run ESLint
+bun start        # Start production server
 
-## Learn More
+bun db:up        # Start local PostgreSQL Docker container
+bun db:down      # Stop local PostgreSQL Docker container
+bun db:init      # Initialise database schema
+bun db:test      # Test database connection
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Production (Supabase)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The app is designed to connect to a [Supabase](https://supabase.com) PostgreSQL database in production.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Use the **Transaction Pooler** connection string from your Supabase dashboard (`Project → Connect → Transaction pooler`) to avoid IPv6 connectivity issues:
 
-## Deploy on Vercel
+```
+postgresql://postgres.<project-ref>:<password>@aws-1-<region>.pooler.supabase.com:6543/postgres
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Set this as `DATABASE_URL` in your production environment variables and run `bun db:init` once to create the schema.
