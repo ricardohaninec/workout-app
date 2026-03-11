@@ -1,24 +1,20 @@
 import { betterAuth } from "better-auth";
 import { createAuthMiddleware, APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import BetterSQLite from "better-sqlite3";
-import { mkdirSync } from "fs";
-
-mkdirSync("./data", { recursive: true });
+import { pool } from "@/lib/db";
 
 const MAX_USERS = 20;
 
-const db = new BetterSQLite("./data/app.db");
-
 export const auth = betterAuth({
-  database: db,
+  database: pool,
   emailAndPassword: { enabled: true },
   plugins: [nextCookies()],
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path !== "/sign-up/email") return;
-      const row = db.prepare("SELECT COUNT(*) as count FROM user").get() as { count: number };
-      if (row.count >= MAX_USERS) {
+      const result = await pool.query('SELECT COUNT(*) as count FROM "user"');
+      const count = Number(result.rows[0].count);
+      if (count >= MAX_USERS) {
         throw new APIError("FORBIDDEN", { message: "Registration is currently closed." });
       }
     }),

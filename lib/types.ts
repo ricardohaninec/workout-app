@@ -3,7 +3,7 @@ export type Workout = {
   user_id: string;
   title: string;
   image_url: string | null;
-  is_public: number;
+  is_public: boolean;
   public_slug: string | null;
   created_at: string;
   updated_at: string;

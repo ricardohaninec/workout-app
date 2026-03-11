@@ -1,31 +1,31 @@
-import BetterSQLite from "better-sqlite3";
-import { mkdirSync } from "fs";
+import { Pool } from "pg";
 
-type Database = InstanceType<typeof BetterSQLite>;
+const globalForPg = global as unknown as { pool: Pool };
 
-mkdirSync("./data", { recursive: true });
+export const pool =
+  globalForPg.pool ??
+  new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL?.includes("localhost") || process.env.DATABASE_URL?.includes("127.0.0.1") ? false : { rejectUnauthorized: false },
+    max: 20,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 2_000,
+  });
 
-let _db: Database | null = null;
+if (process.env.NODE_ENV !== "production") globalForPg.pool = pool;
 
-export function getDb(): Database {
-  if (!_db) {
-    _db = new BetterSQLite("./data/app.db");
-    _db.exec("PRAGMA journal_mode = WAL;");
-    _db.exec("PRAGMA foreign_keys = ON;");
-  }
-  return _db;
+type Param = string | number | bigint | boolean | null | Buffer;
+
+export async function query<T>(sql: string, params: Param[] = []): Promise<T[]> {
+  const result = await pool.query(sql, params);
+  return result.rows as T[];
 }
 
-type Param = string | number | bigint | boolean | null | Uint8Array;
-
-export function query<T>(sql: string, params: Param[] = []): T[] {
-  return getDb().prepare(sql).all(...params) as T[];
+export async function get<T>(sql: string, params: Param[] = []): Promise<T | undefined> {
+  const result = await pool.query(sql, params);
+  return result.rows[0] as T | undefined;
 }
 
-export function get<T>(sql: string, params: Param[] = []): T | undefined {
-  return getDb().prepare(sql).get(...params) as T | undefined;
-}
-
-export function run(sql: string, params: Param[] = []): void {
-  getDb().prepare(sql).run(...params);
+export async function run(sql: string, params: Param[] = []): Promise<void> {
+  await pool.query(sql, params);
 }

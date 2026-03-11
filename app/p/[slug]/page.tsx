@@ -8,39 +8,41 @@ type Props = { params: Promise<{ slug: string }> };
 export default async function PublicWorkoutPage({ params }: Props) {
   const { slug } = await params;
 
-  const workout = get<Workout & { user_name: string }>(
+  const workout = await get<Workout & { user_name: string }>(
     `SELECT w.*, u.name AS user_name
      FROM workout w
-     JOIN user u ON u.id = w.user_id
-     WHERE w.public_slug = ? AND w.is_public = 1`,
+     JOIN "user" u ON u.id = w.user_id
+     WHERE w.public_slug = $1 AND w.is_public = TRUE`,
     [slug]
   );
   if (!workout) notFound();
 
   type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string; exercise_title: string; exercise_image_url: string | null };
-  const rows = query<ItemRow>(
+  const rows = await query<ItemRow>(
     `SELECT wi.id, wi.workout_id, wi.exercise_id, wi.position, wi.created_at, wi.updated_at,
             e.title AS exercise_title, e.image_url AS exercise_image_url
      FROM workout_item wi
      JOIN exercise e ON e.id = wi.exercise_id
-     WHERE wi.workout_id = ?
+     WHERE wi.workout_id = $1
      ORDER BY wi.position ASC`,
     [workout.id]
   );
 
-  const workoutItems: WorkoutItem[] = rows.map((row) => ({
-    id: row.id,
-    workout_id: row.workout_id,
-    exercise_id: row.exercise_id,
-    position: row.position,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    exercise: { id: row.exercise_id, title: row.exercise_title, image_url: row.exercise_image_url },
-    sets: query<WorkoutItemSet>(
-      "SELECT * FROM workout_item_set WHERE workout_item_id = ? ORDER BY position ASC",
-      [row.id]
-    ),
-  }));
+  const workoutItems: WorkoutItem[] = await Promise.all(
+    rows.map(async (row) => ({
+      id: row.id,
+      workout_id: row.workout_id,
+      exercise_id: row.exercise_id,
+      position: row.position,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      exercise: { id: row.exercise_id, title: row.exercise_title, image_url: row.exercise_image_url },
+      sets: await query<WorkoutItemSet>(
+        "SELECT * FROM workout_item_set WHERE workout_item_id = $1 ORDER BY position ASC",
+        [row.id]
+      ),
+    }))
+  );
 
   return (
     <main className="mx-auto max-w-3xl p-8">

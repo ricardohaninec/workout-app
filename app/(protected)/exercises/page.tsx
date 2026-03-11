@@ -6,8 +6,8 @@ import ExercisesManager from "@/components/exercises-manager";
 export default async function ExercisesPage() {
   const session = await requireSession();
 
-  const exercises = query<Exercise>(
-    "SELECT id, user_id, title, image_url, created_at, updated_at FROM exercise WHERE user_id = ? ORDER BY title ASC",
+  const exercises = await query<Exercise>(
+    "SELECT id, user_id, title, image_url, created_at, updated_at FROM exercise WHERE user_id = $1 ORDER BY title ASC",
     [session.user.id]
   );
 

@@ -7,8 +7,8 @@ import CreateWorkoutButton from "@/components/create-workout-button";
 export default async function DashboardPage() {
   const session = await requireSession();
 
-  const workouts = query<Workout>(
-    "SELECT * FROM workout WHERE user_id = ? ORDER BY updated_at DESC",
+  const workouts = await query<Workout>(
+    "SELECT * FROM workout WHERE user_id = $1 ORDER BY updated_at DESC",
     [session.user.id]
   );
 

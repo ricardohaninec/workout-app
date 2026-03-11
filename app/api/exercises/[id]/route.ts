@@ -9,20 +9,20 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const exercise = get<Exercise>("SELECT * FROM exercise WHERE id = ? AND user_id = ?", [id, session.user.id]);
+  const exercise = await get<Exercise>("SELECT * FROM exercise WHERE id = $1 AND user_id = $2", [id, session.user.id]);
   if (!exercise) return Response.json({ error: "Not found" }, { status: 404 });
 
   const body = await request.json().catch(() => ({}));
   const title = (body.title as string | undefined)?.trim();
   if (title) {
-    run("UPDATE exercise SET title = ?, updated_at = datetime('now') WHERE id = ?", [title, id]);
+    await run("UPDATE exercise SET title = $1, updated_at = NOW() WHERE id = $2", [title, id]);
   }
 
   if ("image_url" in body) {
-    run("UPDATE exercise SET image_url = ?, updated_at = datetime('now') WHERE id = ?", [body.image_url ?? null, id]);
+    await run("UPDATE exercise SET image_url = $1, updated_at = NOW() WHERE id = $2", [body.image_url ?? null, id]);
   }
 
-  return Response.json(get<Exercise>("SELECT id, user_id, title, image_url, created_at, updated_at FROM exercise WHERE id = ?", [id]));
+  return Response.json(await get<Exercise>("SELECT id, user_id, title, image_url, created_at, updated_at FROM exercise WHERE id = $1", [id]));
 }
 
 export async function DELETE(request: Request, { params }: Params) {
@@ -30,10 +30,10 @@ export async function DELETE(request: Request, { params }: Params) {
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const exercise = get<Exercise>("SELECT * FROM exercise WHERE id = ? AND user_id = ?", [id, session.user.id]);
+  const exercise = await get<Exercise>("SELECT * FROM exercise WHERE id = $1 AND user_id = $2", [id, session.user.id]);
   if (!exercise) return Response.json({ error: "Not found" }, { status: 404 });
 
-  run("DELETE FROM exercise WHERE id = ?", [id]);
+  await run("DELETE FROM exercise WHERE id = $1", [id]);
 
   return Response.json({ message: "Exercise deleted successfully." });
 }
