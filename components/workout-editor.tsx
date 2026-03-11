@@ -39,23 +39,24 @@ function SortableItem({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
+  const handle = (
+    <div
+      {...attributes}
+      {...listeners}
+      className="flex h-7 w-7 items-center justify-center rounded-md bg-black/40 cursor-grab active:cursor-grabbing text-white hover:bg-black/60 touch-none"
+      aria-label="Drag to reorder"
+    >
+      <GripVertical size={16} />
+    </div>
+  );
+
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`relative ${isDragging ? "z-50 opacity-80" : ""}`}
+      className={isDragging ? "z-50 opacity-80" : ""}
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-600 touch-none"
-        aria-label="Drag to reorder"
-      >
-        <GripVertical size={18} />
-      </div>
-      <div className="pl-7">
-        <WorkoutItemCard item={item} onEdit={onEdit} onRemove={onRemove} />
-      </div>
+      <WorkoutItemCard item={item} onEdit={onEdit} onRemove={onRemove} dragHandle={handle} />
     </li>
   );
 }

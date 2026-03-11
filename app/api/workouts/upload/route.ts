@@ -1,9 +1,8 @@
 import { auth } from "@/lib/auth";
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { put } from "@vercel/blob";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_SIZE = 4.5 * 1024 * 1024; // 4.5 MB (Vercel Blob limit)
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -16,13 +15,12 @@ export async function POST(request: Request) {
   if (!ALLOWED_TYPES.includes(file.type))
     return Response.json({ error: "Invalid file type" }, { status: 400 });
   if (file.size > MAX_SIZE)
-    return Response.json({ error: "File too large (max 5 MB)" }, { status: 400 });
+    return Response.json({ error: "File too large (max 4.5 MB)" }, { status: 400 });
 
   const ext = file.name.split(".").pop() ?? "jpg";
-  const filename = `${crypto.randomUUID()}.${ext}`;
-  const dest = join(process.cwd(), "public", "uploads", "workouts", filename);
+  const filename = `workouts/${crypto.randomUUID()}.${ext}`;
 
-  await writeFile(dest, Buffer.from(await file.arrayBuffer()));
+  const blob = await put(filename, file, { access: "public" });
 
-  return Response.json({ url: `/uploads/workouts/${filename}` }, { status: 201 });
+  return Response.json({ url: blob.url }, { status: 201 });
 }

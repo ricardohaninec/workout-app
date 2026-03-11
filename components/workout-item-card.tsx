@@ -1,3 +1,4 @@
+import type React from "react";
 import type { WorkoutItem } from "@/lib/types";
 import PlaceholderImage from "@/components/icons/placeholder-image";
 import { Badge } from "@/components/ui/badge";
@@ -15,16 +16,21 @@ export default function WorkoutItemCard({
   item,
   onEdit,
   onRemove,
+  dragHandle,
 }: {
   item: WorkoutItem;
   onEdit?: (item: WorkoutItem) => void;
   onRemove?: (item: WorkoutItem) => void;
+  dragHandle?: React.ReactNode;
 }) {
   const hasActions = onEdit || onRemove;
 
   return (
     <Card className="pt-0 overflow-hidden">
       <div className="relative h-28 w-full">
+        {dragHandle && (
+          <div className="absolute left-2 top-2 z-10">{dragHandle}</div>
+        )}
         {item.exercise.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
