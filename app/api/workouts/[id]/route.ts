@@ -5,10 +5,10 @@ import type { Workout, WorkoutItem, WorkoutItemSet } from "@/lib/types";
 type Params = { params: Promise<{ id: string }> };
 
 function buildWorkoutItems(workoutId: string): WorkoutItem[] {
-  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string; exercise_title: string };
+  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string; exercise_title: string; exercise_image_url: string | null };
   const rows = query<ItemRow>(
     `SELECT wi.id, wi.workout_id, wi.exercise_id, wi.position, wi.created_at, wi.updated_at,
-            e.title AS exercise_title
+            e.title AS exercise_title, e.image_url AS exercise_image_url
      FROM workout_item wi
      JOIN exercise e ON e.id = wi.exercise_id
      WHERE wi.workout_id = ?
@@ -23,7 +23,7 @@ function buildWorkoutItems(workoutId: string): WorkoutItem[] {
     position: row.position,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    exercise: { id: row.exercise_id, title: row.exercise_title },
+    exercise: { id: row.exercise_id, title: row.exercise_title, image_url: row.exercise_image_url },
     sets: query<WorkoutItemSet>(
       "SELECT * FROM workout_item_set WHERE workout_item_id = ? ORDER BY position ASC",
       [row.id]

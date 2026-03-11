@@ -16,7 +16,7 @@ export async function POST(request: Request, { params }: Params) {
   const exerciseId = body.exerciseId as string | undefined;
   if (!exerciseId) return Response.json({ error: "exerciseId required" }, { status: 400 });
 
-  const exercise = get<{ id: string; title: string }>("SELECT id, title FROM exercise WHERE id = ?", [exerciseId]);
+  const exercise = get<{ id: string; title: string; image_url: string | null }>("SELECT id, title, image_url FROM exercise WHERE id = ?", [exerciseId]);
   if (!exercise) return Response.json({ error: "Exercise not found" }, { status: 404 });
 
   const position = typeof body.position === "number" ? body.position : 0;
