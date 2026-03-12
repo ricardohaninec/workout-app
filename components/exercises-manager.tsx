@@ -58,6 +58,7 @@ function ImageUpload({ value, onChange }: { value: string | null; onChange: (url
 
 export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
   const [exercises, setExercises] = useState(initial);
+  const [search, setSearch] = useState("");
 
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
@@ -164,10 +165,26 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
     setDeleteTarget(null);
   }
 
+  const filtered = search.trim()
+    ? exercises.filter((ex) => ex.title.toLowerCase().includes(search.toLowerCase()))
+    : exercises;
+
   const allSelected = exercises.length > 0 && selected.size === exercises.length;
 
   return (
     <>
+      {/* Search */}
+      {!selecting && (
+        <div className="mb-4">
+          <Input
+            type="search"
+            placeholder="Search exercises…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="mb-4 flex items-center justify-between">
         {selecting ? (
@@ -201,11 +218,11 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
         </div>
       </div>
 
-      {exercises.length === 0 ? (
-        <p className="text-neutral-500">No exercises yet.</p>
+      {filtered.length === 0 ? (
+        <p className="text-neutral-500">{search.trim() ? "No exercises match your search." : "No exercises yet."}</p>
       ) : (
         <ul className="flex flex-col gap-3">
-          {exercises.map((ex) => (
+          {filtered.map((ex) => (
             <li
               key={ex.id}
               onClick={selecting ? () => toggleSelect(ex.id) : undefined}
