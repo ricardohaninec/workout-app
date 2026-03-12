@@ -233,6 +233,7 @@ CREATE TABLE IF NOT EXISTS workout_item_set (
   reps INTEGER NOT NULL DEFAULT 1,
   weight REAL NOT NULL DEFAULT 0,
   position INTEGER NOT NULL DEFAULT 0,
+  rest_seconds INTEGER NOT NULL DEFAULT 60,
   FOREIGN KEY (workout_item_id) REFERENCES workout_item(id) ON DELETE CASCADE
 );
 ```
@@ -334,6 +335,7 @@ CREATE INDEX IF NOT EXISTS idx_wip_set_item_id ON workout_in_progress_set(workou
 - `scripts/migrate-workout-in-progress.ts` — migration adding `workout_in_progress` and `workout_in_progress_set` tables
 - `scripts/migrate-add-item-note.ts` — migration adding `note TEXT` column to `workout_item`
 - `scripts/migrate-add-set-complete.ts` — migration adding `is_complete BOOLEAN` column to `workout_in_progress_set`
+- `scripts/migrate-add-rest-seconds.ts` — migration adding `rest_seconds INTEGER DEFAULT 60` column to `workout_item_set`
 
 ---
 
@@ -742,12 +744,13 @@ Delete a WorkoutInProgress session and all its sets (cascades to `workout_in_pro
 | `/dashboard` | Auth | List of user workouts and exercises manager |
 | `/workout/[id]` | Auth | Workout editor: title, items, share toggle, delete |
 | `/p/[slug]` | Public | Read-only public workout page |
-| `/workout-in-progress/[workoutId]` | Auth | Active session page: view items, log sets, complete session **(NEW)** |
+| `/workout-in-progress/[workoutId]` | Auth | Active session page: view items, log sets, complete session |
+| `/history` | Auth | Completed session history with per-session detail modal |
 
 ### 8.2 Layout & Navigation
 
 - Global layout: `app/layout.tsx`
-- Header with app name, login/logout/account & theme toggle
+- Header with app name and profile avatar; nav links collapsed behind an animated slide-in drawer (hamburger) on all screen sizes
 - `app/(auth)/login`, `app/(auth)/register`
 
 ### 8.3 Components
@@ -761,7 +764,7 @@ Props: `workouts: Workout[]`. Renders list of workouts with links to `/workout/[
 Client button that calls `POST /api/workouts` and navigates to the new workout editor.
 
 **components/workout-editor.tsx**
-Props: `workoutId`, `initialTitle`, `initialIsPublic`, `initialSlug`, `savedItems`. Inline-editable title, save button, share toggle, delete button with confirmation, and list of Workout Items. Includes a **Start Session** button that triggers `POST /api/workouts/:id/sessions` and navigates to `/workout-in-progress/[workoutId]`.
+Props: `workoutId`, `initialTitle`, `initialIsPublic`, `initialSlug`, `savedItems`. Inline-editable title, save button, share toggle, delete button with confirmation, and list of Workout Items. Each set in the edit modal includes a `rest_seconds` input (default 60, step 5).
 
 **components/add-workout-item-modal.tsx**
 Two-tab modal (New exercise / Existing exercise) built with shadcn Tabs. Calls `onAdd` with a `PendingWorkoutItem`; actual API calls happen on save in `workout-editor`.
@@ -773,9 +776,15 @@ Full CRUD for the exercises library. Supports image upload, bulk select/delete, 
 Props: `workoutId`, `sessionId`, `workoutItems: WorkoutItem[]`, `sets: WorkoutInProgressSet[]`.
 - Renders each Workout Item (exercise name + target sets from template)
 - Allows the user to edit actual reps/weight for each set in the active session
-- Changes call `PATCH /api/workouts/:id/sessions/:sessionId` to persist set updates
+- Each set row shows rest time (read-only, sourced from `workout_item_set.rest_seconds`)
+- Marking a set as **Done** starts a rest countdown timer; only one timer active at a time (last one wins)
+- Rest timer persists across page refreshes via `sessionStorage` (stores end timestamp)
+- Timer shows as a floating fixed footer pill; "Skip" dismisses it early
+- When the timer reaches zero, a **"Get ready for your next set!"** modal appears
+- Changes auto-save via debounced `PATCH /api/workouts/:id/sessions/:sessionId`
+- **Complete Session** button is disabled while auto-save is in progress
 - Provides a **Complete Session** button that sets `isActive: false`, `completedAt`, and `durationSeconds`
-- Shows a session timer (elapsed time since `startedAt`)
+- Shows a session elapsed timer (since `startedAt`)
 
 **components/start-session-button.tsx**
 Client button shown on the `/workout/[id]` page. Calls `POST /api/workouts/:id/sessions` and navigates to `/workout-in-progress/[workoutId]`.
@@ -784,7 +793,13 @@ Client button shown on the `/workout/[id]` page. Calls `POST /api/workouts/:id/s
 Props: `name`, `email`. Avatar button (initials) with shadcn DropdownMenu. Shows user name/email and Log out action.
 
 **components/modal.tsx**
-Generic modal wrapper. Props: `open`, `onClose`, `title`, `children`.
+Generic modal wrapper. Props: `open`, `onClose`, `title`, `children`. Capped at `90vh` with scrollable content area so tall modals don't overflow the viewport.
+
+**components/session-history-list.tsx**
+Renders the list of completed sessions on `/history`. Clicking a session row opens a detail modal fetched from `GET /api/sessions/:id`, showing exercises, sets (reps × weight · rest), and completion status per set.
+
+**components/start-workout-button.tsx**
+On click, fetches the workout's exercises and shows a confirmation modal listing all exercises and their sets before starting. Calls `POST /api/workouts/:id/sessions` on confirm and navigates to `/workout-in-progress/[workoutId]`.
 
 ### 8.4 shadcn/ui Components (`components/ui/`)
 
@@ -856,3 +871,4 @@ bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress
 | 1.0 | 2025-01-01 | Initial specification |
 | 2.0 | March 2026 | Added WorkoutInProgress feature: new DB tables (`workout_in_progress`, `workout_in_progress_set`), new API endpoints (§7.6), new route `/workout-in-progress/[workoutId]`, new components (`workout-in-progress-view`, `start-session-button`), updated security and indexes sections |
 | 2.1 | March 2026 | Migrated DB from SQLite (`bun:sqlite`) to PostgreSQL (`pg`); added `image_url` to `workout` table; added `note TEXT` to `workout_item`; added `is_complete BOOLEAN` to `workout_in_progress_set`; updated all SQL to use PostgreSQL types (`BOOLEAN`, `TIMESTAMPTZ`) |
+| 2.2 | March 2026 | Added `rest_seconds INTEGER DEFAULT 60` to `workout_item_set`; rest time read-only in session view, sourced from template; rest countdown timer on set completion with `sessionStorage` persistence and floating footer UI; "Get ready" modal on timer end; start-workout confirmation modal; session history detail modal; animated side-nav drawer replacing inline header nav; scrollable modals (max 90vh); Complete Session disabled while saving |

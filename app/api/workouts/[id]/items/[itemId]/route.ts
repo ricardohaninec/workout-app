@@ -28,11 +28,11 @@ export async function PATCH(request: Request, { params }: Params) {
 
   if (Array.isArray(body.sets)) {
     await run("DELETE FROM workout_item_set WHERE workout_item_id = $1", [itemId]);
-    for (let i = 0; i < (body.sets as { reps: number; weight: number }[]).length; i++) {
-      const s = (body.sets as { reps: number; weight: number }[])[i];
+    for (let i = 0; i < (body.sets as { reps: number; weight: number; rest_seconds?: number }[]).length; i++) {
+      const s = (body.sets as { reps: number; weight: number; rest_seconds?: number }[])[i];
       await run(
-        "INSERT INTO workout_item_set (id, workout_item_id, reps, weight, position) VALUES ($1, $2, $3, $4, $5)",
-        [crypto.randomUUID(), itemId, Number(s.reps) || 1, Number(s.weight) || 0, i]
+        "INSERT INTO workout_item_set (id, workout_item_id, reps, weight, position, rest_seconds) VALUES ($1, $2, $3, $4, $5, $6)",
+        [crypto.randomUUID(), itemId, Number(s.reps) || 1, Number(s.weight) || 0, i, Number(s.rest_seconds) || 60]
       );
     }
     await run("UPDATE workout_item SET updated_at = NOW() WHERE id = $1", [itemId]);

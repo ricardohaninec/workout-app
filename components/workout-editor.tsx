@@ -73,7 +73,7 @@ function SortableItem({
   );
 }
 
-type SetRow = { reps: string; weight: string };
+type SetRow = { reps: string; weight: string; rest_seconds: string };
 
 async function uploadWorkoutImage(file: File): Promise<string> {
   const fd = new FormData();
@@ -187,6 +187,7 @@ export default function WorkoutEditor({
       item.sets.map((s) => ({
         reps: String(s.reps),
         weight: String(s.weight),
+        rest_seconds: String(s.rest_seconds ?? 60),
       })),
     );
     setEditNote(item.note ?? "");
@@ -203,6 +204,7 @@ export default function WorkoutEditor({
         sets: editSets.map((s) => ({
           reps: Number(s.reps) || 1,
           weight: Number(s.weight) || 0,
+          rest_seconds: Number(s.rest_seconds) || 60,
         })),
         note: editNote,
       }),
@@ -497,11 +499,7 @@ export default function WorkoutEditor({
                   min={1}
                   value={s.reps}
                   onChange={(e) =>
-                    setEditSets(
-                      editSets.map((r, j) =>
-                        j === i ? { ...r, reps: e.target.value } : r,
-                      ),
-                    )
+                    setEditSets(editSets.map((r, j) => j === i ? { ...r, reps: e.target.value } : r))
                   }
                   placeholder="Reps"
                   className="w-20"
@@ -513,24 +511,30 @@ export default function WorkoutEditor({
                   step={0.5}
                   value={s.weight}
                   onChange={(e) =>
-                    setEditSets(
-                      editSets.map((r, j) =>
-                        j === i ? { ...r, weight: e.target.value } : r,
-                      ),
-                    )
+                    setEditSets(editSets.map((r, j) => j === i ? { ...r, weight: e.target.value } : r))
                   }
                   placeholder="lb"
                   className="w-24"
                 />
                 <span className="text-xs text-neutral-400">lb</span>
+                <Input
+                  type="number"
+                  min={0}
+                  step={5}
+                  value={s.rest_seconds}
+                  onChange={(e) =>
+                    setEditSets(editSets.map((r, j) => j === i ? { ...r, rest_seconds: e.target.value } : r))
+                  }
+                  placeholder="60"
+                  className="w-16"
+                />
+                <span className="text-xs text-neutral-400">s rest</span>
                 {editSets.length > 1 && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() =>
-                      setEditSets(editSets.filter((_, j) => j !== i))
-                    }
+                    onClick={() => setEditSets(editSets.filter((_, j) => j !== i))}
                     className="ml-auto text-neutral-400 hover:text-red-500"
                   >
                     ✕
@@ -543,7 +547,7 @@ export default function WorkoutEditor({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setEditSets([...editSets, { reps: "", weight: "" }])}
+            onClick={() => setEditSets([...editSets, { reps: "", weight: "", rest_seconds: "60" }])}
             className="self-start text-neutral-500"
           >
             + Add set

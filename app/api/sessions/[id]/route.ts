@@ -10,6 +10,7 @@ type SessionDetailSet = {
   reps: number;
   weight: number;
   position: number;
+  rest_seconds: number;
   is_complete: boolean;
 };
 
@@ -35,10 +36,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const sets = await query<SessionDetailSet>(
     `SELECT wips.id, wips.workout_item_id, e.title AS exercise_title,
-            wips.reps, wips.weight, wips.position, wips.is_complete
+            wips.reps, wips.weight, wips.position,
+            COALESCE(wis.rest_seconds, 60) AS rest_seconds,
+            wips.is_complete
      FROM workout_in_progress_set wips
      JOIN workout_item wi ON wi.id = wips.workout_item_id
      JOIN exercise e ON e.id = wi.exercise_id
+     LEFT JOIN workout_item_set wis ON wis.workout_item_id = wips.workout_item_id
+       AND wis.position = wips.position
      WHERE wips.workout_in_progress_id = $1
      ORDER BY e.title, wips.position`,
     [id]

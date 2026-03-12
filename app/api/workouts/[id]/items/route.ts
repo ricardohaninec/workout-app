@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: Params) {
   if (!exercise) return Response.json({ error: "Exercise not found" }, { status: 404 });
 
   const position = typeof body.position === "number" ? body.position : 0;
-  const sets: { reps: number; weight: number }[] = Array.isArray(body.sets) ? body.sets : [];
+  const sets: { reps: number; weight: number; rest_seconds?: number }[] = Array.isArray(body.sets) ? body.sets : [];
   const note = typeof body.note === "string" && body.note.trim() ? body.note.trim() : null;
 
   const itemId = crypto.randomUUID();
@@ -32,8 +32,8 @@ export async function POST(request: Request, { params }: Params) {
   for (let i = 0; i < sets.length; i++) {
     const s = sets[i];
     await run(
-      "INSERT INTO workout_item_set (id, workout_item_id, reps, weight, position) VALUES ($1, $2, $3, $4, $5)",
-      [crypto.randomUUID(), itemId, Number(s.reps) || 1, Number(s.weight) || 0, i]
+      "INSERT INTO workout_item_set (id, workout_item_id, reps, weight, position, rest_seconds) VALUES ($1, $2, $3, $4, $5, $6)",
+      [crypto.randomUUID(), itemId, Number(s.reps) || 1, Number(s.weight) || 0, i, Number(s.rest_seconds) || 60]
     );
   }
 

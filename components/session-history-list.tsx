@@ -182,6 +182,9 @@ function SessionDetailContent({ session }: { session: SessionDetail }) {
                 <span>{set.reps} reps</span>
                 <span className="text-neutral-400">×</span>
                 <span>{set.weight} kg</span>
+                {set.rest_seconds != null && (
+                  <span className="text-neutral-400">· {set.rest_seconds}s rest</span>
+                )}
                 {set.is_complete && (
                   <span className="ml-auto text-xs font-medium text-green-600">✓</span>
                 )}

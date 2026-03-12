@@ -13,6 +13,8 @@
     "db:migrate-wip": "bun scripts/migrate-workout-in-progress.ts",
     "db:migrate-item-note": "bun scripts/migrate-add-item-note.ts",
     "db:migrate-set-complete": "bun scripts/migrate-add-set-complete.ts",
+    "db:migrate-rest-seconds": "bun scripts/migrate-add-rest-seconds.ts",
+    "db:seed": "bun scripts/seed.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down"
   },

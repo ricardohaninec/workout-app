@@ -48,6 +48,9 @@ export default function WorkoutItemCard({
             {item.sets.map((s, i) => (
               <li key={s.id}>
                 Set {i + 1}: {s.reps} reps × {s.weight} lb
+                {s.rest_seconds != null && (
+                  <span className="ml-1 text-neutral-400">· {s.rest_seconds}s rest</span>
+                )}
               </li>
             ))}
           </ul>

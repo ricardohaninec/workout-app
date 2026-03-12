@@ -50,10 +50,29 @@ This starts a PostgreSQL 16 container on port `5433` (to avoid conflicts with an
 ### 4. Initialise the schema
 
 ```bash
-bun db:init
+bun run db:init
 ```
 
-### 5. Start the development server
+### 5. Run migrations
+
+```bash
+bun run db:migrate-wip           # workout_in_progress tables
+bun run db:migrate-item-note     # note column on workout_item
+bun run db:migrate-set-complete  # is_complete column on workout_in_progress_set
+bun run db:migrate-rest-seconds  # rest_seconds column on workout_item_set
+```
+
+### 6. (Optional) Seed with mock data
+
+Populates the DB with exercises, workouts, and completed sessions for development:
+
+```bash
+bun run db:seed
+```
+
+Login credentials after seeding: `dev@example.com` / `password`
+
+### 7. Start the development server
 
 ```bash
 bun dev
@@ -64,15 +83,20 @@ Open [http://localhost:8080](http://localhost:8080) in your browser.
 ## Available Commands
 
 ```bash
-bun dev          # Start development server (port 8080)
-bun run build    # Build for production
-bun run lint     # Run ESLint
-bun start        # Start production server
+bun dev                          # Start development server (port 8080)
+bun run build                    # Build for production
+bun run lint                     # Run ESLint
+bun start                        # Start production server
 
-bun db:up        # Start local PostgreSQL Docker container
-bun db:down      # Stop local PostgreSQL Docker container
-bun db:init      # Initialise database schema
-bun db:test      # Test database connection
+bun run db:up                    # Start local PostgreSQL Docker container
+bun run db:down                  # Stop local PostgreSQL Docker container
+bun run db:init                  # Initialise database schema
+bun run db:migrate-wip           # Add workout_in_progress tables
+bun run db:migrate-item-note     # Add note column to workout_item
+bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress_set
+bun run db:migrate-rest-seconds  # Add rest_seconds column to workout_item_set
+bun run db:seed                  # Populate DB with mock data (dev@example.com / password)
+bun run db:test                  # Test database connection
 ```
 
 ## Production (Supabase)

@@ -22,11 +22,13 @@ export default function Modal({
 }) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className={className}>
-        <DialogHeader>
+      <DialogContent className={`flex max-h-[90vh] flex-col ${className ?? ""}`}>
+        <DialogHeader className="shrink-0">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   );

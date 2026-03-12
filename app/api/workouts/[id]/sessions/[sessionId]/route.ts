@@ -76,11 +76,18 @@ export async function PATCH(request: Request, { params }: Params) {
         byItem.get(s.workoutItemId)!.push({ reps: s.reps ?? 1, weight: s.weight ?? 0, position: s.position ?? 0 });
       }
       for (const [itemId, sets] of byItem) {
+        // Fetch existing rest_seconds before deleting so we can preserve them
+        const existing = await client.query<{ position: number; rest_seconds: number }>(
+          "SELECT position, rest_seconds FROM workout_item_set WHERE workout_item_id = $1",
+          [itemId]
+        );
+        const restByPosition = new Map(existing.rows.map((r) => [r.position, r.rest_seconds]));
+
         await client.query("DELETE FROM workout_item_set WHERE workout_item_id = $1", [itemId]);
         for (const s of sets) {
           await client.query(
-            "INSERT INTO workout_item_set (id, workout_item_id, reps, weight, position) VALUES ($1, $2, $3, $4, $5)",
-            [crypto.randomUUID(), itemId, s.reps, s.weight, s.position]
+            "INSERT INTO workout_item_set (id, workout_item_id, reps, weight, position, rest_seconds) VALUES ($1, $2, $3, $4, $5, $6)",
+            [crypto.randomUUID(), itemId, s.reps, s.weight, s.position, restByPosition.get(s.position) ?? 60]
           );
         }
         await client.query("UPDATE workout_item SET updated_at = NOW() WHERE id = $1", [itemId]);
