@@ -111,6 +111,8 @@ export default function WorkoutInProgressView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [completing, setCompleting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelConfirm, setCancelConfirm] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const [pendingRemove, setPendingRemove] = useState<{ itemId: string; position: number; setNumber: number } | null>(null);
   const startTime = new Date(startedAt).getTime();
@@ -201,6 +203,12 @@ export default function WorkoutInProgressView({
       if (toggled?.isComplete) startRestTimer(Number(toggled.rest_seconds) || 60);
       return updated;
     });
+  }
+
+  async function cancelSession() {
+    setCancelling(true);
+    await fetch(`/api/workouts/${workoutId}/sessions/${sessionId}`, { method: "DELETE" });
+    router.push(`/workout/${workoutId}`);
   }
 
   async function completeSession() {
@@ -333,7 +341,10 @@ export default function WorkoutInProgressView({
       </ul>
 
       {/* Bottom actions */}
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex justify-between">
+        <Button variant="outline" onClick={() => setCancelConfirm(true)} disabled={completing || cancelling}>
+          Cancel Session
+        </Button>
         <Button onClick={completeSession} disabled={completing || saveStatus === "saving"}>
           {completing ? "Completing…" : "Complete Session"}
         </Button>
@@ -399,6 +410,21 @@ export default function WorkoutInProgressView({
           </p>
           <Button className="w-full" onClick={() => setRestDone(false)}>
             Let&apos;s go!
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Cancel session confirmation modal */}
+      <Modal open={cancelConfirm} onClose={() => setCancelConfirm(false)} title="Cancel Session">
+        <p className="text-sm text-neutral-600">
+          Are you sure you want to cancel this session? All progress will be lost.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => setCancelConfirm(false)}>
+            Keep Going
+          </Button>
+          <Button variant="destructive" size="sm" onClick={cancelSession} disabled={cancelling}>
+            {cancelling ? "Cancelling…" : "Cancel Session"}
           </Button>
         </div>
       </Modal>
