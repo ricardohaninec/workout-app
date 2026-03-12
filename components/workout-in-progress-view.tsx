@@ -76,9 +76,9 @@ export default function WorkoutInProgressView({
   // Auto-save on change with 800ms debounce
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
-    setSaveStatus("saving");
     const snapshot = sets;
     const timer = setTimeout(async () => {
+      setSaveStatus("saving");
       await fetch(`/api/workouts/${workoutId}/sessions/${sessionId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -135,22 +135,6 @@ export default function WorkoutInProgressView({
             : s
         )
     );
-  }
-
-  async function saveProgress() {
-    await fetch(`/api/workouts/${workoutId}/sessions/${sessionId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sets: sets.map((s) => ({
-          workoutItemId: s.workoutItemId,
-          reps: Number(s.reps) || 1,
-          weight: Number(s.weight) || 0,
-          position: s.position,
-          isComplete: s.isComplete,
-        })),
-      }),
-    });
   }
 
   function toggleSetComplete(itemId: string, position: number) {
@@ -317,8 +301,8 @@ export default function WorkoutInProgressView({
 
       {/* Image preview modal */}
       <Modal open={!!previewImage} onClose={() => setPreviewImage(null)} title={previewImage?.title ?? ""} className="sm:max-w-2xl">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         {previewImage && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={previewImage.url}
             alt={previewImage.title}

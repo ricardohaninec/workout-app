@@ -22,7 +22,7 @@ A web application where authenticated users can create, view, edit, delete, and 
 - Next.js (App Router) + Bun runtime
 - TypeScript
 - TailwindCSS 4
-- SQLite via `bun:sqlite` (Bun's built-in SQLite) with raw SQL
+- PostgreSQL via `pg` (node-postgres) with raw SQL
 - shadcn/ui component library
 
 ---
@@ -36,7 +36,7 @@ A web application where authenticated users can create, view, edit, delete, and 
   - Client components for Workouts, exercises editor, and interactive UI
   - Route Handlers (`app/api/.../route.ts`) for JSON APIs
 - **Runtime:** Bun (for dev & production)
-- **Database:** Single SQLite file (`data/app.db`) accessed via `bun:sqlite`
+- **Database:** PostgreSQL accessed via `pg` (node-postgres), connection via `DATABASE_URL` env var
 - **Auth:** better-auth integrated into Next.js (middleware + server helpers)
 
 ### 2.2 Application Layers
@@ -51,7 +51,7 @@ A web application where authenticated users can create, view, edit, delete, and 
 - REST-like JSON endpoints for workouts, exercises, and workout session CRUD
 
 **Data access layer**
-- Raw SQL queries executed via `bun:sqlite`
+- Raw SQL queries executed via `pg` Pool
 - A small helper module for DB access (`lib/db.ts`)
 
 ---
@@ -117,14 +117,14 @@ better-auth manages its own tables. The following are required:
 **user**
 
 ```sql
-CREATE TABLE user (
+CREATE TABLE IF NOT EXISTS "user" (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
-  emailVerified INTEGER NOT NULL DEFAULT 0,
+  "emailVerified" BOOLEAN NOT NULL DEFAULT FALSE,
   image TEXT,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
@@ -133,58 +133,58 @@ CREATE TABLE user (
 | id | TEXT | Unique identifier (primary key) |
 | name | TEXT | User's display name |
 | email | TEXT | User's email address |
-| emailVerified | INTEGER | Whether email is verified (0 or 1) |
+| emailVerified | BOOLEAN | Whether email is verified |
 | image | TEXT | User's image URL (optional) |
-| createdAt | TEXT | Account creation timestamp |
-| updatedAt | TEXT | Last update timestamp |
+| createdAt | TIMESTAMPTZ | Account creation timestamp |
+| updatedAt | TIMESTAMPTZ | Last update timestamp |
 
 **session**
 
 ```sql
-CREATE TABLE session (
+CREATE TABLE IF NOT EXISTS session (
   id TEXT PRIMARY KEY,
-  userId TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
   token TEXT NOT NULL UNIQUE,
-  expiresAt TEXT NOT NULL,
-  ipAddress TEXT,
-  userAgent TEXT,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-  updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (userId) REFERENCES user(id)
+  "expiresAt" TIMESTAMPTZ NOT NULL,
+  "ipAddress" TEXT,
+  "userAgent" TEXT,
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("userId") REFERENCES "user"(id)
 );
 ```
 
 **account**
 
 ```sql
-CREATE TABLE account (
+CREATE TABLE IF NOT EXISTS account (
   id TEXT PRIMARY KEY,
-  userId TEXT NOT NULL,
-  accountId TEXT NOT NULL,
-  providerId TEXT NOT NULL,
-  accessToken TEXT,
-  refreshToken TEXT,
-  accessTokenExpiresAt TEXT,
-  refreshTokenExpiresAt TEXT,
+  "userId" TEXT NOT NULL,
+  "accountId" TEXT NOT NULL,
+  "providerId" TEXT NOT NULL,
+  "accessToken" TEXT,
+  "refreshToken" TEXT,
+  "accessTokenExpiresAt" TIMESTAMPTZ,
+  "refreshTokenExpiresAt" TIMESTAMPTZ,
   scope TEXT,
-  idToken TEXT,
+  "idToken" TEXT,
   password TEXT,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-  updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (userId) REFERENCES user(id)
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("userId") REFERENCES "user"(id)
 );
 ```
 
 **verification**
 
 ```sql
-CREATE TABLE verification (
+CREATE TABLE IF NOT EXISTS verification (
   id TEXT PRIMARY KEY,
   identifier TEXT NOT NULL,
   value TEXT NOT NULL,
-  expiresAt TEXT NOT NULL,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+  "expiresAt" TIMESTAMPTZ NOT NULL,
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
@@ -193,39 +193,41 @@ CREATE TABLE verification (
 #### Workout, Workout Items, Exercises, and Sets
 
 ```sql
-CREATE TABLE workout (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  title TEXT NOT NULL,
-  is_public INTEGER NOT NULL DEFAULT 0,
-  public_slug TEXT UNIQUE,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (user_id) REFERENCES user(id)
-);
-
-CREATE TABLE exercise (
+CREATE TABLE IF NOT EXISTS workout (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   title TEXT NOT NULL,
   image_url TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (user_id) REFERENCES user(id)
+  is_public BOOLEAN NOT NULL DEFAULT FALSE,
+  public_slug TEXT UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
 
-CREATE TABLE workout_item (
+CREATE TABLE IF NOT EXISTS exercise (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  image_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
+
+CREATE TABLE IF NOT EXISTS workout_item (
   id TEXT PRIMARY KEY,
   workout_id TEXT NOT NULL,
   exercise_id TEXT NOT NULL,
   position INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  note TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   FOREIGN KEY (workout_id) REFERENCES workout(id) ON DELETE CASCADE,
   FOREIGN KEY (exercise_id) REFERENCES exercise(id)
 );
 
-CREATE TABLE workout_item_set (
+CREATE TABLE IF NOT EXISTS workout_item_set (
   id TEXT PRIMARY KEY,
   workout_item_id TEXT NOT NULL,
   reps INTEGER NOT NULL DEFAULT 1,
@@ -242,21 +244,21 @@ CREATE TABLE workout_item_set (
 These two tables track live and historical workout sessions.
 
 ```sql
-CREATE TABLE workout_in_progress (
+CREATE TABLE IF NOT EXISTS workout_in_progress (
   id TEXT PRIMARY KEY,
   workout_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
-  is_active INTEGER NOT NULL DEFAULT 1,
-  started_at TEXT NOT NULL DEFAULT (datetime('now')),
-  completed_at TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ,
   duration_seconds INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   FOREIGN KEY (workout_id) REFERENCES workout(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES user(id)
+  FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
 
-CREATE TABLE workout_in_progress_set (
+CREATE TABLE IF NOT EXISTS workout_in_progress_set (
   id TEXT PRIMARY KEY,
   workout_in_progress_id TEXT NOT NULL,
   workout_item_id TEXT NOT NULL,
@@ -264,8 +266,8 @@ CREATE TABLE workout_in_progress_set (
   weight REAL NOT NULL DEFAULT 0,
   position INTEGER NOT NULL DEFAULT 0,
   is_complete BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   FOREIGN KEY (workout_in_progress_id)
     REFERENCES workout_in_progress(id) ON DELETE CASCADE,
   FOREIGN KEY (workout_item_id) REFERENCES workout_item(id)
@@ -279,12 +281,12 @@ CREATE TABLE workout_in_progress_set (
 | id | TEXT | Unique identifier (primary key) |
 | workout_id | TEXT | The workout being performed (FK → workout.id, CASCADE DELETE) |
 | user_id | TEXT | Owner of the session (FK → user.id) |
-| is_active | INTEGER | Whether this session is currently active (0 or 1) |
-| started_at | TEXT | Timestamp when the session was started |
-| completed_at | TEXT | Timestamp when the session was completed (NULL if still active) |
+| is_active | BOOLEAN | Whether this session is currently active |
+| started_at | TIMESTAMPTZ | Timestamp when the session was started |
+| completed_at | TIMESTAMPTZ | Timestamp when the session was completed (NULL if still active) |
 | duration_seconds | INTEGER | Total session duration in seconds (NULL until complete) |
-| created_at | TEXT | Record creation timestamp |
-| updated_at | TEXT | Record last update timestamp |
+| created_at | TIMESTAMPTZ | Record creation timestamp |
+| updated_at | TIMESTAMPTZ | Record last update timestamp |
 
 **workout_in_progress_set**
 
@@ -297,8 +299,8 @@ CREATE TABLE workout_in_progress_set (
 | weight | REAL | Actual weight used in this set (kg) |
 | position | INTEGER | Display order within the workout item |
 | is_complete | BOOLEAN | Whether the user has marked this set as done (default FALSE) |
-| created_at | TEXT | Record creation timestamp |
-| updated_at | TEXT | Record last update timestamp |
+| created_at | TIMESTAMPTZ | Record creation timestamp |
+| updated_at | TIMESTAMPTZ | Record last update timestamp |
 
 > **Cascade behaviour:** Deleting a `workout` automatically deletes all `workout_in_progress` rows (via `ON DELETE CASCADE`), which in turn deletes all `workout_in_progress_set` rows. Deleting a `workout_item` does NOT automatically delete associated `workout_in_progress_set` rows — application logic should handle orphaned sets.
 
@@ -307,33 +309,31 @@ CREATE TABLE workout_in_progress_set (
 ### 5.2 Indexes
 
 ```sql
--- Existing indexes
-CREATE INDEX idx_workout_user_id ON workout(user_id);
-CREATE INDEX idx_workout_title ON workout(title);
-CREATE INDEX idx_workout_created_at ON workout(created_at);
-CREATE UNIQUE INDEX idx_workout_public_slug ON workout(public_slug);
+CREATE INDEX IF NOT EXISTS idx_workout_user_id ON workout(user_id);
+CREATE INDEX IF NOT EXISTS idx_workout_title ON workout(title);
+CREATE INDEX IF NOT EXISTS idx_workout_created_at ON workout(created_at);
 
-CREATE INDEX idx_exercise_user_id ON exercise(user_id);
-CREATE INDEX idx_exercise_title ON exercise(title);
+CREATE INDEX IF NOT EXISTS idx_exercise_user_id ON exercise(user_id);
+CREATE INDEX IF NOT EXISTS idx_exercise_title ON exercise(title);
 
-CREATE INDEX idx_workout_item_workout_id ON workout_item(workout_id);
-CREATE INDEX idx_workout_item_exercise_id ON workout_item(exercise_id);
+CREATE INDEX IF NOT EXISTS idx_workout_item_workout_id ON workout_item(workout_id);
+CREATE INDEX IF NOT EXISTS idx_workout_item_exercise_id ON workout_item(exercise_id);
 
-CREATE INDEX idx_workout_item_set_workout_item_id ON workout_item_set(workout_item_id);
+CREATE INDEX IF NOT EXISTS idx_workout_item_set_workout_item_id ON workout_item_set(workout_item_id);
 
--- New indexes for WorkoutInProgress
-CREATE INDEX idx_wip_workout_id ON workout_in_progress(workout_id);
-CREATE INDEX idx_wip_user_id ON workout_in_progress(user_id);
-CREATE INDEX idx_wip_is_active ON workout_in_progress(is_active);
-CREATE INDEX idx_wip_set_wip_id ON workout_in_progress_set(workout_in_progress_id);
-CREATE INDEX idx_wip_set_item_id ON workout_in_progress_set(workout_item_id);
+CREATE INDEX IF NOT EXISTS idx_wip_workout_id ON workout_in_progress(workout_id);
+CREATE INDEX IF NOT EXISTS idx_wip_user_id ON workout_in_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_wip_is_active ON workout_in_progress(is_active);
+CREATE INDEX IF NOT EXISTS idx_wip_set_wip_id ON workout_in_progress_set(workout_in_progress_id);
+CREATE INDEX IF NOT EXISTS idx_wip_set_item_id ON workout_in_progress_set(workout_item_id);
 ```
 
 ### 5.3 DB Initialization Scripts
 
-- `scripts/init-db.ts` — creates all tables and indexes from scratch (updated to include `workout_in_progress` and `workout_in_progress_set`)
-- `scripts/migrate-workout-items.ts` — existing migration for `workout_item` / `workout_item_set` restructure
-- `scripts/migrate-workout-in-progress.ts` — **NEW** migration adding `workout_in_progress` and `workout_in_progress_set` tables
+- `scripts/init-db.ts` — creates all tables and indexes from scratch (PostgreSQL, includes all tables)
+- `scripts/migrate-workout-in-progress.ts` — migration adding `workout_in_progress` and `workout_in_progress_set` tables
+- `scripts/migrate-add-item-note.ts` — migration adding `note TEXT` column to `workout_item`
+- `scripts/migrate-add-set-complete.ts` — migration adding `is_complete BOOLEAN` column to `workout_in_progress_set`
 
 ---
 
@@ -343,8 +343,8 @@ CREATE INDEX idx_wip_set_item_id ON workout_in_progress_set(workout_item_id);
 
 **File:** `lib/db.ts`
 
-- Initialize `bun:sqlite` `Database` with DB file (`data/app.db`)
-- Export helper functions: `getDb()`, `query<T>()`, `get<T>()`, `run()`
+- Initialize a `pg` `Pool` using `DATABASE_URL` env var (with SSL for non-local connections)
+- Export helper functions: `query<T>()`, `get<T>()`, `run()`
 
 ---
 
@@ -769,7 +769,7 @@ Two-tab modal (New exercise / Existing exercise) built with shadcn Tabs. Calls `
 **components/exercises-manager.tsx**
 Full CRUD for the exercises library. Supports image upload, bulk select/delete, and inline edit via modal.
 
-**components/workout-in-progress-view.tsx** *(NEW)*
+**components/workout-in-progress-view.tsx**
 Props: `workoutId`, `sessionId`, `workoutItems: WorkoutItem[]`, `sets: WorkoutInProgressSet[]`.
 - Renders each Workout Item (exercise name + target sets from template)
 - Allows the user to edit actual reps/weight for each set in the active session
@@ -777,7 +777,7 @@ Props: `workoutId`, `sessionId`, `workoutItems: WorkoutItem[]`, `sets: WorkoutIn
 - Provides a **Complete Session** button that sets `isActive: false`, `completedAt`, and `durationSeconds`
 - Shows a session timer (elapsed time since `startedAt`)
 
-**components/start-session-button.tsx** *(NEW)*
+**components/start-session-button.tsx**
 Client button shown on the `/workout/[id]` page. Calls `POST /api/workouts/:id/sessions` and navigates to `/workout-in-progress/[workoutId]`.
 
 **components/profile-dropdown.tsx**
@@ -824,12 +824,13 @@ Generic modal wrapper. Props: `open`, `onClose`, `title`, `children`.
 ## 11. Development Workflow
 
 ```bash
-bun dev                 # Start dev server at http://localhost:8080
-bun run build           # Production build
-bun run lint            # ESLint
-bun run db:init         # Initialize DB (scripts/init-db.ts)
-bun run db:migrate      # Run existing migrations
-bun run db:migrate-wip  # NEW: add workout_in_progress tables
+bun dev                          # Start dev server at http://localhost:3000
+bun run build                    # Production build
+bun run lint                     # ESLint
+bun run db:init                  # Initialize DB (scripts/init-db.ts)
+bun run db:migrate-wip           # Add workout_in_progress tables
+bun run db:migrate-item-note     # Add note column to workout_item
+bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress_set
 ```
 
 ### 11.1 Setup Order
@@ -854,3 +855,4 @@ bun run db:migrate-wip  # NEW: add workout_in_progress tables
 |---|---|---|
 | 1.0 | 2025-01-01 | Initial specification |
 | 2.0 | March 2026 | Added WorkoutInProgress feature: new DB tables (`workout_in_progress`, `workout_in_progress_set`), new API endpoints (§7.6), new route `/workout-in-progress/[workoutId]`, new components (`workout-in-progress-view`, `start-session-button`), updated security and indexes sections |
+| 2.1 | March 2026 | Migrated DB from SQLite (`bun:sqlite`) to PostgreSQL (`pg`); added `image_url` to `workout` table; added `note TEXT` to `workout_item`; added `is_complete BOOLEAN` to `workout_in_progress_set`; updated all SQL to use PostgreSQL types (`BOOLEAN`, `TIMESTAMPTZ`) |

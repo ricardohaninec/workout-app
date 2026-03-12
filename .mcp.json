@@ -1,5 +1,10 @@
 {
   "mcpServers": {
+    "eslint": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@eslint/mcp@latest"]
+    },
     "shadcn": {
       "command": "npx",
       "args": [
