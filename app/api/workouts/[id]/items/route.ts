@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: Params) {
 
   await run("UPDATE workout SET updated_at = NOW() WHERE id = $1", [workoutId]);
 
-  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string };
+  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; note: string | null; created_at: string; updated_at: string };
   const item = (await get<ItemRow>("SELECT * FROM workout_item WHERE id = $1", [itemId]))!;
 
   return Response.json(
