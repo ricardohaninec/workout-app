@@ -11,8 +11,8 @@ type Props = { name: string; email: string };
 
 const navLinks = [
   { href: "/dashboard", label: "My Workouts", icon: LayoutDashboard },
-  { href: "/exercises", label: "My Exercises", icon: Dumbbell },
   { href: "/history", label: "History", icon: History },
+  { href: "/exercises", label: "My Exercises", icon: Dumbbell },
 ];
 
 export default function Header({ name, email }: Props) {

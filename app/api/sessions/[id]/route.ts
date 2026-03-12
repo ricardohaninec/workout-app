@@ -45,7 +45,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
      LEFT JOIN workout_item_set wis ON wis.workout_item_id = wips.workout_item_id
        AND wis.position = wips.position
      WHERE wips.workout_in_progress_id = $1
-     ORDER BY e.title, wips.position`,
+     ORDER BY wi.position, wips.position`,
     [id]
   );
 

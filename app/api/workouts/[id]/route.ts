@@ -90,7 +90,15 @@ export async function DELETE(request: Request, { params }: Params) {
   if (workout.image_url) {
     await del(workout.image_url).catch(() => {});
   }
-  // workout_item and workout_item_set cascade on workout delete
+  // Delete in_progress sets first (no cascade on workout_item_id FK)
+  await run(
+    `DELETE FROM workout_in_progress_set
+     WHERE workout_in_progress_id IN (
+       SELECT id FROM workout_in_progress WHERE workout_id = $1
+     )`,
+    [id]
+  );
+  // workout_in_progress, workout_item, workout_item_set all cascade from workout
   await run("DELETE FROM workout WHERE id = $1", [id]);
 
   return Response.json({ message: "Workout deleted successfully." });
