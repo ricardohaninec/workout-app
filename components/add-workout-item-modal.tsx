@@ -49,7 +49,7 @@ export default function AddWorkoutItemModal({
   }, [tab]);
 
   function parsedSets() {
-    return sets.map((s) => ({ reps: Number(s.reps) || 1, weight: Number(s.weight) || 0 }));
+    return sets.map((s) => ({ reps: Number(s.reps) || 1, weight: Number(s.weight) || 0, rest_seconds: 0 }));
   }
 
   function handleNew(e: React.FormEvent) {
