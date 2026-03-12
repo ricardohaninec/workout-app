@@ -8,6 +8,7 @@ import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import PlaceholderImage from "@/components/icons/placeholder-image";
+import CreateWorkoutButton from "@/components/create-workout-button";
 
 export default function WorkoutList({ workouts: initial }: { workouts: Workout[] }) {
   const router = useRouter();
@@ -57,18 +58,10 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
-        {selecting ? (
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
-              {allSelected ? "Deselect all" : "Select all"}
-            </Button>
-            <span className="text-sm text-neutral-400">{selected.size} selected</span>
-          </div>
-        ) : (
-          <div />
-        )}
-        <div className="flex gap-2">
+      {/* Action row: New Workout + Select */}
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <CreateWorkoutButton />
+        <div className="flex items-center gap-2">
           {selecting && selected.size > 0 && (
             <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
               Delete {selected.size}
@@ -77,11 +70,20 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
           <Button
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
             onClick={selecting ? exitSelecting : () => setSelecting(true)}
           >
             {selecting ? "Cancel" : "Select"}
           </Button>
         </div>
+        {selecting && (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
+              {allSelected ? "Deselect all" : "Select all"}
+            </Button>
+            <span className="text-sm text-neutral-400">{selected.size} selected</span>
+          </div>
+        )}
       </div>
 
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

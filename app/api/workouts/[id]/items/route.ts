@@ -21,11 +21,12 @@ export async function POST(request: Request, { params }: Params) {
 
   const position = typeof body.position === "number" ? body.position : 0;
   const sets: { reps: number; weight: number }[] = Array.isArray(body.sets) ? body.sets : [];
+  const note = typeof body.note === "string" && body.note.trim() ? body.note.trim() : null;
 
   const itemId = crypto.randomUUID();
   await run(
-    "INSERT INTO workout_item (id, workout_id, exercise_id, position) VALUES ($1, $2, $3, $4)",
-    [itemId, workoutId, exerciseId, position]
+    "INSERT INTO workout_item (id, workout_id, exercise_id, position, note) VALUES ($1, $2, $3, $4, $5)",
+    [itemId, workoutId, exerciseId, position, note]
   );
 
   for (let i = 0; i < sets.length; i++) {

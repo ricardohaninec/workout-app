@@ -11,6 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MessageSquare } from "lucide-react";
 
 export default function WorkoutItemCard({
   item,
@@ -35,9 +37,19 @@ export default function WorkoutItemCard({
               {dragHandle}
               <span className="font-semibold leading-tight">{item.exercise.title}</span>
             </div>
-            <Badge variant="secondary" className="shrink-0">
-              {item.sets.length} set{item.sets.length !== 1 ? "s" : ""}
-            </Badge>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {item.note && (
+                <Tooltip>
+                  <TooltipTrigger className="flex items-center justify-center text-neutral-400 hover:text-neutral-600 cursor-default">
+                    <MessageSquare size={14} />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-56">{item.note}</TooltipContent>
+                </Tooltip>
+              )}
+              <Badge variant="secondary">
+                {item.sets.length} set{item.sets.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
           </div>
           <ul className="mt-1 flex flex-col gap-0.5 text-sm text-neutral-500">
             {item.sets.map((s, i) => (
@@ -46,6 +58,12 @@ export default function WorkoutItemCard({
               </li>
             ))}
           </ul>
+          {item.note && (
+            <p className="mt-2 flex items-start gap-1.5 text-xs text-neutral-400">
+              <MessageSquare size={12} className="mt-0.5 shrink-0" />
+              {item.note}
+            </p>
+          )}
         </div>
 
         {/* Right: image */}

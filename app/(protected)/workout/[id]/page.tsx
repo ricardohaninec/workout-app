@@ -16,9 +16,9 @@ export default async function WorkoutPage({ params }: Props) {
   );
   if (!workout) notFound();
 
-  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string; exercise_title: string; exercise_image_url: string | null };
+  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; note: string | null; created_at: string; updated_at: string; exercise_title: string; exercise_image_url: string | null };
   const rows = await query<ItemRow>(
-    `SELECT wi.id, wi.workout_id, wi.exercise_id, wi.position, wi.created_at, wi.updated_at,
+    `SELECT wi.id, wi.workout_id, wi.exercise_id, wi.position, wi.note, wi.created_at, wi.updated_at,
             e.title AS exercise_title, e.image_url AS exercise_image_url
      FROM workout_item wi
      JOIN exercise e ON e.id = wi.exercise_id
@@ -33,6 +33,7 @@ export default async function WorkoutPage({ params }: Props) {
       workout_id: row.workout_id,
       exercise_id: row.exercise_id,
       position: row.position,
+      note: row.note ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
       exercise: { id: row.exercise_id, title: row.exercise_title, image_url: row.exercise_image_url },

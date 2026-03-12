@@ -21,6 +21,11 @@ export async function PATCH(request: Request, { params }: Params) {
     await run("UPDATE workout_item SET position = $1, updated_at = NOW() WHERE id = $2", [body.position, itemId]);
   }
 
+  if ("note" in body) {
+    const note = typeof body.note === "string" && body.note.trim() ? body.note.trim() : null;
+    await run("UPDATE workout_item SET note = $1, updated_at = NOW() WHERE id = $2", [note, itemId]);
+  }
+
   if (Array.isArray(body.sets)) {
     await run("DELETE FROM workout_item_set WHERE workout_item_id = $1", [itemId]);
     for (let i = 0; i < (body.sets as { reps: number; weight: number }[]).length; i++) {

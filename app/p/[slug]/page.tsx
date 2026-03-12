@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { get, query } from "@/lib/db";
 import type { Workout, WorkoutItem, WorkoutItemSet } from "@/lib/types";
 import WorkoutItemCard from "@/components/workout-item-card";
+import Logo from "@/components/icons/logo";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -40,9 +41,9 @@ export default async function PublicWorkoutPage({ params }: Props) {
   );
   if (!workout) notFound();
 
-  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; created_at: string; updated_at: string; exercise_title: string; exercise_image_url: string | null };
+  type ItemRow = { id: string; workout_id: string; exercise_id: string; position: number; note: string | null; created_at: string; updated_at: string; exercise_title: string; exercise_image_url: string | null };
   const rows = await query<ItemRow>(
-    `SELECT wi.id, wi.workout_id, wi.exercise_id, wi.position, wi.created_at, wi.updated_at,
+    `SELECT wi.id, wi.workout_id, wi.exercise_id, wi.position, wi.note, wi.created_at, wi.updated_at,
             e.title AS exercise_title, e.image_url AS exercise_image_url
      FROM workout_item wi
      JOIN exercise e ON e.id = wi.exercise_id
@@ -57,6 +58,7 @@ export default async function PublicWorkoutPage({ params }: Props) {
       workout_id: row.workout_id,
       exercise_id: row.exercise_id,
       position: row.position,
+      note: row.note ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
       exercise: { id: row.exercise_id, title: row.exercise_title, image_url: row.exercise_image_url },
@@ -68,6 +70,21 @@ export default async function PublicWorkoutPage({ params }: Props) {
   );
 
   return (
+    <>
+      <header className="sticky top-0 z-40 border-b bg-white">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-8">
+          <div className="flex items-center gap-2">
+            <Logo />
+            <p className="text-sm text-neutral-500">Viewing a shared workout</p>
+          </div>
+          <a
+            href="/dashboard"
+            className="rounded-full bg-neutral-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700 transition-colors"
+          >
+            Open Workout App
+          </a>
+        </div>
+      </header>
     <main className="mx-auto max-w-3xl p-4 sm:p-8">
       {workout.image_url && (
         <div className="mb-6 w-full h-48 rounded-xl overflow-hidden">
@@ -93,5 +110,6 @@ export default async function PublicWorkoutPage({ params }: Props) {
         )}
       </section>
     </main>
+    </>
   );
 }

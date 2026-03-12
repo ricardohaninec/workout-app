@@ -23,6 +23,7 @@ export default function AddWorkoutItemModal({
   const [title, setTitle] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [sets, setSets] = useState<SetRow[]>(DEFAULT_SETS);
+  const [note, setNote] = useState("");
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -32,6 +33,7 @@ export default function AddWorkoutItemModal({
     setTitle("");
     setImageUrl(null);
     setSets(DEFAULT_SETS);
+    setNote("");
     setSearch("");
     setTab("new");
     setSelectedExercise(null);
@@ -58,6 +60,7 @@ export default function AddWorkoutItemModal({
       exerciseTitle: title.trim() || "Untitled Exercise",
       exerciseImageUrl: imageUrl,
       sets: parsedSets(),
+      note: note.trim() || null,
     });
     close();
   }
@@ -72,6 +75,7 @@ export default function AddWorkoutItemModal({
       exerciseTitle: selectedExercise.title,
       exerciseImageUrl: selectedExercise.image_url,
       sets: parsedSets(),
+      note: note.trim() || null,
     });
     close();
   }
@@ -109,6 +113,17 @@ export default function AddWorkoutItemModal({
               </div>
 
               <SetsEditor sets={sets} onChange={setSets} />
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Note <span className="text-neutral-400">(optional)</span></Label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. keep elbows tucked, slow on the way down…"
+                  rows={2}
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                />
+              </div>
 
               <Button type="submit">Add</Button>
             </form>
@@ -151,6 +166,17 @@ export default function AddWorkoutItemModal({
                   </div>
 
                   <SetsEditor sets={sets} onChange={setSets} />
+
+                  <div className="flex flex-col gap-1.5">
+                    <Label>Note <span className="text-neutral-400">(optional)</span></Label>
+                    <textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="e.g. keep elbows tucked, slow on the way down…"
+                      rows={2}
+                      className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                    />
+                  </div>
 
                   <Button type="submit">Add</Button>
                 </form>

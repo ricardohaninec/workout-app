@@ -30,7 +30,7 @@ export default function ProfileDropdown({ name, email }: { name: string; email: 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white hover:bg-neutral-700"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white hover:bg-neutral-700"
         aria-label="Profile menu"
       >
         {initials}

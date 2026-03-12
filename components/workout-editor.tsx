@@ -17,7 +17,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { GripVertical, MessageSquare } from "lucide-react";
 import type { PendingWorkoutItem, Workout, WorkoutItem } from "@/lib/types";
 import AddWorkoutItemModal from "@/components/add-workout-item-modal";
 import Modal from "@/components/modal";
@@ -125,6 +125,7 @@ export default function WorkoutEditor({
   // Edit item state
   const [editItem, setEditItem] = useState<WorkoutItem | null>(null);
   const [editSets, setEditSets] = useState<SetRow[]>([]);
+  const [editNote, setEditNote] = useState<string>("");
   const [editSaving, setEditSaving] = useState(false);
 
   // Remove item state
@@ -162,6 +163,7 @@ export default function WorkoutEditor({
   function openEdit(item: WorkoutItem) {
     setEditItem(item);
     setEditSets(item.sets.map((s) => ({ reps: String(s.reps), weight: String(s.weight) })));
+    setEditNote(item.note ?? "");
   }
 
   async function handleSaveEdit(e: React.FormEvent) {
@@ -173,6 +175,7 @@ export default function WorkoutEditor({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sets: editSets.map((s) => ({ reps: Number(s.reps) || 1, weight: Number(s.weight) || 0 })),
+        note: editNote,
       }),
     });
     setEditSaving(false);
@@ -218,7 +221,7 @@ export default function WorkoutEditor({
       await fetch(`/api/workouts/${workoutId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exerciseId, sets: item.sets }),
+        body: JSON.stringify({ exerciseId, sets: item.sets, note: item.note }),
       });
     }
 
@@ -249,14 +252,17 @@ export default function WorkoutEditor({
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-8">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-3">
+        {/* Title */}
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="text-2xl font-bold bg-transparent outline-none border-b border-transparent hover:border-neutral-300 focus:border-neutral-900 transition-colors w-full min-w-0"
+          className="text-xl font-bold bg-transparent outline-none border-b border-transparent hover:border-neutral-300 focus:border-neutral-900 transition-colors w-full min-w-0 sm:text-2xl"
         />
-        <div className="flex gap-2 shrink-0">
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-2">
           {isDirty && (
             <Button onClick={save} disabled={saving} size="sm">
               {saving ? "Saving…" : "Save"}
@@ -280,6 +286,33 @@ export default function WorkoutEditor({
             Delete
           </Button>
         </div>
+
+        {/* Public link */}
+        {isPublic && slug && (
+          <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2">
+            <span className="text-xs text-green-600 font-medium shrink-0">Public link</span>
+            <a
+              href={`/p/${slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 truncate text-sm text-green-700 underline underline-offset-2"
+            >
+              {origin ? `${origin}/p/${slug}` : `/p/${slug}`}
+            </a>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={async () => {
+                await navigator.clipboard.writeText(`${origin}/p/${slug}`);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2500);
+              }}
+              className="shrink-0 border-green-300 text-green-700 hover:bg-green-100"
+            >
+              {copied ? "Copied!" : "Copy"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Workout image */}
@@ -303,32 +336,6 @@ export default function WorkoutEditor({
           </label>
         )}
       </div>
-
-      {isPublic && slug && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2">
-          <span className="text-xs text-green-600 font-medium shrink-0">Public link</span>
-          <a
-            href={`/p/${slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 truncate text-sm text-green-700 underline underline-offset-2"
-          >
-            {origin ? `${origin}/p/${slug}` : `/p/${slug}`}
-          </a>
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={async () => {
-              await navigator.clipboard.writeText(`${origin}/p/${slug}`);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2500);
-            }}
-            className="shrink-0 border-green-300 text-green-700 hover:bg-green-100"
-          >
-            {copied ? "Copied!" : "Copy"}
-          </Button>
-        </div>
-      )}
 
       <section>
         <div className="mb-3 flex items-center justify-between">
@@ -362,6 +369,12 @@ export default function WorkoutEditor({
                           <li key={i}>Set {i + 1}: {s.reps} reps × {s.weight} lb</li>
                         ))}
                       </ul>
+                      {item.note && (
+                        <p className="mt-2 flex items-start gap-1.5 text-xs text-neutral-400">
+                          <MessageSquare size={12} className="mt-0.5 shrink-0" />
+                          {item.note}
+                        </p>
+                      )}
                     </div>
                     <div className="w-28 shrink-0 bg-neutral-100 -my-4">
                       {item.exerciseImageUrl ? (
@@ -407,10 +420,10 @@ export default function WorkoutEditor({
                   step={0.5}
                   value={s.weight}
                   onChange={(e) => setEditSets(editSets.map((r, j) => j === i ? { ...r, weight: e.target.value } : r))}
-                  placeholder="kg"
+                  placeholder="lb"
                   className="w-24"
                 />
-                <span className="text-xs text-neutral-400">kg</span>
+                <span className="text-xs text-neutral-400">lb</span>
                 {editSets.length > 1 && (
                   <Button
                     type="button"
@@ -434,6 +447,17 @@ export default function WorkoutEditor({
           >
             + Add set
           </Button>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="edit-note">Note <span className="text-neutral-400 font-normal">(optional)</span></Label>
+            <textarea
+              id="edit-note"
+              value={editNote}
+              onChange={(e) => setEditNote(e.target.value)}
+              placeholder="e.g. keep elbows tucked, slow on the way down…"
+              rows={2}
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+            />
+          </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setEditItem(null)}>Cancel</Button>
             <Button type="submit" disabled={editSaving}>{editSaving ? "Saving…" : "Save"}</Button>

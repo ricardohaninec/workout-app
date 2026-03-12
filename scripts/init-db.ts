@@ -83,6 +83,7 @@ await pool.query(`
     workout_id TEXT NOT NULL,
     exercise_id TEXT NOT NULL,
     position INTEGER NOT NULL DEFAULT 0,
+    note TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     FOREIGN KEY (workout_id) REFERENCES workout(id) ON DELETE CASCADE,
