@@ -57,6 +57,7 @@ export type WorkoutInProgressSet = {
   reps: number;
   weight: number;
   position: number;
+  is_complete: boolean;
   created_at: string;
   updated_at: string;
 };

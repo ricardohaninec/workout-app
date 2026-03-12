@@ -64,8 +64,8 @@ export async function PATCH(request: Request, { params }: Params) {
       );
       for (const s of body.sets) {
         await client.query(
-          "INSERT INTO workout_in_progress_set (id, workout_in_progress_id, workout_item_id, reps, weight, position) VALUES ($1, $2, $3, $4, $5, $6)",
-          [crypto.randomUUID(), sessionId, s.workoutItemId, s.reps ?? 1, s.weight ?? 0, s.position ?? 0]
+          "INSERT INTO workout_in_progress_set (id, workout_in_progress_id, workout_item_id, reps, weight, position, is_complete) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+          [crypto.randomUUID(), sessionId, s.workoutItemId, s.reps ?? 1, s.weight ?? 0, s.position ?? 0, s.isComplete ?? false]
         );
       }
 

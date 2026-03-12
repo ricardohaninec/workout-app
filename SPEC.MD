@@ -263,6 +263,7 @@ CREATE TABLE workout_in_progress_set (
   reps INTEGER NOT NULL DEFAULT 1,
   weight REAL NOT NULL DEFAULT 0,
   position INTEGER NOT NULL DEFAULT 0,
+  is_complete BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (workout_in_progress_id)
@@ -295,6 +296,7 @@ CREATE TABLE workout_in_progress_set (
 | reps | INTEGER | Actual reps performed in this set |
 | weight | REAL | Actual weight used in this set (kg) |
 | position | INTEGER | Display order within the workout item |
+| is_complete | BOOLEAN | Whether the user has marked this set as done (default FALSE) |
 | created_at | TEXT | Record creation timestamp |
 | updated_at | TEXT | Record last update timestamp |
 
