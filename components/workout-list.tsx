@@ -89,7 +89,7 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
           <li
             key={w.id}
             onClick={selecting ? () => toggleSelect(w.id) : undefined}
-            className={`overflow-hidden rounded-xl border bg-white transition-colors ${
+            className={`flex flex-col overflow-hidden rounded-xl border bg-white transition-colors ${
               selecting ? "cursor-pointer select-none" : ""
             } ${selecting && selected.has(w.id) ? "border-neutral-900 ring-2 ring-neutral-900" : ""}`}
           >
@@ -103,7 +103,7 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
               </div>
             )}
 
-            <div className="p-4">
+            <div className="flex flex-1 flex-col p-4">
               <div className="mb-1 flex items-start justify-between gap-2">
                 <span className="font-semibold leading-tight">{w.title}</span>
                 {w.is_public ? (
@@ -124,7 +124,7 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
                 Updated {new Date(w.updated_at).toLocaleDateString()}
               </p>
               {!selecting && (
-                <Link href={`/workout/${w.id}`}>
+                <Link href={`/workout/${w.id}`} className="mt-auto">
                   <Button className="w-full">Open Workout</Button>
                 </Link>
               )}

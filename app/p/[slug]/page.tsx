@@ -1,9 +1,32 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { get, query } from "@/lib/db";
 import type { Workout, WorkoutItem, WorkoutItemSet } from "@/lib/types";
 import WorkoutItemCard from "@/components/workout-item-card";
 
 type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const workout = await get<Workout>(
+    "SELECT title, image_url FROM workout WHERE public_slug = $1 AND is_public = TRUE",
+    [slug]
+  );
+  if (!workout) return {};
+
+  return {
+    title: workout.title,
+    openGraph: {
+      title: workout.title,
+      ...(workout.image_url && { images: [{ url: workout.image_url }] }),
+    },
+    twitter: {
+      card: workout.image_url ? "summary_large_image" : "summary",
+      title: workout.title,
+      ...(workout.image_url && { images: [workout.image_url] }),
+    },
+  };
+}
 
 export default async function PublicWorkoutPage({ params }: Props) {
   const { slug } = await params;

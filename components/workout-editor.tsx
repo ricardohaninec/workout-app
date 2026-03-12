@@ -117,6 +117,7 @@ export default function WorkoutEditor({
   const [shareLoading, setShareLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [removeImageOpen, setRemoveImageOpen] = useState(false);
   const [origin, setOrigin] = useState("");
   useEffect(() => { setOrigin(window.location.origin); }, []);
   useEffect(() => { setItems(savedItems); }, [savedItems]);
@@ -289,7 +290,7 @@ export default function WorkoutEditor({
             <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
             <button
               type="button"
-              onClick={handleRemoveImage}
+              onClick={() => setRemoveImageOpen(true)}
               className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs text-white hover:bg-red-600 transition-colors"
             >
               ✕
@@ -349,27 +350,29 @@ export default function WorkoutEditor({
 
             {pending.map((item) => (
               <li key={item.tempId}>
-                <Card className="pt-0 overflow-hidden border-dashed">
-                  <div className="relative h-28 w-full">
-                    {item.exerciseImageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.exerciseImageUrl} alt={item.exerciseTitle} className="h-full w-full object-cover brightness-90" />
-                    ) : (
-                      <div className="h-full w-full bg-neutral-200" />
-                    )}
-                  </div>
-                  <CardHeader>
-                    <CardAction><Badge variant="secondary">unsaved</Badge></CardAction>
-                    <CardTitle>{item.exerciseTitle}</CardTitle>
-                    <CardDescription>
-                      <ul className="flex flex-col gap-0.5">
+                <Card className="overflow-hidden border-dashed">
+                  <div className="flex">
+                    <div className="flex flex-1 flex-col gap-1 p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-semibold leading-tight">{item.exerciseTitle}</span>
+                        <Badge variant="secondary" className="shrink-0">unsaved</Badge>
+                      </div>
+                      <ul className="mt-1 flex flex-col gap-0.5 text-sm text-neutral-500">
                         {item.sets.map((s, i) => (
                           <li key={i}>Set {i + 1}: {s.reps} reps × {s.weight} lb</li>
                         ))}
                       </ul>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter>
+                    </div>
+                    <div className="w-28 shrink-0 bg-neutral-100 -my-4">
+                      {item.exerciseImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.exerciseImageUrl} alt={item.exerciseTitle} className="h-full w-full object-contain" />
+                      ) : (
+                        <div className="h-full w-full bg-neutral-200" />
+                      )}
+                    </div>
+                  </div>
+                  <CardFooter className="border-t pt-3">
                     <Button variant="outline" size="sm" className="w-full border-red-200 text-red-600 hover:bg-red-50"
                       onClick={() => setPending((prev) => prev.filter((p) => p.tempId !== item.tempId))}>
                       Remove
@@ -448,6 +451,15 @@ export default function WorkoutEditor({
           <Button variant="destructive" onClick={handleRemoveItem} disabled={removeLoading}>
             {removeLoading ? "Removing…" : "Remove"}
           </Button>
+        </div>
+      </Modal>
+
+      {/* Remove workout image confirmation */}
+      <Modal open={removeImageOpen} onClose={() => setRemoveImageOpen(false)} title="Remove Image">
+        <p className="mb-6 text-sm text-neutral-600">Are you sure you want to remove the workout image?</p>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setRemoveImageOpen(false)}>Cancel</Button>
+          <Button variant="destructive" onClick={() => { setRemoveImageOpen(false); handleRemoveImage(); }}>Remove</Button>
         </div>
       </Modal>
 
