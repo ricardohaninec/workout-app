@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Play, ActivitySquare, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Play, ActivitySquare } from "lucide-react";
+import Modal from "@/components/modal";
+import type { WorkoutItem } from "@/lib/types";
 
 export default function StartWorkoutButton({
   workoutId,
@@ -14,33 +16,88 @@ export default function StartWorkoutButton({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [exercises, setExercises] = useState<WorkoutItem[]>([]);
 
   async function handleClick() {
+    // If resuming an active session, no confirmation needed
+    if (hasActiveSession) {
+      router.push(`/workout-in-progress/${workoutId}`);
+      return;
+    }
+
     setLoading(true);
     try {
-      if (hasActiveSession) {
-        router.push(`/workout-in-progress/${workoutId}`);
-        return;
+      const res = await fetch(`/api/workouts/${workoutId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setExercises(data.workoutItems ?? []);
       }
+    } finally {
+      setLoading(false);
+    }
+    setModalOpen(true);
+  }
+
+  async function handleConfirm() {
+    setStarting(true);
+    try {
       const res = await fetch(`/api/workouts/${workoutId}/sessions`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to start session");
       router.push(`/workout-in-progress/${workoutId}`);
-    } finally {
-      setLoading(false);
+    } catch {
+      setStarting(false);
     }
   }
 
   return (
-    <Button
-      className={`w-full ${hasActiveSession ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
-      onClick={handleClick}
-      disabled={loading}
-    >
-      {loading ? "Loading…" : hasActiveSession ? (
-        <><ActivitySquare size={15} className="shrink-0" /> View Workout Progress</>
-      ) : (
-        <><Play size={15} className="shrink-0" /> Start Workout</>
-      )}
-    </Button>
+    <>
+      <Button
+        className={`w-full ${hasActiveSession ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+        onClick={handleClick}
+        disabled={loading}
+      >
+        {loading ? "Loading…" : hasActiveSession ? (
+          <><ActivitySquare size={15} className="shrink-0" /> View Workout Progress</>
+        ) : (
+          <><Play size={15} className="shrink-0" /> Start Workout</>
+        )}
+      </Button>
+
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Start Workout">
+        <p className="mb-4 text-sm text-neutral-500">
+          {exercises.length === 0
+            ? "This workout has no exercises yet."
+            : `${exercises.length} exercise${exercises.length !== 1 ? "s" : ""} in this workout:`}
+        </p>
+
+        {exercises.length > 0 && (
+          <ul className="mb-6 space-y-2">
+            {exercises.map((item) => (
+              <li key={item.id} className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
+                <Dumbbell size={15} className="shrink-0 text-neutral-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{item.exercise.title}</p>
+                  <p className="text-xs text-neutral-400">
+                    {item.sets.length} set{item.sets.length !== 1 ? "s" : ""}
+                    {item.sets.length > 0 && ` · ${item.sets[0].weight}kg × ${item.sets[0].reps} reps`}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setModalOpen(false)} disabled={starting}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} disabled={starting || exercises.length === 0}>
+            {starting ? "Starting…" : "Start Workout"}
+          </Button>
+        </div>
+      </Modal>
+    </>
   );
 }
