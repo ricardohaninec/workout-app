@@ -1,10 +1,13 @@
-# Technical Specification – Note Taking Web App
+# Technical Specification – Note Taking / Workout Web App
+> Version 2.0 — Updated March 2026
+
+---
 
 ## 1. Overview
 
-A web application where authenticated users can create, view, edit, delete, and publicly share workouts. Workouts are created with custom components and then stored as JSON in a SQLite database, and rendered in the browser.
+A web application where authenticated users can create, view, edit, delete, and publicly share workouts. Workouts are created with custom components and stored as JSON in a SQLite database, and rendered in the browser.
 
-### Core Features
+### 1.1 Core Features
 
 - User authentication (sign up, login, logout) via better-auth
 - Authenticated note management (CRUD)
@@ -12,8 +15,9 @@ A web application where authenticated users can create, view, edit, delete, and 
 - One Workout Item references exactly one Exercise and owns its own Sets
 - Exercises are reusable templates (title only — no sets stored on the exercise itself)
 - Public sharing of workouts via a public URL (toggle on/off)
+- Workout sessions tracked via WorkoutInProgress — multiple sessions per workout, one active at a time
 
-### Tech
+### 1.2 Tech Stack
 
 - Next.js (App Router) + Bun runtime
 - TypeScript
@@ -29,7 +33,7 @@ A web application where authenticated users can create, view, edit, delete, and 
 
 - **Frontend & Backend:** Next.js (App Router)
   - Server components for data fetching
-  - Client components for Workouts and exercises editor and interactive UI
+  - Client components for Workouts, exercises editor, and interactive UI
   - Route Handlers (`app/api/.../route.ts`) for JSON APIs
 - **Runtime:** Bun (for dev & production)
 - **Database:** Single SQLite file (`data/app.db`) accessed via `bun:sqlite`
@@ -38,18 +42,15 @@ A web application where authenticated users can create, view, edit, delete, and 
 ### 2.2 Application Layers
 
 **Presentation layer**
-
 - Next.js pages and components
 - TailwindCSS 4 for styling
 - shadcn/ui for UI primitives (Button, Input, Label, Tabs, Checkbox, Dialog, DropdownMenu)
 - lucide-react for icons
 
 **API layer**
-
-- REST-like JSON endpoints for notes CRUD & sharing
+- REST-like JSON endpoints for workouts, exercises, and workout session CRUD
 
 **Data access layer**
-
 - Raw SQL queries executed via `bun:sqlite`
 - A small helper module for DB access (`lib/db.ts`)
 
@@ -59,110 +60,49 @@ A web application where authenticated users can create, view, edit, delete, and 
 
 ### 3.1 Authentication
 
-Users can:
+Users can register (email + password, minimum validation) and log in / log out. Authentication state is accessible on server (for SSR) and on client (for protected UI).
 
-- Register (email + password, minimum validation)
-- Log in / log out
-
-Authentication state is accessible on server (for SSR) and on client (for protected UI).
-
-Unauthenticated users:
-
-- Can access public shared note URLs (read-only)
-- Cannot access dashboard or personal notes
+**Unauthenticated users:**
+- Can access public shared workout URLs (read-only)
+- Cannot access dashboard, personal workouts, or workout sessions
 
 ### 3.2 Workouts and Exercises Management (Authenticated)
 
-**Create a new Workout:**
-
-- Default title: "Untitled Workout"
-
-**View a list of own Workouts:**
-
-- Show title, last updated at, shared status
-
-**View a single Workout:**
-
-- Load workout editor so you can add Workout Items (each linking an Exercise + its sets)
-
-**Update Workout:**
-
-- Change title
-- Add / remove Workout Items
-- Auto-update `updated_at`
-
-**Delete Workout:**
-
-- Hard delete — cascades to all associated Workout Items and their Sets
-- The referenced Exercises are NOT deleted
-
-**Create a new Exercise:**
-
-- Default title: "Untitled Exercise"
-- Exercises are simple templates — they hold no set data
-
-**View a list of own Exercises:**
-
-- Show title, last updated at
-
-**View a single Exercise:**
-
-- Load exercise editor to rename it
-
-**Update Exercise:**
-
-- Change title
-- Auto-update `updated_at`
-
-**Delete Exercise:**
-
-- Hard delete of the exercise record only
-- Workout Items that referenced this exercise are NOT automatically deleted (handle via FK constraint or application logic)
+See full CRUD details in Section 7 (API Design). Key behaviors:
+- Create workout with default title `"Untitled Workout"`
+- Hard delete cascades to Workout Items and Sets; Exercises are never deleted
+- Exercises are reusable templates — no set data stored on the exercise itself
 
 ### 3.3 Workout Sharing
 
-Users can toggle workout "public sharing":
+- Toggle public sharing on/off per workout
+- When enabled: workout gets a unique public slug, accessible via `/p/{slug}`
+- When disabled: public URL returns 404
+- Public page is read-only — no editing or owner info visible
 
-**When enabled:**
+### 3.4 WorkoutInProgress (Authenticated)
 
-- Workout gets a unique public slug (e.g. `abcdef1234`)
-- Accessible via `/p/{slug}` for anonymous users
+A WorkoutInProgress represents a live or completed session of performing a specific workout.
 
-**When disabled:**
-
-- Public URL returns 404 / "Note not found"
-
-**Public page rendering:**
-
-- Reads workout from DB by `public_slug`
-- Shows title and all Workout Items (exercise name + sets) in read-only mode
-- No editing or owner information necessary
+- A workout can have multiple WorkoutInProgress records (full session history)
+- Only one WorkoutInProgress can be active (`is_active = 1`) per workout at any time
+- Starting a new session auto-deactivates the previous active session for that workout
+- Each session tracks: `started_at`, `completed_at`, `duration_seconds`, and `is_active`
+- Each session stores per-set performance via `workout_in_progress_set` records
+- Sessions are scoped to the authenticated user — no cross-user access
+- The `/workout-in-progress/[workoutId]` page shows all workout items for the workout and allows updating them within the active session
 
 ---
 
 ## 4. Non-Functional Requirements
 
-**Performance**
-
-- Workout list & workout view should load under ~300 ms for typical DB sizes
-
-**Security**
-
-- All workout operations are scoped to authenticated user's `user_id`
-- Public workouts are read-only; no leaked private data in API responses
-
-**Reliability**
-
-- Graceful handling of DB errors
-
-**Maintainability**
-
-- Type-safe APIs and DB types
-- Modularized DB and auth helpers
-
-**UX**
-
-- Simple, minimal UI with keyboard-friendly editor
+| Concern | Requirement |
+|---|---|
+| Performance | Workout list & view load under ~300ms for typical DB sizes |
+| Security | All operations scoped to authenticated `user_id`; public workouts are read-only |
+| Reliability | Graceful handling of DB errors |
+| Maintainability | Type-safe APIs and DB types; modularized DB and auth helpers |
+| UX | Simple, minimal UI with keyboard-friendly editor |
 
 ---
 
@@ -172,7 +112,7 @@ Users can toggle workout "public sharing":
 
 #### better-auth Core Tables
 
-better-auth manages its own tables for authentication. The following tables are required by better-auth:
+better-auth manages its own tables. The following are required:
 
 **user**
 
@@ -188,15 +128,15 @@ CREATE TABLE user (
 );
 ```
 
-| Field         | Type    | Description                                            |
-| ------------- | ------- | ------------------------------------------------------ |
-| id            | TEXT    | Unique identifier for each user (primary key)          |
-| name          | TEXT    | User's chosen display name                             |
-| email         | TEXT    | User's email address for communication and login       |
-| emailVerified | INTEGER | Whether the user's email is verified (0 or 1)          |
-| image         | TEXT    | User's image URL (optional)                            |
-| createdAt     | TEXT    | Timestamp of when the user account was created         |
-| updatedAt     | TEXT    | Timestamp of the last update to the user's information |
+| Field | Type | Description |
+|---|---|---|
+| id | TEXT | Unique identifier (primary key) |
+| name | TEXT | User's display name |
+| email | TEXT | User's email address |
+| emailVerified | INTEGER | Whether email is verified (0 or 1) |
+| image | TEXT | User's image URL (optional) |
+| createdAt | TEXT | Account creation timestamp |
+| updatedAt | TEXT | Last update timestamp |
 
 **session**
 
@@ -213,17 +153,6 @@ CREATE TABLE session (
   FOREIGN KEY (userId) REFERENCES user(id)
 );
 ```
-
-| Field     | Type | Description                                         |
-| --------- | ---- | --------------------------------------------------- |
-| id        | TEXT | Unique identifier for each session (primary key)    |
-| userId    | TEXT | The ID of the user (foreign key)                    |
-| token     | TEXT | The unique session token                            |
-| expiresAt | TEXT | The time when the session expires                   |
-| ipAddress | TEXT | The IP address of the device (optional)             |
-| userAgent | TEXT | The user agent information of the device (optional) |
-| createdAt | TEXT | Timestamp of when the session was created           |
-| updatedAt | TEXT | Timestamp of when the session was updated           |
 
 **account**
 
@@ -246,22 +175,6 @@ CREATE TABLE account (
 );
 ```
 
-| Field                 | Type | Description                                                                         |
-| --------------------- | ---- | ----------------------------------------------------------------------------------- |
-| id                    | TEXT | Unique identifier for each account (primary key)                                    |
-| userId                | TEXT | The ID of the user (foreign key)                                                    |
-| accountId             | TEXT | The ID of the account as provided by SSO or equal to userId for credential accounts |
-| providerId            | TEXT | The ID of the provider (e.g., "credential", "google", "github")                     |
-| accessToken           | TEXT | The access token returned by the provider (optional)                                |
-| refreshToken          | TEXT | The refresh token returned by the provider (optional)                               |
-| accessTokenExpiresAt  | TEXT | The time when the access token expires (optional)                                   |
-| refreshTokenExpiresAt | TEXT | The time when the refresh token expires (optional)                                  |
-| scope                 | TEXT | The scope of the account returned by the provider (optional)                        |
-| idToken               | TEXT | The ID token returned from the provider (optional)                                  |
-| password              | TEXT | The hashed password for email/password authentication (optional)                    |
-| createdAt             | TEXT | Timestamp of when the account was created                                           |
-| updatedAt             | TEXT | Timestamp of when the account was updated                                           |
-
 **verification**
 
 ```sql
@@ -274,15 +187,6 @@ CREATE TABLE verification (
   updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
 );
 ```
-
-| Field      | Type | Description                                            |
-| ---------- | ---- | ------------------------------------------------------ |
-| id         | TEXT | Unique identifier for each verification (primary key)  |
-| identifier | TEXT | The identifier for the verification request            |
-| value      | TEXT | The value to be verified                               |
-| expiresAt  | TEXT | The time when the verification request expires         |
-| createdAt  | TEXT | Timestamp of when the verification request was created |
-| updatedAt  | TEXT | Timestamp of when the verification request was updated |
 
 ---
 
@@ -331,61 +235,77 @@ CREATE TABLE workout_item_set (
 );
 ```
 
-**workout**
+---
 
-| Field       | Type    | Description                                      |
-| ----------- | ------- | ------------------------------------------------ |
-| id          | TEXT    | Unique identifier for each workout (primary key) |
-| user_id     | TEXT    | Owner of the workout (foreign key → user.id)     |
-| title       | TEXT    | The name of the workout                          |
-| is_public   | INTEGER | Whether the workout is publicly shared (0 or 1)  |
-| public_slug | TEXT    | Unique slug for the public URL (optional)        |
-| created_at  | TEXT    | Timestamp of when the workout was created        |
-| updated_at  | TEXT    | Timestamp of when the workout was last updated   |
+#### WorkoutInProgress and WorkoutInProgressSet (NEW)
 
-**exercise**
+These two tables track live and historical workout sessions.
 
-Exercises are reusable templates. They store identity, title, and an optional image URL — no set data.
+```sql
+CREATE TABLE workout_in_progress (
+  id TEXT PRIMARY KEY,
+  workout_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  started_at TEXT NOT NULL DEFAULT (datetime('now')),
+  completed_at TEXT,
+  duration_seconds INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (workout_id) REFERENCES workout(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES user(id)
+);
 
-| Field      | Type | Description                                       |
-| ---------- | ---- | ------------------------------------------------- |
-| id         | TEXT | Unique identifier for each exercise (primary key) |
-| user_id    | TEXT | Owner of the exercise (foreign key → user.id)     |
-| title      | TEXT | The name of the exercise                          |
-| image_url  | TEXT | Optional path to an uploaded exercise image       |
-| created_at | TEXT | Timestamp of when the exercise was created        |
-| updated_at | TEXT | Timestamp of when the exercise was last updated   |
+CREATE TABLE workout_in_progress_set (
+  id TEXT PRIMARY KEY,
+  workout_in_progress_id TEXT NOT NULL,
+  workout_item_id TEXT NOT NULL,
+  reps INTEGER NOT NULL DEFAULT 1,
+  weight REAL NOT NULL DEFAULT 0,
+  position INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (workout_in_progress_id)
+    REFERENCES workout_in_progress(id) ON DELETE CASCADE,
+  FOREIGN KEY (workout_item_id) REFERENCES workout_item(id)
+);
+```
 
-**workout_item**
+**workout_in_progress**
 
-A Workout Item is the join between a Workout and an Exercise. Each item represents one exercise slot within a specific workout and owns its own set data.
+| Field | Type | Description |
+|---|---|---|
+| id | TEXT | Unique identifier (primary key) |
+| workout_id | TEXT | The workout being performed (FK → workout.id, CASCADE DELETE) |
+| user_id | TEXT | Owner of the session (FK → user.id) |
+| is_active | INTEGER | Whether this session is currently active (0 or 1) |
+| started_at | TEXT | Timestamp when the session was started |
+| completed_at | TEXT | Timestamp when the session was completed (NULL if still active) |
+| duration_seconds | INTEGER | Total session duration in seconds (NULL until complete) |
+| created_at | TEXT | Record creation timestamp |
+| updated_at | TEXT | Record last update timestamp |
 
-| Field       | Type    | Description                                                                |
-| ----------- | ------- | -------------------------------------------------------------------------- |
-| id          | TEXT    | Unique identifier (primary key)                                            |
-| workout_id  | TEXT    | Reference to the parent workout (foreign key → workout.id, CASCADE DELETE) |
-| exercise_id | TEXT    | Reference to the exercise template (foreign key → exercise.id)             |
-| position    | INTEGER | Display order within the workout                                           |
-| created_at  | TEXT    | Timestamp of when the item was created                                     |
-| updated_at  | TEXT    | Timestamp of when the item was last updated                                |
+**workout_in_progress_set**
 
-**workout_item_set**
+| Field | Type | Description |
+|---|---|---|
+| id | TEXT | Unique identifier (primary key) |
+| workout_in_progress_id | TEXT | Parent session (FK → workout_in_progress.id, CASCADE DELETE) |
+| workout_item_id | TEXT | The workout item this set belongs to (FK → workout_item.id) |
+| reps | INTEGER | Actual reps performed in this set |
+| weight | REAL | Actual weight used in this set (kg) |
+| position | INTEGER | Display order within the workout item |
+| created_at | TEXT | Record creation timestamp |
+| updated_at | TEXT | Record last update timestamp |
 
-Sets belong to a Workout Item, not to the Exercise. This allows the same exercise to appear in different workouts with different sets each time.
+> **Cascade behaviour:** Deleting a `workout` automatically deletes all `workout_in_progress` rows (via `ON DELETE CASCADE`), which in turn deletes all `workout_in_progress_set` rows. Deleting a `workout_item` does NOT automatically delete associated `workout_in_progress_set` rows — application logic should handle orphaned sets.
 
-| Field           | Type    | Description                                                                          |
-| --------------- | ------- | ------------------------------------------------------------------------------------ |
-| id              | TEXT    | Unique identifier (primary key)                                                      |
-| workout_item_id | TEXT    | Reference to the parent workout item (foreign key → workout_item.id, CASCADE DELETE) |
-| reps            | INTEGER | Number of reps for this set                                                          |
-| weight          | REAL    | Weight for this set (kg)                                                             |
-| position        | INTEGER | Display order within the workout item                                                |
-
-> **Cascade behaviour:** Deleting a `workout` automatically deletes all its `workout_item` rows (via `ON DELETE CASCADE`), which in turn automatically deletes all `workout_item_set` rows. The `exercise` record is never deleted by this cascade.
+---
 
 ### 5.2 Indexes
 
 ```sql
+-- Existing indexes
 CREATE INDEX idx_workout_user_id ON workout(user_id);
 CREATE INDEX idx_workout_title ON workout(title);
 CREATE INDEX idx_workout_created_at ON workout(created_at);
@@ -398,12 +318,20 @@ CREATE INDEX idx_workout_item_workout_id ON workout_item(workout_id);
 CREATE INDEX idx_workout_item_exercise_id ON workout_item(exercise_id);
 
 CREATE INDEX idx_workout_item_set_workout_item_id ON workout_item_set(workout_item_id);
+
+-- New indexes for WorkoutInProgress
+CREATE INDEX idx_wip_workout_id ON workout_in_progress(workout_id);
+CREATE INDEX idx_wip_user_id ON workout_in_progress(user_id);
+CREATE INDEX idx_wip_is_active ON workout_in_progress(is_active);
+CREATE INDEX idx_wip_set_wip_id ON workout_in_progress_set(workout_in_progress_id);
+CREATE INDEX idx_wip_set_item_id ON workout_in_progress_set(workout_item_id);
 ```
 
 ### 5.3 DB Initialization Scripts
 
-- `scripts/init-db.ts` — creates all tables and indexes from scratch
-- `scripts/migrate-workout-items.ts` — migration that restructures the old `workout_exercise` junction + `exercise_set` tables into the new `workout_item` + `workout_item_set` tables
+- `scripts/init-db.ts` — creates all tables and indexes from scratch (updated to include `workout_in_progress` and `workout_in_progress_set`)
+- `scripts/migrate-workout-items.ts` — existing migration for `workout_item` / `workout_item_set` restructure
+- `scripts/migrate-workout-in-progress.ts` — **NEW** migration adding `workout_in_progress` and `workout_in_progress_set` tables
 
 ---
 
@@ -414,11 +342,7 @@ CREATE INDEX idx_workout_item_set_workout_item_id ON workout_item_set(workout_it
 **File:** `lib/db.ts`
 
 - Initialize `bun:sqlite` `Database` with DB file (`data/app.db`)
-- Export helper functions:
-  - `getDb()` – returns singleton DB connection
-  - `query<T>(sql, params?): T[]`
-  - `get<T>(sql, params?): T | undefined`
-  - `run(sql, params?)`
+- Export helper functions: `getDb()`, `query<T>()`, `get<T>()`, `run()`
 
 ---
 
@@ -426,27 +350,17 @@ CREATE INDEX idx_workout_item_set_workout_item_id ON workout_item_set(workout_it
 
 ### 7.1 Authentication Access
 
-Implement a server helper from better-auth like `getCurrentUser()` or `getSession()`.
-
-All `/api/workouts` and `/api/exercises` handlers (except public read) must:
-
-- Check auth
-- Return 401 if not authenticated
+All `/api/workouts`, `/api/exercises`, and `/api/workouts/:id/sessions` handlers must check auth and return `401` if not authenticated. The `/api/public-workouts/:slug` endpoint is exempt.
 
 ---
 
 ### 7.2 Exercises Endpoints
 
-Exercises are reusable templates — they have no sets of their own.
-
----
-
 #### GET /api/exercises
 
-**Description:** List all exercises for the authenticated user.
+List all exercises for the authenticated user.
 
 **Response 200:**
-
 ```json
 [
   {
@@ -459,14 +373,11 @@ Exercises are reusable templates — they have no sets of their own.
 ]
 ```
 
----
-
 #### POST /api/exercises
 
-**Description:** Create a new exercise template.
+Create a new exercise template.
 
 **Request Body:**
-
 ```json
 {
   "title": "Bench Press",
@@ -475,7 +386,6 @@ Exercises are reusable templates — they have no sets of their own.
 ```
 
 **Response 201:**
-
 ```json
 {
   "id": "exercise-id",
@@ -486,41 +396,27 @@ Exercises are reusable templates — they have no sets of their own.
 }
 ```
 
----
-
 #### POST /api/exercises/upload
 
-**Description:** Upload an image for an exercise. Returns the public URL to store on the exercise record.
-
-- Accepted types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
-- Max size: 5 MB
-- Files saved to `public/uploads/exercises/` with a UUID filename
+Upload an image for an exercise. Accepted types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`. Max 5MB. Files saved to `public/uploads/exercises/` with UUID filename.
 
 **Request:** `multipart/form-data` with a `file` field.
 
 **Response 201:**
-
 ```json
 { "url": "/uploads/exercises/uuid.jpg" }
 ```
 
----
-
 #### PATCH /api/exercises/:id
 
-**Description:** Update an exercise title and/or image.
+Update exercise title and/or image.
 
 **Request Body:**
-
 ```json
-{
-  "title": "Incline Bench Press",
-  "image_url": "/uploads/exercises/uuid.jpg"
-}
+{ "title": "Incline Bench Press", "image_url": "/uploads/exercises/uuid.jpg" }
 ```
 
 **Response 200:**
-
 ```json
 {
   "id": "exercise-id",
@@ -530,32 +426,24 @@ Exercises are reusable templates — they have no sets of their own.
 }
 ```
 
----
-
 #### DELETE /api/exercises/:id
 
-**Description:** Delete an exercise template. Workout Items referencing this exercise are NOT automatically deleted.
+Delete an exercise template. Workout Items referencing this exercise are NOT automatically deleted.
 
 **Response 200:**
-
 ```json
-{
-  "message": "Exercise deleted successfully."
-}
+{ "message": "Exercise deleted successfully." }
 ```
 
 ---
 
 ### 7.3 Workouts Endpoints
 
----
-
 #### GET /api/workouts
 
-**Description:** List all workouts for the authenticated user.
+List all workouts for the authenticated user.
 
 **Response 200:**
-
 ```json
 [
   {
@@ -567,14 +455,11 @@ Exercises are reusable templates — they have no sets of their own.
 ]
 ```
 
----
-
 #### GET /api/workouts/:id
 
-**Description:** Get a single workout with all its Workout Items, each including the linked exercise and its sets.
+Get a single workout with all Workout Items, each including the linked exercise and its template sets.
 
 **Response 200:**
-
 ```json
 {
   "id": "workout-id",
@@ -583,10 +468,7 @@ Exercises are reusable templates — they have no sets of their own.
     {
       "id": "item-id",
       "position": 0,
-      "exercise": {
-        "id": "exercise-id",
-        "title": "Bench Press"
-      },
+      "exercise": { "id": "exercise-id", "title": "Bench Press" },
       "sets": [
         { "id": "set-id", "reps": 10, "weight": 80.0, "position": 0 },
         { "id": "set-id-2", "reps": 8, "weight": 85.0, "position": 1 }
@@ -598,22 +480,16 @@ Exercises are reusable templates — they have no sets of their own.
 }
 ```
 
----
-
 #### POST /api/workouts
 
-**Description:** Create a new workout.
+Create a new workout.
 
 **Request Body:**
-
 ```json
-{
-  "title": "Push Day"
-}
+{ "title": "Push Day" }
 ```
 
 **Response 201:**
-
 ```json
 {
   "id": "workout-id",
@@ -623,22 +499,16 @@ Exercises are reusable templates — they have no sets of their own.
 }
 ```
 
----
-
 #### PATCH /api/workouts/:id
 
-**Description:** Update a workout title.
+Update a workout title.
 
 **Request Body:**
-
 ```json
-{
-  "title": "Push Day (Updated)"
-}
+{ "title": "Push Day (Updated)" }
 ```
 
 **Response 200:**
-
 ```json
 {
   "id": "workout-id",
@@ -647,34 +517,24 @@ Exercises are reusable templates — they have no sets of their own.
 }
 ```
 
----
-
 #### DELETE /api/workouts/:id
 
-**Description:** Delete a workout. Cascades to all associated Workout Items and their Sets. The referenced Exercises are NOT deleted.
+Delete a workout. Cascades to all Workout Items, Sets, and WorkoutInProgress sessions. Exercises are NOT deleted.
 
 **Response 200:**
-
 ```json
-{
-  "message": "Workout deleted successfully."
-}
+{ "message": "Workout deleted successfully." }
 ```
 
 ---
 
 ### 7.4 Workout Items Endpoints
 
-Workout Items are managed under the workout they belong to.
-
----
-
 #### POST /api/workouts/:id/items
 
-**Description:** Add a new Workout Item to a workout — links an exercise and creates its sets.
+Add a new Workout Item to a workout — links an exercise and creates its template sets.
 
 **Request Body:**
-
 ```json
 {
   "exerciseId": "exercise-id",
@@ -687,15 +547,11 @@ Workout Items are managed under the workout they belong to.
 ```
 
 **Response 201:**
-
 ```json
 {
   "id": "item-id",
   "position": 0,
-  "exercise": {
-    "id": "exercise-id",
-    "title": "Bench Press"
-  },
+  "exercise": { "id": "exercise-id", "title": "Bench Press" },
   "sets": [
     { "id": "set-id", "reps": 10, "weight": 80.0, "position": 0 },
     { "id": "set-id-2", "reps": 8, "weight": 85.0, "position": 1 }
@@ -703,14 +559,11 @@ Workout Items are managed under the workout they belong to.
 }
 ```
 
----
-
 #### PATCH /api/workouts/:id/items/:itemId
 
-**Description:** Update a Workout Item's position and/or sets. Sets are replaced wholesale.
+Update a Workout Item's position and/or sets. Sets are replaced wholesale.
 
 **Request Body:**
-
 ```json
 {
   "position": 1,
@@ -719,7 +572,6 @@ Workout Items are managed under the workout they belong to.
 ```
 
 **Response 200:**
-
 ```json
 {
   "id": "item-id",
@@ -729,18 +581,13 @@ Workout Items are managed under the workout they belong to.
 }
 ```
 
----
-
 #### DELETE /api/workouts/:id/items/:itemId
 
-**Description:** Remove a Workout Item (and all its Sets) from a workout. The referenced Exercise is NOT deleted.
+Remove a Workout Item (and all its Sets) from a workout. The referenced Exercise is NOT deleted.
 
 **Response 200:**
-
 ```json
-{
-  "message": "Workout item removed successfully."
-}
+{ "message": "Workout item removed successfully." }
 ```
 
 ---
@@ -749,11 +596,137 @@ Workout Items are managed under the workout they belong to.
 
 #### GET /api/public-workouts/:slug
 
-**Description:** Read-only access to a public workout. Returns the same shape as `GET /api/workouts/:id`.
+Read-only access to a public workout. Returns same shape as `GET /api/workouts/:id`. Returns 404 if slug not found or `is_public = 0`.
 
-- Returns 404 if slug not found or `is_public = 0`
+---
 
-_(Or skip this API endpoint and resolve directly in the `/p/[slug]` route using server components.)_
+### 7.6 WorkoutInProgress Endpoints (NEW)
+
+All endpoints require authentication. Sessions are scoped to the authenticated user. The workout referenced must belong to the authenticated user.
+
+#### GET /api/workouts/:id/sessions
+
+List all WorkoutInProgress sessions for a given workout, ordered by `started_at` descending (most recent first).
+
+**Response 200:**
+```json
+[
+  {
+    "id": "session-id",
+    "workoutId": "workout-id",
+    "isActive": true,
+    "startedAt": "2026-03-10T09:00:00Z",
+    "completedAt": null,
+    "durationSeconds": null,
+    "sets": [
+      {
+        "id": "wip-set-id",
+        "workoutItemId": "item-id",
+        "reps": 10,
+        "weight": 80.0,
+        "position": 0
+      }
+    ],
+    "createdAt": "2026-03-10T09:00:00Z",
+    "updatedAt": "2026-03-10T09:00:00Z"
+  }
+]
+```
+
+#### GET /api/workouts/:id/sessions/active
+
+Get the currently active WorkoutInProgress session for a workout, including its sets and the full workout items with exercise details. Returns 404 if no active session exists.
+
+**Response 200:**
+```json
+{
+  "id": "session-id",
+  "workoutId": "workout-id",
+  "isActive": true,
+  "startedAt": "2026-03-10T09:00:00Z",
+  "completedAt": null,
+  "durationSeconds": null,
+  "workoutItems": [
+    {
+      "id": "item-id",
+      "position": 0,
+      "exercise": { "id": "exercise-id", "title": "Bench Press" },
+      "sets": [
+        { "id": "wip-set-id", "reps": 10, "weight": 80.0, "position": 0 }
+      ]
+    }
+  ],
+  "createdAt": "2026-03-10T09:00:00Z",
+  "updatedAt": "2026-03-10T09:00:00Z"
+}
+```
+
+#### POST /api/workouts/:id/sessions
+
+Start a new WorkoutInProgress session. If an active session already exists for this workout, it is automatically deactivated (`is_active = 0`) before the new session is created — done atomically in a single SQLite transaction.
+
+**Request Body:** *(empty)*
+```json
+{}
+```
+
+**Response 201:**
+```json
+{
+  "id": "session-id",
+  "workoutId": "workout-id",
+  "isActive": true,
+  "startedAt": "2026-03-10T09:00:00Z",
+  "completedAt": null,
+  "durationSeconds": null,
+  "createdAt": "2026-03-10T09:00:00Z",
+  "updatedAt": "2026-03-10T09:00:00Z"
+}
+```
+
+#### PATCH /api/workouts/:id/sessions/:sessionId
+
+Update an active session. Supports completing the session and/or replacing its sets wholesale. All fields are optional.
+
+**Request Body:**
+```json
+{
+  "isActive": false,
+  "completedAt": "2026-03-10T10:05:00Z",
+  "durationSeconds": 3900,
+  "sets": [
+    { "workoutItemId": "item-id", "reps": 10, "weight": 82.5, "position": 0 },
+    { "workoutItemId": "item-id", "reps": 8,  "weight": 85.0, "position": 1 }
+  ]
+}
+```
+
+**Response 200:**
+```json
+{
+  "id": "session-id",
+  "workoutId": "workout-id",
+  "isActive": false,
+  "startedAt": "2026-03-10T09:00:00Z",
+  "completedAt": "2026-03-10T10:05:00Z",
+  "durationSeconds": 3900,
+  "sets": [
+    { "id": "wip-set-id", "workoutItemId": "item-id", "reps": 10, "weight": 82.5, "position": 0 }
+  ],
+  "updatedAt": "2026-03-10T10:05:00Z"
+}
+```
+
+> Sets are replaced wholesale: all existing `workout_in_progress_set` rows for the session are deleted and re-inserted in a single transaction.
+
+#### DELETE /api/workouts/:id/sessions/:sessionId
+
+Delete a WorkoutInProgress session and all its sets (cascades to `workout_in_progress_set`).
+
+**Response 200:**
+```json
+{ "message": "Session deleted successfully." }
+```
 
 ---
 
@@ -761,157 +734,121 @@ _(Or skip this API endpoint and resolve directly in the `/p/[slug]` route using 
 
 ### 8.1 Routes
 
-Assuming Next.js App Router structure:
-
-- `/` – Landing page
-  - Marketing / "Log in / Sign up" CTA
-- `/dashboard` – Authenticated area
-  - List of user workouts
-  - "Create workout" button
-- `/workout/[id]` – Authenticated workout editor page
-  - Title field
-  - Add Workout Item via modal (pick an Exercise, configure sets)
-  - Share toggle
-  - Delete button
-- `/p/[slug]` – Public workout page
-  - Read-only content
-  - No nav to user-specific area if viewer is unauthenticated
+| Route | Access | Description |
+|---|---|---|
+| `/` | Public | Landing page with marketing / login / sign up CTA |
+| `/dashboard` | Auth | List of user workouts and exercises manager |
+| `/workout/[id]` | Auth | Workout editor: title, items, share toggle, delete |
+| `/p/[slug]` | Public | Read-only public workout page |
+| `/workout-in-progress/[workoutId]` | Auth | Active session page: view items, log sets, complete session **(NEW)** |
 
 ### 8.2 Layout & Navigation
 
 - Global layout: `app/layout.tsx`
-  - Header with app name, login/logout/account & theme
-- `app/(auth)/login`, `app/(auth)/register` (if better-auth doesn't provide their own UI)
+- Header with app name, login/logout/account & theme toggle
+- `app/(auth)/login`, `app/(auth)/register`
 
 ### 8.3 Components
 
 > All component files use kebab-case naming (e.g. `workout-list.tsx`, not `WorkoutList.tsx`).
 
 **components/workout-list.tsx**
-
-- Props: `workouts: Workout[]`
-- Renders list of workouts with links to `/workout/[id]`
-- Shows title and last updated date
+Props: `workouts: Workout[]`. Renders list of workouts with links to `/workout/[id]`. Shows title and last updated date.
 
 **components/create-workout-button.tsx**
-
-- Client button that calls `POST /api/workouts` and navigates to the new workout editor
+Client button that calls `POST /api/workouts` and navigates to the new workout editor.
 
 **components/workout-editor.tsx**
-
-- Props: `workoutId`, `initialTitle`, `initialIsPublic`, `initialSlug`, `savedItems`
-- Inline-editable title, Save button (shown when dirty)
-- Share toggle — enables public URL and shows a copy-link banner
-- Delete button with confirmation modal (via `components/modal.tsx`)
-- List of Workout Items showing exercise name + sets
-- Uses `add-workout-item-modal` to add new items
+Props: `workoutId`, `initialTitle`, `initialIsPublic`, `initialSlug`, `savedItems`. Inline-editable title, save button, share toggle, delete button with confirmation, and list of Workout Items. Includes a **Start Session** button that triggers `POST /api/workouts/:id/sessions` and navigates to `/workout-in-progress/[workoutId]`.
 
 **components/add-workout-item-modal.tsx**
-
-- Props: `onAdd: (item: PendingWorkoutItem) => void`
-- Two-tab modal ("New exercise" / "Existing exercise") built with shadcn Tabs
-- New tab: exercise title + dynamic set rows (reps × weight)
-- Existing tab: searchable list of user's exercises, then configure sets
-- Calls `onAdd` with a `PendingWorkoutItem` object; actual API calls happen on save in `workout-editor`
-
-**components/attach-exercise-modal.tsx**
-
-- Modal for attaching an existing exercise to a workout item
+Two-tab modal (New exercise / Existing exercise) built with shadcn Tabs. Calls `onAdd` with a `PendingWorkoutItem`; actual API calls happen on save in `workout-editor`.
 
 **components/exercises-manager.tsx**
+Full CRUD for the exercises library. Supports image upload, bulk select/delete, and inline edit via modal.
 
-- Props: `initial: Exercise[]`
-- Full CRUD for the exercises library (on `/dashboard` exercises tab)
-- Create/edit supports optional image upload (via `POST /api/exercises/upload`)
-- Displays exercise thumbnail when `image_url` is set
-- Delete (single and bulk) via inline modals
-- Bulk select mode with checkboxes (shadcn Checkbox)
-- Uses `components/modal.tsx` and shadcn Input/Label/Button
+**components/workout-in-progress-view.tsx** *(NEW)*
+Props: `workoutId`, `sessionId`, `workoutItems: WorkoutItem[]`, `sets: WorkoutInProgressSet[]`.
+- Renders each Workout Item (exercise name + target sets from template)
+- Allows the user to edit actual reps/weight for each set in the active session
+- Changes call `PATCH /api/workouts/:id/sessions/:sessionId` to persist set updates
+- Provides a **Complete Session** button that sets `isActive: false`, `completedAt`, and `durationSeconds`
+- Shows a session timer (elapsed time since `startedAt`)
+
+**components/start-session-button.tsx** *(NEW)*
+Client button shown on the `/workout/[id]` page. Calls `POST /api/workouts/:id/sessions` and navigates to `/workout-in-progress/[workoutId]`.
 
 **components/profile-dropdown.tsx**
-
-- Props: `name`, `email`
-- Avatar button (initials) with shadcn DropdownMenu
-- Shows user name/email and Log out action
+Props: `name`, `email`. Avatar button (initials) with shadcn DropdownMenu. Shows user name/email and Log out action.
 
 **components/modal.tsx**
-
-- Generic modal wrapper used by workout-editor, add-workout-item-modal, exercises-manager
-- Props: `open`, `onClose`, `title`, `children`
-
-**components/workout-title-editor.tsx**
-
-- Inline-editable title input for the workout editor
+Generic modal wrapper. Props: `open`, `onClose`, `title`, `children`.
 
 ### 8.4 shadcn/ui Components (`components/ui/`)
 
-Installed via shadcn CLI and customized as needed:
-
-- `button.tsx` — Button with variants (default, outline, ghost, destructive) and sizes
-- `input.tsx` — Styled text/number input
-- `label.tsx` — Form label
+- `button.tsx` — variants: default, outline, ghost, destructive
+- `input.tsx` — styled text/number input
+- `label.tsx` — form label
 - `tabs.tsx` — Tabs, TabsList, TabsTrigger, TabsContent
-- `checkbox.tsx` — Checkbox with checked state
-- `dialog.tsx` — Dialog primitives (available but Modal.tsx is used instead)
-- `dropdown-menu.tsx` — DropdownMenu and related sub-components
+- `checkbox.tsx` — checkbox with checked state
+- `dialog.tsx` — Dialog primitives
+- `dropdown-menu.tsx` — DropdownMenu and sub-components
 
 ---
 
-## 10. Styling (TailwindCSS 4 + shadcn/ui)
+## 9. Styling (TailwindCSS 4 + shadcn/ui)
 
 - TailwindCSS 4 via PostCSS (`@tailwindcss/postcss`)
 - shadcn/ui provides design tokens (CSS variables) for colors, radius, etc.
 - `tw-animate-css` for animation utilities
-- `tailwind-merge` + `clsx` + `class-variance-authority` used by shadcn components for conditional class merging
-- Minimal design: neutral backgrounds, card-style bordered containers, no heavy color usage
+- `tailwind-merge` + `clsx` + `class-variance-authority` used by shadcn components
+- Minimal design: neutral backgrounds, card-style bordered containers
 
 ---
 
-## 11. Security Considerations
+## 10. Security Considerations
 
-**Auth enforcement**
-
-- All `/dashboard` and `/workout/[id]` routes check auth on server
-- API routes verify user and attach `userId` from session
-
-**Authorization**
-
-- Every workout and exercise query in the auth context filters by `user_id`
-
-**Public workouts**
-
-- Slug should be sufficiently random to prevent guessing (e.g. 16+ chars)
-
-**XSS**
-
-- Primary data is structured JSON, not raw HTML
-- No arbitrary `dangerouslySetInnerHTML` with unsanitized data
-
-**Rate limiting (optional enhancement)**
-
-- Apply per-IP or per-user rate limiting to API routes if exposed publicly
+| Area | Requirement |
+|---|---|
+| Auth enforcement | All `/dashboard`, `/workout/[id]`, and `/workout-in-progress/[workoutId]` routes check auth on server |
+| Authorization | Every workout, exercise, and session query filters by `user_id` |
+| Session ownership | `PATCH` and `DELETE` on sessions verify the session's workout belongs to the authenticated user |
+| Public workouts | Slug is 16+ random chars; public pages are read-only with no leaked private data |
+| XSS | Primary data is structured JSON; no `dangerouslySetInnerHTML` with unsanitized data |
+| Rate limiting | Optional per-IP or per-user rate limiting on API routes |
 
 ---
 
-## 12. Development Workflow
+## 11. Development Workflow
 
 ```bash
-bun dev             # Start dev server at http://localhost:8080
-bun run build       # Production build
-bun run lint        # ESLint
-bun run db:init     # Initialize DB (scripts/init-db.ts)
-bun run db:migrate  # Run migrations (scripts/migrate-workout-items.ts)
+bun dev                 # Start dev server at http://localhost:8080
+bun run build           # Production build
+bun run lint            # ESLint
+bun run db:init         # Initialize DB (scripts/init-db.ts)
+bun run db:migrate      # Run existing migrations
+bun run db:migrate-wip  # NEW: add workout_in_progress tables
 ```
 
-### Setup Order
+### 11.1 Setup Order
 
 1. Initialize Next.js app with Bun & TypeScript
 2. Set up TailwindCSS 4
 3. Install and configure shadcn/ui
 4. Integrate better-auth and session handling
-5. Implement SQLite DB initialization via `scripts/init-db.ts`
+5. Implement SQLite DB initialization via `scripts/init-db.ts` (includes new WIP tables)
 6. Build DB helpers (`lib/db.ts`) and type definitions (`lib/types.ts`)
-7. Implement workout, workout item, and exercise API routes
+7. Implement workout, exercise, workout item, and session API routes
 8. Build dashboard, workout editor, and exercises library pages
-9. Implement public workout pages `/p/[slug]`
-10. Add polish (loading states, confirmation modals, error handling)
+9. Build `/workout-in-progress/[workoutId]` page and associated components
+10. Implement public workout pages `/p/[slug]`
+11. Add polish: loading states, confirmation modals, session timer, error handling
+
+---
+
+## 12. Changelog
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | 2025-01-01 | Initial specification |
+| 2.0 | March 2026 | Added WorkoutInProgress feature: new DB tables (`workout_in_progress`, `workout_in_progress_set`), new API endpoints (§7.6), new route `/workout-in-progress/[workoutId]`, new components (`workout-in-progress-view`, `start-session-button`), updated security and indexes sections |

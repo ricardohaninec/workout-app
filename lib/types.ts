@@ -38,6 +38,29 @@ export type WorkoutItem = {
   updated_at: string;
 };
 
+export type WorkoutInProgress = {
+  id: string;
+  workout_id: string;
+  user_id: string;
+  is_active: boolean;
+  started_at: string;
+  completed_at: string | null;
+  duration_seconds: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorkoutInProgressSet = {
+  id: string;
+  workout_in_progress_id: string;
+  workout_item_id: string;
+  reps: number;
+  weight: number;
+  position: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type PendingWorkoutItem = {
   tempId: string;
   exerciseTitle: string;

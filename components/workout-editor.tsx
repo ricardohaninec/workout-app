@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardFooter } from "@/components/ui/card";
 import WorkoutItemCard from "@/components/workout-item-card";
 
 function SortableItem({
@@ -37,7 +37,14 @@ function SortableItem({
   onEdit: (item: WorkoutItem) => void;
   onRemove: (item: WorkoutItem) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
 
   const handle = (
     <div
@@ -56,7 +63,12 @@ function SortableItem({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={isDragging ? "z-50 opacity-80" : ""}
     >
-      <WorkoutItemCard item={item} onEdit={onEdit} onRemove={onRemove} dragHandle={handle} />
+      <WorkoutItemCard
+        item={item}
+        onEdit={onEdit}
+        onRemove={onRemove}
+        dragHandle={handle}
+      />
     </li>
   );
 }
@@ -95,7 +107,9 @@ export default function WorkoutEditor({
   const [pending, setPending] = useState<PendingWorkoutItem[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -119,8 +133,12 @@ export default function WorkoutEditor({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [removeImageOpen, setRemoveImageOpen] = useState(false);
   const [origin, setOrigin] = useState("");
-  useEffect(() => { setOrigin(window.location.origin); }, []);
-  useEffect(() => { setItems(savedItems); }, [savedItems]);
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+  useEffect(() => {
+    setItems(savedItems);
+  }, [savedItems]);
 
   // Edit item state
   const [editItem, setEditItem] = useState<WorkoutItem | null>(null);
@@ -132,7 +150,10 @@ export default function WorkoutEditor({
   const [removeItem, setRemoveItem] = useState<WorkoutItem | null>(null);
   const [removeLoading, setRemoveLoading] = useState(false);
 
-  const isDirty = title.trim() !== initialTitle || imageUrl !== initialImageUrl || pending.length > 0;
+  const isDirty =
+    title.trim() !== initialTitle ||
+    imageUrl !== initialImageUrl ||
+    pending.length > 0;
 
   async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -162,7 +183,12 @@ export default function WorkoutEditor({
 
   function openEdit(item: WorkoutItem) {
     setEditItem(item);
-    setEditSets(item.sets.map((s) => ({ reps: String(s.reps), weight: String(s.weight) })));
+    setEditSets(
+      item.sets.map((s) => ({
+        reps: String(s.reps),
+        weight: String(s.weight),
+      })),
+    );
     setEditNote(item.note ?? "");
   }
 
@@ -174,7 +200,10 @@ export default function WorkoutEditor({
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        sets: editSets.map((s) => ({ reps: Number(s.reps) || 1, weight: Number(s.weight) || 0 })),
+        sets: editSets.map((s) => ({
+          reps: Number(s.reps) || 1,
+          weight: Number(s.weight) || 0,
+        })),
         note: editNote,
       }),
     });
@@ -186,7 +215,9 @@ export default function WorkoutEditor({
   async function handleRemoveItem() {
     if (!removeItem) return;
     setRemoveLoading(true);
-    await fetch(`/api/workouts/${workoutId}/items/${removeItem.id}`, { method: "DELETE" });
+    await fetch(`/api/workouts/${workoutId}/items/${removeItem.id}`, {
+      method: "DELETE",
+    });
     setRemoveLoading(false);
     setRemoveItem(null);
     router.refresh();
@@ -273,7 +304,11 @@ export default function WorkoutEditor({
             size="sm"
             onClick={handleShare}
             disabled={shareLoading}
-            className={isPublic ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100" : ""}
+            className={
+              isPublic
+                ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                : ""
+            }
           >
             {shareLoading ? "…" : isPublic ? "Shared ✓" : "Share"}
           </Button>
@@ -290,7 +325,9 @@ export default function WorkoutEditor({
         {/* Public link */}
         {isPublic && slug && (
           <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2">
-            <span className="text-xs text-green-600 font-medium shrink-0">Public link</span>
+            <span className="text-xs text-green-600 font-medium shrink-0">
+              Public link
+            </span>
             <a
               href={`/p/${slug}`}
               target="_blank"
@@ -320,7 +357,11 @@ export default function WorkoutEditor({
         {imageUrl ? (
           <div className="relative w-full h-48 rounded-xl overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
+            <img
+              src={imageUrl}
+              alt={title}
+              className="h-full w-full object-cover"
+            />
             <button
               type="button"
               onClick={() => setRemoveImageOpen(true)}
@@ -332,7 +373,13 @@ export default function WorkoutEditor({
         ) : (
           <label className="flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-neutral-300 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-600 transition-colors">
             {imageUploading ? "Uploading…" : "+ Add workout image"}
-            <input type="file" accept="image/*" className="hidden" onChange={handleImageFile} disabled={imageUploading} />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageFile}
+              disabled={imageUploading}
+            />
           </label>
         )}
       </div>
@@ -340,17 +387,32 @@ export default function WorkoutEditor({
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold">Exercises</h2>
-          <AddWorkoutItemModal onAdd={(item) => setPending((prev) => [...prev, item])} />
+          <AddWorkoutItemModal
+            onAdd={(item) => setPending((prev) => [...prev, item])}
+          />
         </div>
 
         {items.length === 0 && pending.length === 0 ? (
           <p className="text-neutral-500">No exercises yet.</p>
         ) : (
           <ul className="flex flex-col gap-4">
-            <DndContext id="workout-items-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+            <DndContext
+              id="workout-items-dnd"
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={items.map((i) => i.id)}
+                strategy={verticalListSortingStrategy}
+              >
                 {items.map((item) => (
-                  <SortableItem key={item.id} item={item} onEdit={openEdit} onRemove={setRemoveItem} />
+                  <SortableItem
+                    key={item.id}
+                    item={item}
+                    onEdit={openEdit}
+                    onRemove={setRemoveItem}
+                  />
                 ))}
               </SortableContext>
             </DndContext>
@@ -361,17 +423,26 @@ export default function WorkoutEditor({
                   <div className="flex">
                     <div className="flex flex-1 flex-col gap-1 p-4">
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-semibold leading-tight">{item.exerciseTitle}</span>
-                        <Badge variant="secondary" className="shrink-0">unsaved</Badge>
+                        <span className="font-semibold leading-tight">
+                          {item.exerciseTitle}
+                        </span>
+                        <Badge variant="secondary" className="shrink-0">
+                          unsaved
+                        </Badge>
                       </div>
                       <ul className="mt-1 flex flex-col gap-0.5 text-sm text-neutral-500">
                         {item.sets.map((s, i) => (
-                          <li key={i}>Set {i + 1}: {s.reps} reps × {s.weight} lb</li>
+                          <li key={i}>
+                            Set {i + 1}: {s.reps} reps × {s.weight} lb
+                          </li>
                         ))}
                       </ul>
                       {item.note && (
                         <p className="mt-2 flex items-start gap-1.5 text-xs text-neutral-400">
-                          <MessageSquare size={12} className="mt-0.5 shrink-0" />
+                          <MessageSquare
+                            size={12}
+                            className="mt-0.5 shrink-0"
+                          />
                           {item.note}
                         </p>
                       )}
@@ -379,15 +450,27 @@ export default function WorkoutEditor({
                     <div className="w-28 shrink-0 bg-neutral-100 -my-4">
                       {item.exerciseImageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.exerciseImageUrl} alt={item.exerciseTitle} className="h-full w-full object-contain" />
+                        <img
+                          src={item.exerciseImageUrl}
+                          alt={item.exerciseTitle}
+                          className="h-full w-full object-contain"
+                        />
                       ) : (
                         <div className="h-full w-full bg-neutral-200" />
                       )}
                     </div>
                   </div>
                   <CardFooter className="border-t pt-3">
-                    <Button variant="outline" size="sm" className="w-full border-red-200 text-red-600 hover:bg-red-50"
-                      onClick={() => setPending((prev) => prev.filter((p) => p.tempId !== item.tempId))}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                      onClick={() =>
+                        setPending((prev) =>
+                          prev.filter((p) => p.tempId !== item.tempId),
+                        )
+                      }
+                    >
                       Remove
                     </Button>
                   </CardFooter>
@@ -399,7 +482,11 @@ export default function WorkoutEditor({
       </section>
 
       {/* Edit item modal */}
-      <Modal open={!!editItem} onClose={() => setEditItem(null)} title={`Edit — ${editItem?.exercise.title}`}>
+      <Modal
+        open={!!editItem}
+        onClose={() => setEditItem(null)}
+        title={`Edit — ${editItem?.exercise.title}`}
+      >
         <form onSubmit={handleSaveEdit} className="flex flex-col gap-3 pt-1">
           <Label className="block">Sets</Label>
           <div className="flex flex-col gap-2">
@@ -409,7 +496,13 @@ export default function WorkoutEditor({
                   type="number"
                   min={1}
                   value={s.reps}
-                  onChange={(e) => setEditSets(editSets.map((r, j) => j === i ? { ...r, reps: e.target.value } : r))}
+                  onChange={(e) =>
+                    setEditSets(
+                      editSets.map((r, j) =>
+                        j === i ? { ...r, reps: e.target.value } : r,
+                      ),
+                    )
+                  }
                   placeholder="Reps"
                   className="w-20"
                 />
@@ -419,7 +512,13 @@ export default function WorkoutEditor({
                   min={0}
                   step={0.5}
                   value={s.weight}
-                  onChange={(e) => setEditSets(editSets.map((r, j) => j === i ? { ...r, weight: e.target.value } : r))}
+                  onChange={(e) =>
+                    setEditSets(
+                      editSets.map((r, j) =>
+                        j === i ? { ...r, weight: e.target.value } : r,
+                      ),
+                    )
+                  }
                   placeholder="lb"
                   className="w-24"
                 />
@@ -429,7 +528,9 @@ export default function WorkoutEditor({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => setEditSets(editSets.filter((_, j) => j !== i))}
+                    onClick={() =>
+                      setEditSets(editSets.filter((_, j) => j !== i))
+                    }
                     className="ml-auto text-neutral-400 hover:text-red-500"
                   >
                     ✕
@@ -448,7 +549,10 @@ export default function WorkoutEditor({
             + Add set
           </Button>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="edit-note">Note <span className="text-neutral-400 font-normal">(optional)</span></Label>
+            <Label htmlFor="edit-note">
+              Note{" "}
+              <span className="text-neutral-400 font-normal">(optional)</span>
+            </Label>
             <textarea
               id="edit-note"
               value={editNote}
@@ -459,43 +563,88 @@ export default function WorkoutEditor({
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setEditItem(null)}>Cancel</Button>
-            <Button type="submit" disabled={editSaving}>{editSaving ? "Saving…" : "Save"}</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditItem(null)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={editSaving}>
+              {editSaving ? "Saving…" : "Save"}
+            </Button>
           </div>
         </form>
       </Modal>
 
       {/* Remove item confirmation */}
-      <Modal open={!!removeItem} onClose={() => setRemoveItem(null)} title="Remove Exercise">
+      <Modal
+        open={!!removeItem}
+        onClose={() => setRemoveItem(null)}
+        title="Remove Exercise"
+      >
         <p className="mb-6 text-sm text-neutral-600">
-          Remove <span className="font-medium">{removeItem?.exercise.title}</span> from this workout?
+          Remove{" "}
+          <span className="font-medium">{removeItem?.exercise.title}</span> from
+          this workout?
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setRemoveItem(null)}>Cancel</Button>
-          <Button variant="destructive" onClick={handleRemoveItem} disabled={removeLoading}>
+          <Button variant="outline" onClick={() => setRemoveItem(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleRemoveItem}
+            disabled={removeLoading}
+          >
             {removeLoading ? "Removing…" : "Remove"}
           </Button>
         </div>
       </Modal>
 
       {/* Remove workout image confirmation */}
-      <Modal open={removeImageOpen} onClose={() => setRemoveImageOpen(false)} title="Remove Image">
-        <p className="mb-6 text-sm text-neutral-600">Are you sure you want to remove the workout image?</p>
+      <Modal
+        open={removeImageOpen}
+        onClose={() => setRemoveImageOpen(false)}
+        title="Remove Image"
+      >
+        <p className="mb-6 text-sm text-neutral-600">
+          Are you sure you want to remove the workout image?
+        </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setRemoveImageOpen(false)}>Cancel</Button>
-          <Button variant="destructive" onClick={() => { setRemoveImageOpen(false); handleRemoveImage(); }}>Remove</Button>
+          <Button variant="outline" onClick={() => setRemoveImageOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setRemoveImageOpen(false);
+              handleRemoveImage();
+            }}
+          >
+            Remove
+          </Button>
         </div>
       </Modal>
 
       {/* Delete workout modal */}
-      <Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete Workout">
+      <Modal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Delete Workout"
+      >
         <p className="mb-6 text-sm text-neutral-600">
-          Are you sure you want to delete <span className="font-medium">&quot;{title}&quot;</span>? This
-          action cannot be undone.
+          Are you sure you want to delete{" "}
+          <span className="font-medium">&quot;{title}&quot;</span>? This action
+          cannot be undone.
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-          <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={handleDelete}>
+            Delete
+          </Button>
         </div>
       </Modal>
     </main>

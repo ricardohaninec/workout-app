@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import PlaceholderImage from "@/components/icons/placeholder-image";
 import CreateWorkoutButton from "@/components/create-workout-button";
+import StartWorkoutButton from "@/components/start-workout-button";
 
-export default function WorkoutList({ workouts: initial }: { workouts: Workout[] }) {
+export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }: { workouts: Workout[]; activeWorkoutIds?: string[] }) {
+  const activeSet = new Set(activeWorkoutIds);
   const router = useRouter();
   const [workouts, setWorkouts] = useState(initial);
   const [selecting, setSelecting] = useState(false);
@@ -21,7 +23,7 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
   function toggleSelect(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   }
@@ -98,9 +100,9 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
             {/* Cover image */}
             {w.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={w.image_url} alt={w.title} className="h-44 w-full object-cover" />
+              <img src={w.image_url} alt={w.title} className="h-64 w-full object-cover" />
             ) : (
-              <div className="flex h-44 items-center justify-center bg-neutral-100">
+              <div className="flex h-64 items-center justify-center bg-neutral-100">
                 <PlaceholderImage />
               </div>
             )}
@@ -126,9 +128,12 @@ export default function WorkoutList({ workouts: initial }: { workouts: Workout[]
                 Updated {new Date(w.updated_at).toLocaleDateString()}
               </p>
               {!selecting && (
-                <Link href={`/workout/${w.id}`} className="mt-auto">
-                  <Button className="w-full">Open Workout</Button>
-                </Link>
+                <div className="mt-auto flex flex-col gap-2">
+                  <StartWorkoutButton workoutId={w.id} hasActiveSession={activeSet.has(w.id)} />
+                  <Link href={`/workout/${w.id}`}>
+                    <Button className="w-full" variant="outline">Update Workout</Button>
+                  </Link>
+                </div>
               )}
             </div>
           </li>
