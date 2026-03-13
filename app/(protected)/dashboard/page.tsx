@@ -18,8 +18,7 @@ export default async function DashboardPage() {
   const activeWorkoutIds = new Set(activeSessions.map((s) => s.workout_id));
 
   return (
-    <main className="mx-auto max-w-3xl p-4 sm:p-8">
-      <h1 className="mb-4 text-2xl font-bold">My Workouts</h1>
+    <main className="mx-auto max-w-6xl p-8">
       <WorkoutList workouts={workouts} activeWorkoutIds={[...activeWorkoutIds]} />
     </main>
   );

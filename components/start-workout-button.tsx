@@ -66,7 +66,7 @@ export default function StartWorkoutButton({
       </Button>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Start Workout">
-        <p className="mb-4 text-sm text-neutral-500">
+        <p className="mb-4 text-sm text-neutral-400">
           {exercises.length === 0
             ? "This workout has no exercises yet."
             : `${exercises.length} exercise${exercises.length !== 1 ? "s" : ""} in this workout:`}

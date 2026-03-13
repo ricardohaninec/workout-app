@@ -1,0 +1,2571 @@
+{
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Header and Nav Bar",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": "#0D0D0D",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "ywa8T",
+          "x": 0,
+          "y": 0,
+          "name": "Header Bar",
+          "width": 800,
+          "height": 64,
+          "fill": "#0D0D0D",
+          "stroke": {
+            "align": "outside",
+            "thickness": 1,
+            "fill": "#FFFFFF1A"
+          },
+          "padding": [
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "q3YRf",
+              "name": "brand",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "m0Iul",
+                  "name": "brandIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "dumbbell",
+                  "iconFontFamily": "lucide",
+                  "fill": "#F97316"
+                },
+                {
+                  "type": "text",
+                  "id": "w0RXz",
+                  "name": "brandTxt",
+                  "fill": "#FFFFFF",
+                  "content": "WORKOUT",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "900",
+                  "letterSpacing": 3
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "nKcnk",
+              "name": "navCenter",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "by9Gk",
+                  "name": "navItem1",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "7snYi",
+                      "name": "nav1lbl",
+                      "fill": "#FFFFFF",
+                      "content": "My Workouts",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iFB6p",
+                      "name": "nav1dot",
+                      "width": 16,
+                      "height": 2,
+                      "fill": "#F97316",
+                      "cornerRadius": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wnxGp",
+                  "name": "navItem2",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SsnAW",
+                      "name": "nav2lbl",
+                      "fill": "#6B7280",
+                      "content": "History",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DqfLy",
+                  "name": "navItem3",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "AM5eM",
+                      "name": "nav3lbl",
+                      "fill": "#6B7280",
+                      "content": "My Exercises",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ZxT1O",
+              "name": "rightSide",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "4Z3d4",
+                  "name": "avatar",
+                  "width": 34,
+                  "height": 34,
+                  "fill": "#F97316",
+                  "cornerRadius": 17,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ndAzm",
+                      "name": "avatarTxt",
+                      "fill": "#FFFFFF",
+                      "content": "R",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "6mdVM",
+          "x": 0,
+          "y": 64,
+          "name": "Side Drawer",
+          "width": 240,
+          "height": 536,
+          "fill": "#0D0D0D",
+          "stroke": {
+            "align": "outside",
+            "thickness": 1,
+            "fill": "#FFFFFF1A"
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "UaLaB",
+              "name": "drawerHeader",
+              "width": "fill_container",
+              "height": 60,
+              "stroke": {
+                "align": "outside",
+                "thickness": 1,
+                "fill": "#FFFFFF0D"
+              },
+              "padding": [
+                0,
+                20
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "CDyEW",
+                  "name": "dhBrand",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "TsRWg",
+                      "name": "dhBrandIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "dumbbell",
+                      "iconFontFamily": "lucide",
+                      "fill": "#F97316"
+                    },
+                    {
+                      "type": "text",
+                      "id": "xOJYW",
+                      "name": "dhBrandTxt",
+                      "fill": "#FFFFFF",
+                      "content": "WORKOUT",
+                      "fontFamily": "Inter",
+                      "fontSize": 10,
+                      "fontWeight": "900",
+                      "letterSpacing": 3
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gjVTE",
+                  "name": "dhClose",
+                  "width": 30,
+                  "height": 30,
+                  "fill": "#FFFFFF0D",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "kZAoe",
+                      "name": "dhCloseIcon",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "x",
+                      "iconFontFamily": "lucide",
+                      "fill": "#9CA3AF"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "nrJ7W",
+              "name": "drawerNav",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                12,
+                8
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "haeq4",
+                  "name": "navActive",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "#F9731614",
+                  "cornerRadius": 8,
+                  "gap": 10,
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "TqSjx",
+                      "name": "activeIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "layout-dashboard",
+                      "iconFontFamily": "lucide",
+                      "fill": "#F97316"
+                    },
+                    {
+                      "type": "text",
+                      "id": "9VisW",
+                      "name": "activeLbl",
+                      "fill": "#F97316",
+                      "content": "My Workouts",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vzl6x",
+                  "name": "navHistRow",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "#00000000",
+                  "cornerRadius": 8,
+                  "gap": 10,
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "BCzPL",
+                      "name": "histIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "history",
+                      "iconFontFamily": "lucide",
+                      "fill": "#6B7280"
+                    },
+                    {
+                      "type": "text",
+                      "id": "FNWaj",
+                      "name": "histLbl",
+                      "fill": "#6B7280",
+                      "content": "History",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "4wkLa",
+                  "name": "navExRow",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "#00000000",
+                  "cornerRadius": 8,
+                  "gap": 10,
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "lBGa3",
+                      "name": "exIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "zap",
+                      "iconFontFamily": "lucide",
+                      "fill": "#6B7280"
+                    },
+                    {
+                      "type": "text",
+                      "id": "3bgiU",
+                      "name": "exLbl",
+                      "fill": "#6B7280",
+                      "content": "My Exercises",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "2fYWv",
+              "name": "drawerFooter",
+              "width": "fill_container",
+              "height": 64,
+              "stroke": {
+                "align": "outside",
+                "thickness": 1,
+                "fill": "#FFFFFF0D"
+              },
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "EiHKT",
+                  "name": "footerAvatar",
+                  "width": 34,
+                  "height": 34,
+                  "fill": "#F97316",
+                  "cornerRadius": 17,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "nUNH4",
+                      "name": "footAvatarTxt",
+                      "fill": "#FFFFFF",
+                      "content": "R",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hwMwd",
+                  "name": "footerInfo",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ObJnY",
+                      "name": "footName",
+                      "fill": "#FFFFFF",
+                      "content": "Ricardo",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "xpgdZ",
+                      "name": "footEmail",
+                      "fill": "#6B7280",
+                      "content": "ricardo@example.com",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "fWqjM",
+      "x": 900,
+      "y": 0,
+      "name": "My Workouts Dashboard",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "#0D0D0D",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "995lb",
+          "name": "Header",
+          "width": "fill_container",
+          "height": 64,
+          "fill": "#0D0D0D",
+          "stroke": {
+            "align": "outside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#FFFFFF1A"
+          },
+          "padding": [
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "fh2Uk",
+              "name": "brand",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "CYptn",
+                  "name": "brandIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "dumbbell",
+                  "iconFontFamily": "lucide",
+                  "fill": "#F97316"
+                },
+                {
+                  "type": "text",
+                  "id": "KhmWI",
+                  "name": "brandTxt",
+                  "fill": "#FFFFFF",
+                  "content": "WORKOUT",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "900",
+                  "letterSpacing": 3
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vbveY",
+              "name": "navCenter",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZpB3g",
+                  "name": "navItem1",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "7jFp7",
+                      "name": "nav1lbl",
+                      "fill": "#FFFFFF",
+                      "content": "My Workouts",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "n97ZM",
+                      "name": "nav1dot",
+                      "width": 16,
+                      "height": 2,
+                      "fill": "#F97316",
+                      "cornerRadius": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZxnSg",
+                  "name": "navItem2",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Zy9hu",
+                      "name": "nav2lbl",
+                      "fill": "#6B7280",
+                      "content": "History",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "o5xrU",
+                  "name": "navItem3",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "08VxQ",
+                      "name": "nav3lbl",
+                      "fill": "#6B7280",
+                      "content": "My Exercises",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jhGSK",
+              "name": "rightSide",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iNEir",
+                  "name": "avatar",
+                  "width": 34,
+                  "height": 34,
+                  "fill": "#F97316",
+                  "cornerRadius": 17,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HAemZ",
+                      "name": "avatarTxt",
+                      "fill": "#FFFFFF",
+                      "content": "R",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "70nPq",
+          "name": "pageContent",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "fgP4N",
+              "name": "pageTopRow",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qQSB7",
+                  "name": "pageHeading",
+                  "fill": "#FFFFFF",
+                  "content": "My Workouts",
+                  "fontFamily": "Inter",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "aNyZh",
+                  "name": "pageActions",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "1z7Mk",
+                      "name": "newWorkoutBtn",
+                      "fill": "#F97316",
+                      "cornerRadius": 10,
+                      "gap": 8,
+                      "padding": [
+                        10,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "NfKhT",
+                          "name": "newWorkoutIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "plus",
+                          "iconFontFamily": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "dr178",
+                          "name": "newWorkoutLbl",
+                          "fill": "#FFFFFF",
+                          "content": "New Workout",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "aJbP8",
+                      "name": "selectBtn",
+                      "fill": "#111111",
+                      "cornerRadius": 10,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#FFFFFF1A"
+                      },
+                      "padding": [
+                        10,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "9hEPZ",
+                          "name": "selectLbl",
+                          "fill": "#FFFFFF",
+                          "content": "Select",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FRHkx",
+              "name": "cardGrid",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qxeSs",
+                  "name": "card1",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#111111",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF1A"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XJybH",
+                      "name": "card1photo",
+                      "width": "fill_container",
+                      "height": 192,
+                      "fill": "#1A1A1A",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "KLHqh",
+                          "name": "card1icon",
+                          "width": 32,
+                          "height": 32,
+                          "iconFontName": "dumbbell",
+                          "iconFontFamily": "lucide",
+                          "fill": "#374151"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "4lqdu",
+                      "name": "card1body",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 14,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "nRsNE",
+                          "name": "c1title",
+                          "fill": "#FFFFFF",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Lower Body Hamstrings + Stair Stepper",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "E0BxJ",
+                          "name": "c1metaRow",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "xCQmw",
+                              "name": "c1badge",
+                              "fill": "#111111",
+                              "cornerRadius": 99,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFFFFF1A"
+                              },
+                              "padding": [
+                                3,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "h79ZT",
+                                  "name": "c1badgeLbl",
+                                  "fill": "#6B7280",
+                                  "content": "Public",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "9lF4Z",
+                              "name": "c1date",
+                              "fill": "#6B7280",
+                              "content": "Updated 3/11/2026",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "k0xNo",
+                          "name": "c1startBtn",
+                          "width": "fill_container",
+                          "fill": "#F97316",
+                          "cornerRadius": 10,
+                          "gap": 6,
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "ey8eU",
+                              "name": "c1startIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "play",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            },
+                            {
+                              "type": "text",
+                              "id": "eMA6a",
+                              "name": "c1startLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Start Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "72DFE",
+                          "name": "c1updateBtn",
+                          "width": "fill_container",
+                          "fill": "#111111",
+                          "cornerRadius": 10,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFFFFF1A"
+                          },
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "U1cEU",
+                              "name": "c1updateLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Update Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XS3yb",
+                  "name": "card2",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#111111",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF1A"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "S8QzV",
+                      "name": "c2photo",
+                      "width": "fill_container",
+                      "height": 192,
+                      "fill": "#1A1A1A",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "mOtU6",
+                          "name": "c2icon",
+                          "width": 32,
+                          "height": 32,
+                          "iconFontName": "dumbbell",
+                          "iconFontFamily": "lucide",
+                          "fill": "#374151"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DNy0F",
+                      "name": "c2body",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 14,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ONqhH",
+                          "name": "c2title",
+                          "fill": "#FFFFFF",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Friday — Upper Body Pull (Back, Biceps, Rear Delts)",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "AIODu",
+                          "name": "c2metaRow",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "JKDm2",
+                              "name": "c2badge",
+                              "fill": "#111111",
+                              "cornerRadius": 99,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFFFFF1A"
+                              },
+                              "padding": [
+                                3,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "t06pJ",
+                                  "name": "c2badgeLbl",
+                                  "fill": "#6B7280",
+                                  "content": "Public",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "s3P6L",
+                              "name": "c2date",
+                              "fill": "#6B7280",
+                              "content": "Updated 3/11/2026",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "b18HM",
+                          "name": "c2startBtn",
+                          "width": "fill_container",
+                          "fill": "#F97316",
+                          "cornerRadius": 10,
+                          "gap": 6,
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "ac2HB",
+                              "name": "c2startIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "play",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            },
+                            {
+                              "type": "text",
+                              "id": "kFE0c",
+                              "name": "c2startLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Start Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "7Ceot",
+                          "name": "c2updateBtn",
+                          "width": "fill_container",
+                          "fill": "#111111",
+                          "cornerRadius": 10,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFFFFF1A"
+                          },
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "4D4bt",
+                              "name": "c2updateLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Update Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "kkE60",
+                  "name": "card3",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#111111",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF1A"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "hJT8c",
+                      "name": "c3photo",
+                      "width": "fill_container",
+                      "height": 192,
+                      "fill": "#1A1A1A",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "YNbBx",
+                          "name": "c3icon",
+                          "width": 32,
+                          "height": 32,
+                          "iconFontName": "dumbbell",
+                          "iconFontFamily": "lucide",
+                          "fill": "#374151"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Vn2IE",
+                      "name": "c3body",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 14,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Jslbe",
+                          "name": "c3title",
+                          "fill": "#FFFFFF",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Thursday — Stair Stepper + Core (Zone 2)",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DngQF",
+                          "name": "c3metaRow",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "UgnmC",
+                              "name": "c3badge",
+                              "fill": "#111111",
+                              "cornerRadius": 99,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFFFFF1A"
+                              },
+                              "padding": [
+                                3,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "9npGQ",
+                                  "name": "c3badgeLbl",
+                                  "fill": "#6B7280",
+                                  "content": "Public",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "WTHuh",
+                              "name": "c3date",
+                              "fill": "#6B7280",
+                              "content": "Updated 3/11/2026",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "0zmFu",
+                          "name": "c3startBtn",
+                          "width": "fill_container",
+                          "fill": "#F97316",
+                          "cornerRadius": 10,
+                          "gap": 6,
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "o4Uhn",
+                              "name": "c3startIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "play",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            },
+                            {
+                              "type": "text",
+                              "id": "VvOzA",
+                              "name": "c3startLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Start Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "X18uw",
+                          "name": "c3updateBtn",
+                          "width": "fill_container",
+                          "fill": "#111111",
+                          "cornerRadius": 10,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFFFFF1A"
+                          },
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "T51Rj",
+                              "name": "c3updateLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Update Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "xfUJy",
+      "x": 900,
+      "y": 980,
+      "name": "My Workouts Dashboard – Profile Open",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "#0D0D0D",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "Ceg0w",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "width": 1440,
+          "height": 64,
+          "fill": "#0D0D0D",
+          "stroke": {
+            "align": "outside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#FFFFFF1A"
+          },
+          "padding": [
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "jz71K",
+              "name": "brand",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "LknMM",
+                  "name": "brandIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "dumbbell",
+                  "iconFontFamily": "lucide",
+                  "fill": "#F97316"
+                },
+                {
+                  "type": "text",
+                  "id": "r3a8o",
+                  "name": "brandTxt",
+                  "fill": "#FFFFFF",
+                  "content": "WORKOUT",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "900",
+                  "letterSpacing": 3
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "9dKIH",
+              "name": "navCenter",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JyGrB",
+                  "name": "navItem1",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WiqJ4",
+                      "name": "nav1lbl",
+                      "fill": "#FFFFFF",
+                      "content": "My Workouts",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kfcQE",
+                      "name": "nav1dot",
+                      "width": 16,
+                      "height": 2,
+                      "fill": "#F97316",
+                      "cornerRadius": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "v3bXI",
+                  "name": "navItem2",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zac6b",
+                      "name": "nav2lbl",
+                      "fill": "#6B7280",
+                      "content": "History",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "mAC8s",
+                  "name": "navItem3",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    14,
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cz2Ba",
+                      "name": "nav3lbl",
+                      "fill": "#6B7280",
+                      "content": "My Exercises",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "78xVv",
+              "name": "rightSide",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L0vOM",
+                  "name": "avatar",
+                  "width": 34,
+                  "height": 34,
+                  "fill": "#F97316",
+                  "cornerRadius": 17,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QqrtR",
+                      "name": "avatarTxt",
+                      "fill": "#FFFFFF",
+                      "content": "R",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "jJXdy",
+          "x": 0,
+          "y": 64,
+          "name": "pageContent",
+          "width": 1440,
+          "height": 836,
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "18kpq",
+              "name": "pageTopRow",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WyExb",
+                  "name": "pageHeading",
+                  "fill": "#FFFFFF",
+                  "content": "My Workouts",
+                  "fontFamily": "Inter",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "wJY2p",
+                  "name": "pageActions",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "bd1nJ",
+                      "name": "newWorkoutBtn",
+                      "fill": "#F97316",
+                      "cornerRadius": 10,
+                      "gap": 8,
+                      "padding": [
+                        10,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "IqV3j",
+                          "name": "newWorkoutIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "plus",
+                          "iconFontFamily": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pyRR0",
+                          "name": "newWorkoutLbl",
+                          "fill": "#FFFFFF",
+                          "content": "New Workout",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "eXotm",
+                      "name": "selectBtn",
+                      "fill": "#111111",
+                      "cornerRadius": 10,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#FFFFFF1A"
+                      },
+                      "padding": [
+                        10,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "S3wnK",
+                          "name": "selectLbl",
+                          "fill": "#FFFFFF",
+                          "content": "Select",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "5FZ1e",
+              "name": "cardGrid",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "HAhpb",
+                  "name": "card1",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#111111",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF1A"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "lYFC3",
+                      "name": "card1photo",
+                      "width": "fill_container",
+                      "height": 192,
+                      "fill": "#1A1A1A",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "yQkUb",
+                          "name": "card1icon",
+                          "width": 32,
+                          "height": 32,
+                          "iconFontName": "dumbbell",
+                          "iconFontFamily": "lucide",
+                          "fill": "#374151"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "2hLXK",
+                      "name": "card1body",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 14,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "96Sx4",
+                          "name": "c1title",
+                          "fill": "#FFFFFF",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Lower Body Hamstrings + Stair Stepper",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pmQOM",
+                          "name": "c1metaRow",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "IIaPi",
+                              "name": "c1badge",
+                              "fill": "#111111",
+                              "cornerRadius": 99,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFFFFF1A"
+                              },
+                              "padding": [
+                                3,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "NDaSZ",
+                                  "name": "c1badgeLbl",
+                                  "fill": "#6B7280",
+                                  "content": "Public",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "cSN45",
+                              "name": "c1date",
+                              "fill": "#6B7280",
+                              "content": "Updated 3/11/2026",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xepPl",
+                          "name": "c1startBtn",
+                          "width": "fill_container",
+                          "fill": "#F97316",
+                          "cornerRadius": 10,
+                          "gap": 6,
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Y0fBD",
+                              "name": "c1startIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "play",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Ah0Uz",
+                              "name": "c1startLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Start Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "gRSvC",
+                          "name": "c1updateBtn",
+                          "width": "fill_container",
+                          "fill": "#111111",
+                          "cornerRadius": 10,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFFFFF1A"
+                          },
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "O615t",
+                              "name": "c1updateLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Update Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "YadgO",
+                  "name": "card2",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#111111",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF1A"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "f2WV7",
+                      "name": "c2photo",
+                      "width": "fill_container",
+                      "height": 192,
+                      "fill": "#1A1A1A",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "JUVIN",
+                          "name": "c2icon",
+                          "width": 32,
+                          "height": 32,
+                          "iconFontName": "dumbbell",
+                          "iconFontFamily": "lucide",
+                          "fill": "#374151"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "5DWL4",
+                      "name": "c2body",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 14,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "nPDHs",
+                          "name": "c2title",
+                          "fill": "#FFFFFF",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Friday — Upper Body Pull (Back, Biceps, Rear Delts)",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hFH3E",
+                          "name": "c2metaRow",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "iiESK",
+                              "name": "c2badge",
+                              "fill": "#111111",
+                              "cornerRadius": 99,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFFFFF1A"
+                              },
+                              "padding": [
+                                3,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "kYRFY",
+                                  "name": "c2badgeLbl",
+                                  "fill": "#6B7280",
+                                  "content": "Public",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "Dk7bk",
+                              "name": "c2date",
+                              "fill": "#6B7280",
+                              "content": "Updated 3/11/2026",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YmU8g",
+                          "name": "c2startBtn",
+                          "width": "fill_container",
+                          "fill": "#F97316",
+                          "cornerRadius": 10,
+                          "gap": 6,
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "XovAq",
+                              "name": "c2startIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "play",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            },
+                            {
+                              "type": "text",
+                              "id": "MVRUB",
+                              "name": "c2startLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Start Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nbE8G",
+                          "name": "c2updateBtn",
+                          "width": "fill_container",
+                          "fill": "#111111",
+                          "cornerRadius": 10,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFFFFF1A"
+                          },
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ulRSm",
+                              "name": "c2updateLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Update Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ukGsj",
+                  "name": "card3",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#111111",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF1A"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XVd1C",
+                      "name": "c3photo",
+                      "width": "fill_container",
+                      "height": 192,
+                      "fill": "#1A1A1A",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "J5r0A",
+                          "name": "c3icon",
+                          "width": 32,
+                          "height": 32,
+                          "iconFontName": "dumbbell",
+                          "iconFontFamily": "lucide",
+                          "fill": "#374151"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "7P7BR",
+                      "name": "c3body",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 14,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "w3Dzl",
+                          "name": "c3title",
+                          "fill": "#FFFFFF",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Thursday — Stair Stepper + Core (Zone 2)",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "BaGVN",
+                          "name": "c3metaRow",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "0Fqaf",
+                              "name": "c3badge",
+                              "fill": "#111111",
+                              "cornerRadius": 99,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#FFFFFF1A"
+                              },
+                              "padding": [
+                                3,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "2m8Gq",
+                                  "name": "c3badgeLbl",
+                                  "fill": "#6B7280",
+                                  "content": "Public",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "WZvAx",
+                              "name": "c3date",
+                              "fill": "#6B7280",
+                              "content": "Updated 3/11/2026",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Pf9N0",
+                          "name": "c3startBtn",
+                          "width": "fill_container",
+                          "fill": "#F97316",
+                          "cornerRadius": 10,
+                          "gap": 6,
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "iWuen",
+                              "name": "c3startIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "play",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            },
+                            {
+                              "type": "text",
+                              "id": "tbPYc",
+                              "name": "c3startLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Start Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uAHLX",
+                          "name": "c3updateBtn",
+                          "width": "fill_container",
+                          "fill": "#111111",
+                          "cornerRadius": 10,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#FFFFFF1A"
+                          },
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "0nUMc",
+                              "name": "c3updateLbl",
+                              "fill": "#FFFFFF",
+                              "content": "Update Workout",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "04l2v",
+          "x": 1196,
+          "y": 72,
+          "name": "Profile Dropdown",
+          "width": 220,
+          "fill": "#111111",
+          "cornerRadius": 10,
+          "stroke": {
+            "align": "outside",
+            "thickness": 1,
+            "fill": "#FFFFFF1A"
+          },
+          "layout": "vertical",
+          "padding": [
+            16,
+            16,
+            12,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "zIaNp",
+              "name": "userInfoSection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "5BCP6",
+                  "name": "userName",
+                  "fill": "#FFFFFF",
+                  "content": "Dev User",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "XIgc6",
+                  "name": "userEmail",
+                  "fill": "#6B7280",
+                  "content": "dev@example.com",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "8dcV0",
+              "name": "gapTop",
+              "width": "fill_container",
+              "height": 12,
+              "fill": "#00000000"
+            },
+            {
+              "type": "frame",
+              "id": "DpYiZ",
+              "name": "divider",
+              "width": "fill_container",
+              "height": 1,
+              "fill": "#FFFFFF1A"
+            },
+            {
+              "type": "frame",
+              "id": "Mgkv6",
+              "name": "gapBot",
+              "width": "fill_container",
+              "height": 12,
+              "fill": "#00000000"
+            },
+            {
+              "type": "frame",
+              "id": "7HKaq",
+              "name": "menuItems",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "3bglK",
+                  "name": "logoutItem",
+                  "width": "fill_container",
+                  "height": 36,
+                  "fill": "#00000000",
+                  "cornerRadius": 8,
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "IIOFF",
+                      "name": "logoutIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "log-out",
+                      "iconFontFamily": "lucide",
+                      "fill": "#F97316"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Y7LUf",
+                      "name": "logoutLabel",
+                      "fill": "#F97316",
+                      "content": "Log out",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "aznWT",
+      "x": 900,
+      "y": 1960,
+      "name": "Modal Component",
+      "width": 1440,
+      "height": 900,
+      "fill": "#0D0D0D",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "moZfY",
+          "x": 0,
+          "y": 0,
+          "name": "Overlay",
+          "width": 1440,
+          "height": 900,
+          "fill": "#00000099"
+        },
+        {
+          "type": "frame",
+          "id": "bWxEm",
+          "x": 480,
+          "y": 220,
+          "name": "Modal Card",
+          "width": 480,
+          "fill": "#111111",
+          "cornerRadius": 12,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#FFFFFF1A"
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "qfzYY",
+              "name": "Modal Header",
+              "width": "fill_container",
+              "height": 64,
+              "stroke": {
+                "align": "outside",
+                "thickness": 1,
+                "fill": "#FFFFFF0D"
+              },
+              "padding": [
+                0,
+                20
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JOYvu",
+                  "name": "titleRow",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Ux6QJ",
+                      "name": "titleIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "trash-2",
+                      "iconFontFamily": "lucide",
+                      "fill": "#F97316"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YRmNH",
+                      "name": "titleTxt",
+                      "fill": "#FFFFFF",
+                      "content": "Delete Workout",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DWUAM",
+                  "name": "closeBtn",
+                  "width": 30,
+                  "height": 30,
+                  "fill": "#FFFFFF0D",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "0Of8N",
+                      "name": "closeIcon",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "x",
+                      "iconFontFamily": "lucide",
+                      "fill": "#9CA3AF"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IcYY7",
+              "name": "Modal Body",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 20,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "MsDMf",
+                  "name": "divider",
+                  "width": "fill_container",
+                  "height": 1,
+                  "fill": "#FFFFFF1A"
+                },
+                {
+                  "type": "text",
+                  "id": "qCSvq",
+                  "name": "bodyDesc",
+                  "fill": "#6B7280",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Are you sure you want to delete this workout? This action cannot be undone.",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "DD0gL",
+                  "name": "warningBox",
+                  "width": "fill_container",
+                  "fill": "#F9731610",
+                  "cornerRadius": 8,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#F9731630"
+                  },
+                  "gap": 10,
+                  "padding": [
+                    12,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Fi28m",
+                      "name": "warnIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "triangle-alert",
+                      "iconFontFamily": "lucide",
+                      "fill": "#F97316"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gU9ED",
+                      "name": "warnTxt",
+                      "fill": "#F97316",
+                      "content": "Lower Body Hamstrings + Stair Stepper",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aMUHF",
+              "name": "Modal Footer",
+              "width": "fill_container",
+              "gap": 10,
+              "padding": [
+                14,
+                20,
+                20,
+                20
+              ],
+              "justifyContent": "end",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Fdb0J",
+                  "name": "cancelBtn",
+                  "height": 40,
+                  "fill": "#111111",
+                  "cornerRadius": 10,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF1A"
+                  },
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "CSxrv",
+                      "name": "cancelLbl",
+                      "fill": "#FFFFFF",
+                      "content": "Cancel",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "6Ut4X",
+                  "name": "deleteBtn",
+                  "height": 40,
+                  "fill": "#F97316",
+                  "cornerRadius": 10,
+                  "gap": 6,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "cx6WS",
+                      "name": "deleteBtnIcon",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "trash-2",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    },
+                    {
+                      "type": "text",
+                      "id": "o1fCX",
+                      "name": "deleteBtnLbl",
+                      "fill": "#FFFFFF",
+                      "content": "Delete",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function CreateWorkoutButton() {
@@ -20,8 +21,8 @@ export default function CreateWorkoutButton() {
   }
 
   return (
-    <Button onClick={handleClick} disabled={loading}>
-      {loading ? "Creating…" : "+ New Workout"}
+    <Button className="gap-1.5 px-[18px] py-[10px]" onClick={handleClick} disabled={loading}>
+      {loading ? "Creating…" : <><Plus size={16} className="shrink-0" />New Workout</>}
     </Button>
   );
 }

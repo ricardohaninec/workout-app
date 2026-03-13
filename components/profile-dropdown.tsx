@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import {
   DropdownMenu,
@@ -30,22 +31,31 @@ export default function ProfileDropdown({ name, email }: { name: string; email: 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white hover:bg-neutral-700"
+        className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-orange-500 text-[13px] font-extrabold text-white hover:bg-orange-600 focus-visible:outline-none"
         aria-label="Profile menu"
       >
         {initials}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent
+        align="end"
+        className="w-[220px] rounded-[10px] border border-white/10 bg-[#111111] p-0 shadow-xl"
+      >
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="flex flex-col gap-0.5 py-2">
-            <span className="truncate text-sm font-medium text-foreground">{name}</span>
-            <span className="truncate text-xs font-normal text-muted-foreground">{email}</span>
+          <DropdownMenuLabel className="flex flex-col gap-1 px-4 pb-3 pt-4">
+            <span className="truncate text-[14px] font-semibold text-white">{name}</span>
+            <span className="truncate text-[13px] font-normal text-[#6B7280]">{email}</span>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-          Log out
-        </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-white/10" />
+        <div className="p-2">
+          <DropdownMenuItem
+            onClick={handleLogout}
+            className="flex h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-[14px] font-medium text-orange-500 hover:bg-white/5 hover:text-orange-500 focus:bg-white/5 focus:text-orange-500"
+          >
+            <LogOut size={16} className="shrink-0" />
+            Log out
+          </DropdownMenuItem>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
