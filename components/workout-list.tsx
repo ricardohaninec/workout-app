@@ -58,7 +58,7 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
   return (
     <>
       {/* Top row: heading left, actions right */}
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-white">My Workouts</h1>
         <div className="flex items-center gap-2.5">
           {selecting ? (
@@ -68,17 +68,17 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
                   Delete {selected.size}
                 </Button>
               )}
-              <Button variant="ghost" className="px-[18px] py-[10px] text-neutral-400" onClick={toggleSelectAll}>
+              <Button className="border border-white/10 bg-[#111111] px-[18px] py-[10px] text-[14px] font-medium text-neutral-400 hover:bg-white/5 hover:text-white" onClick={toggleSelectAll}>
                 {allSelected ? "Deselect all" : "Select all"}
               </Button>
-              <Button variant="outline" className="px-[18px] py-[10px]" onClick={exitSelecting}>
+              <Button className="border border-white/10 bg-[#111111] px-[18px] py-[10px] text-[14px] font-medium text-white hover:bg-white/5" onClick={exitSelecting}>
                 Cancel
               </Button>
             </>
           ) : (
             <>
               <CreateWorkoutButton />
-              <Button variant="outline" className="px-[18px] py-[10px]" onClick={() => setSelecting(true)}>
+              <Button className="border border-white/10 bg-[#111111] px-[18px] py-[10px] text-[14px] font-medium text-white hover:bg-white/5" onClick={() => setSelecting(true)}>
                 Select
               </Button>
             </>
@@ -140,7 +140,7 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
                   <div className="mt-auto flex flex-col gap-2 pt-1">
                     <StartWorkoutButton workoutId={w.id} hasActiveSession={activeSet.has(w.id)} />
                     <Link href={`/workout/${w.id}`}>
-                      <Button className="w-full" variant="outline">Update Workout</Button>
+                      <Button className="w-full border border-white/10 bg-[#111111] text-[13px] font-medium text-white hover:bg-white/5">Update Workout</Button>
                     </Link>
                   </div>
                 )}

@@ -47,7 +47,7 @@ function ImageUpload({ value, onChange }: { value: string | null; onChange: (url
           </button>
         </div>
       ) : (
-        <label className="flex h-20 w-32 cursor-pointer items-center justify-center rounded-md border border-dashed border-neutral-300 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-600">
+        <label className="flex h-20 w-32 cursor-pointer items-center justify-center rounded-md border border-dashed border-white/20 text-sm text-neutral-400 hover:border-white/40 hover:text-neutral-300">
           {uploading ? "Uploading…" : "+ Image"}
           <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
         </label>
@@ -189,7 +189,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
       <div className="mb-4 flex items-center justify-between">
         {selecting ? (
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
+            <Button size="sm" onClick={toggleSelectAll} className="border border-white/10 bg-[#111111] text-neutral-300 hover:bg-white/5 hover:text-white">
               {allSelected ? "Deselect all" : "Select all"}
             </Button>
             <span className="text-sm text-neutral-400">{selected.size} selected</span>
@@ -204,14 +204,14 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
             </Button>
           )}
           <Button
-            variant="outline"
             size="sm"
             onClick={selecting ? exitSelecting : () => setSelecting(true)}
+            className="border border-white/10 bg-[#111111] text-white hover:bg-white/5"
           >
             {selecting ? "Cancel" : "Select"}
           </Button>
           {!selecting && (
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Button size="sm" onClick={() => setCreateOpen(true)} className="bg-orange-500 text-white hover:bg-orange-600">
               + New Exercise
             </Button>
           )}
@@ -226,9 +226,9 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
             <li
               key={ex.id}
               onClick={selecting ? () => toggleSelect(ex.id) : undefined}
-              className={`rounded-lg border p-4 transition-colors ${
+              className={`rounded-lg border border-white/10 bg-[#111111] p-4 transition-colors ${
                 selecting ? "cursor-pointer select-none" : ""
-              } ${selecting && selected.has(ex.id) ? "border-neutral-900 bg-neutral-50" : ""}`}
+              } ${selecting && selected.has(ex.id) ? "border-orange-500/60 ring-2 ring-orange-500/30" : ""}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
@@ -243,7 +243,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={ex.image_url} alt={ex.title} className="h-14 w-14 shrink-0 rounded-md object-cover" />
                   ) : (
-                    <div className="h-14 w-14 shrink-0 rounded-md bg-neutral-100 flex items-center justify-center">
+                    <div className="h-14 w-14 shrink-0 rounded-md bg-[#1A1A1A] flex items-center justify-center">
                       <PlaceholderImage size={20} />
                     </div>
                   )}
@@ -251,14 +251,13 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
                 </div>
                 {!selecting && (
                   <div className="flex shrink-0 gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(ex)}>
+                    <Button size="sm" onClick={() => openEdit(ex)} className="border border-white/10 bg-[#111111] text-white hover:bg-white/5">
                       Edit
                     </Button>
                     <Button
-                      variant="outline"
                       size="sm"
                       onClick={() => setDeleteTarget(ex)}
-                      className="border-red-200 text-red-600 hover:bg-red-50"
+                      className="border border-red-500/30 bg-[#111111] text-red-400 hover:bg-red-500/10"
                     >
                       Delete
                     </Button>
@@ -286,7 +285,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
             <Label>Image <span className="text-neutral-400">(optional)</span></Label>
             <ImageUpload value={createImageUrl} onChange={setCreateImageUrl} />
           </div>
-          <Button type="submit" disabled={createLoading}>
+          <Button type="submit" disabled={createLoading} className="bg-orange-500 text-white hover:bg-orange-600">
             {createLoading ? "Creating…" : "Create"}
           </Button>
         </form>
@@ -294,16 +293,16 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
 
       {/* Bulk delete modal */}
       <Modal open={bulkDeleteOpen} onClose={() => setBulkDeleteOpen(false)} title="Delete Exercises">
-        <p className="mb-6 text-sm text-neutral-600">
+        <p className="mb-6 text-sm text-neutral-400">
           Are you sure you want to delete{" "}
-          <span className="font-medium">{selected.size} exercise{selected.size !== 1 ? "s" : ""}</span>?
+          <span className="font-medium text-white">{selected.size} exercise{selected.size !== 1 ? "s" : ""}</span>?
           Workout items referencing these exercises will not be automatically deleted.
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>
+          <Button onClick={() => setBulkDeleteOpen(false)} className="border border-white/10 bg-[#111111] text-white hover:bg-white/5">
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleteLoading}>
+          <Button onClick={handleBulkDelete} disabled={bulkDeleteLoading} className="bg-red-600 text-white hover:bg-red-700">
             {bulkDeleteLoading ? "Deleting…" : `Delete ${selected.size}`}
           </Button>
         </div>
@@ -324,7 +323,7 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
             <Label>Image <span className="text-neutral-400">(optional)</span></Label>
             <ImageUpload value={editImageUrl} onChange={setEditImageUrl} />
           </div>
-          <Button type="submit" disabled={editLoading}>
+          <Button type="submit" disabled={editLoading} className="bg-orange-500 text-white hover:bg-orange-600">
             {editLoading ? "Saving…" : "Save"}
           </Button>
         </form>
@@ -332,16 +331,16 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
 
       {/* Single delete modal */}
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Exercise">
-        <p className="mb-6 text-sm text-neutral-600">
+        <p className="mb-6 text-sm text-neutral-400">
           Are you sure you want to delete{" "}
-          <span className="font-medium">&quot;{deleteTarget?.title}&quot;</span>?
+          <span className="font-medium text-white">&quot;{deleteTarget?.title}&quot;</span>?
           Workout items referencing this exercise will not be automatically deleted.
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+          <Button onClick={() => setDeleteTarget(null)} className="border border-white/10 bg-[#111111] text-white hover:bg-white/5">
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={deleteLoading}>
+          <Button onClick={handleDelete} disabled={deleteLoading} className="bg-red-600 text-white hover:bg-red-700">
             {deleteLoading ? "Deleting…" : "Delete"}
           </Button>
         </div>

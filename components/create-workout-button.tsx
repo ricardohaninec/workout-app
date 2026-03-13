@@ -21,7 +21,7 @@ export default function CreateWorkoutButton() {
   }
 
   return (
-    <Button className="gap-1.5 px-[18px] py-[10px]" onClick={handleClick} disabled={loading}>
+    <Button className="gap-1.5 bg-orange-500 px-[18px] py-[10px] text-[14px] font-semibold text-white hover:bg-orange-600" onClick={handleClick} disabled={loading}>
       {loading ? "Creating…" : <><Plus size={16} className="shrink-0" />New Workout</>}
     </Button>
   );

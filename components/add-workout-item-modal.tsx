@@ -227,7 +227,7 @@ function ImageUpload({ value, onChange }: { value: string | null; onChange: (url
           </button>
         </div>
       ) : (
-        <label className="flex h-20 w-32 cursor-pointer items-center justify-center rounded-md border border-dashed border-neutral-300 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-600">
+        <label className="flex h-20 w-32 cursor-pointer items-center justify-center rounded-md border border-dashed border-white/20 text-sm text-neutral-500 hover:border-white/40 hover:text-neutral-300">
           {uploading ? "Uploading…" : "+ Image"}
           <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
         </label>

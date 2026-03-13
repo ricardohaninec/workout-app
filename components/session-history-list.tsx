@@ -79,7 +79,7 @@ export default function SessionHistoryList({ initialSessions }: { initialSession
         {sessions.map((s) => (
           <li
             key={s.id}
-            className="flex cursor-pointer items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-neutral-50"
+            className="flex cursor-pointer items-center gap-4 rounded-lg border border-white/10 bg-[#111111] p-4 transition-colors hover:bg-white/5"
             onClick={() => openDetail(s)}
           >
             {/* Thumbnail */}
@@ -91,14 +91,14 @@ export default function SessionHistoryList({ initialSessions }: { initialSession
                 className="h-14 w-14 shrink-0 rounded-lg object-cover"
               />
             ) : (
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-neutral-100">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/5">
                 <PlaceholderImage size={20} />
               </div>
             )}
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold">{s.workout_title}</p>
+              <p className="truncate font-semibold text-white">{s.workout_title}</p>
               <p className="mt-0.5 text-xs text-neutral-500">{formatDate(s.completed_at)}</p>
               <div className="mt-1 flex flex-wrap gap-3 text-xs text-neutral-400">
                 <span>{s.exercise_count} exercise{s.exercise_count !== 1 ? "s" : ""}</span>
@@ -111,7 +111,7 @@ export default function SessionHistoryList({ initialSessions }: { initialSession
             <Button
               variant="ghost"
               size="sm"
-              className="shrink-0 text-red-500 hover:bg-red-50 hover:text-red-600"
+              className="shrink-0 text-red-500 hover:bg-red-500/10 hover:text-red-400"
               onClick={(e) => { e.stopPropagation(); setPendingDelete(s); }}
             >
               Delete
@@ -141,7 +141,7 @@ export default function SessionHistoryList({ initialSessions }: { initialSession
           from {pendingDelete ? formatDate(pendingDelete.completed_at) : ""}? This cannot be undone.
         </p>
         <div className="mt-4 flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => setPendingDelete(null)} disabled={deleting}>
+          <Button variant="outline" size="sm" onClick={() => setPendingDelete(null)} disabled={deleting} className="text-foreground">
             Cancel
           </Button>
           <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>

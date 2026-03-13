@@ -291,7 +291,7 @@ export default function WorkoutEditor({
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="text-xl font-bold bg-transparent outline-none border-b border-transparent hover:border-neutral-300 focus:border-neutral-900 transition-colors w-full min-w-0 sm:text-2xl"
+          className="text-xl font-bold bg-transparent outline-none border-b border-transparent hover:border-white/20 focus:border-white/40 transition-colors w-full min-w-0 sm:text-2xl"
         />
 
         {/* Action buttons */}
@@ -308,7 +308,7 @@ export default function WorkoutEditor({
             disabled={shareLoading}
             className={
               isPublic
-                ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                ? "border-green-500/40 bg-green-500/10 text-green-400 hover:bg-green-500/20"
                 : ""
             }
           >
@@ -318,7 +318,7 @@ export default function WorkoutEditor({
             variant="outline"
             size="sm"
             onClick={() => setDeleteOpen(true)}
-            className="border-red-200 text-red-600 hover:bg-red-50"
+            className="border-red-500/30 text-red-400 hover:bg-red-500/10"
           >
             Delete
           </Button>
@@ -326,15 +326,15 @@ export default function WorkoutEditor({
 
         {/* Public link */}
         {isPublic && slug && (
-          <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2">
-            <span className="text-xs text-green-600 font-medium shrink-0">
+          <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2">
+            <span className="text-xs text-green-400 font-medium shrink-0">
               Public link
             </span>
             <a
               href={`/p/${slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 truncate text-sm text-green-700 underline underline-offset-2"
+              className="flex-1 truncate text-sm text-green-400 underline underline-offset-2"
             >
               {origin ? `${origin}/p/${slug}` : `/p/${slug}`}
             </a>
@@ -346,7 +346,7 @@ export default function WorkoutEditor({
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2500);
               }}
-              className="shrink-0 border-green-300 text-green-700 hover:bg-green-100"
+              className="shrink-0 border-green-500/40 text-green-400 hover:bg-green-500/20"
             >
               {copied ? "Copied!" : "Copy"}
             </Button>
@@ -373,7 +373,7 @@ export default function WorkoutEditor({
             </button>
           </div>
         ) : (
-          <label className="flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-neutral-300 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-600 transition-colors">
+          <label className="flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-white/20 text-sm text-neutral-500 hover:border-white/40 hover:text-neutral-300 transition-colors">
             {imageUploading ? "Uploading…" : "+ Add workout image"}
             <input
               type="file"
@@ -449,7 +449,7 @@ export default function WorkoutEditor({
                         </p>
                       )}
                     </div>
-                    <div className="w-28 shrink-0 bg-neutral-100 -my-4">
+                    <div className="w-28 shrink-0 bg-white/5 -my-4">
                       {item.exerciseImageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -458,7 +458,7 @@ export default function WorkoutEditor({
                           className="h-full w-full object-contain"
                         />
                       ) : (
-                        <div className="h-full w-full bg-neutral-200" />
+                        <div className="h-full w-full bg-white/5" />
                       )}
                     </div>
                   </div>
@@ -466,7 +466,7 @@ export default function WorkoutEditor({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                      className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
                       onClick={() =>
                         setPending((prev) =>
                           prev.filter((p) => p.tempId !== item.tempId),
@@ -571,6 +571,7 @@ export default function WorkoutEditor({
               type="button"
               variant="outline"
               onClick={() => setEditItem(null)}
+              className="text-neutral-300 border-white/10 hover:bg-white/5 hover:text-white"
             >
               Cancel
             </Button>
@@ -587,13 +588,13 @@ export default function WorkoutEditor({
         onClose={() => setRemoveItem(null)}
         title="Remove Exercise"
       >
-        <p className="mb-6 text-sm text-neutral-600">
+        <p className="mb-6 text-sm text-neutral-400">
           Remove{" "}
           <span className="font-medium">{removeItem?.exercise.title}</span> from
           this workout?
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setRemoveItem(null)}>
+          <Button variant="outline" onClick={() => setRemoveItem(null)} className="text-neutral-300 border-white/10 hover:bg-white/5 hover:text-white">
             Cancel
           </Button>
           <Button
@@ -612,11 +613,11 @@ export default function WorkoutEditor({
         onClose={() => setRemoveImageOpen(false)}
         title="Remove Image"
       >
-        <p className="mb-6 text-sm text-neutral-600">
+        <p className="mb-6 text-sm text-neutral-400">
           Are you sure you want to remove the workout image?
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setRemoveImageOpen(false)}>
+          <Button variant="outline" onClick={() => setRemoveImageOpen(false)} className="text-neutral-300 border-white/10 hover:bg-white/5 hover:text-white">
             Cancel
           </Button>
           <Button
@@ -637,13 +638,13 @@ export default function WorkoutEditor({
         onClose={() => setDeleteOpen(false)}
         title="Delete Workout"
       >
-        <p className="mb-6 text-sm text-neutral-600">
+        <p className="mb-6 text-sm text-neutral-400">
           Are you sure you want to delete{" "}
           <span className="font-medium">&quot;{title}&quot;</span>? This action
           cannot be undone.
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+          <Button variant="outline" onClick={() => setDeleteOpen(false)} className="text-neutral-300 border-white/10 hover:bg-white/5 hover:text-white">
             Cancel
           </Button>
           <Button variant="destructive" onClick={handleDelete}>

@@ -63,7 +63,7 @@ export default function WorkoutItemCard({
         </div>
 
         {/* Right: image */}
-        <div className="w-28 shrink-0 bg-neutral-100 -my-4">
+        <div className="w-28 shrink-0 bg-white/5 -my-4">
           {item.exercise.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -88,7 +88,7 @@ export default function WorkoutItemCard({
           )}
           {onRemove && (
             <Button
-              className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
+              className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
               variant="outline"
               size="sm"
               onClick={() => onRemove(item)}

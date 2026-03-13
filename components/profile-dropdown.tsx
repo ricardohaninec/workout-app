@@ -52,7 +52,7 @@ export default function ProfileDropdown({ name, email }: { name: string; email: 
             onClick={handleLogout}
             className="flex h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-[14px] font-medium text-orange-500 hover:bg-white/5 hover:text-orange-500 focus:bg-white/5 focus:text-orange-500"
           >
-            <LogOut size={16} className="shrink-0" />
+            <LogOut size={16} className="shrink-0 text-orange-500" />
             Log out
           </DropdownMenuItem>
         </div>

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { get, query } from "@/lib/db";
 import type { Workout, WorkoutItem, WorkoutItemSet } from "@/lib/types";
 import WorkoutItemCard from "@/components/workout-item-card";
-import Logo from "@/components/icons/logo";
+import { Dumbbell } from "lucide-react";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -71,18 +71,21 @@ export default async function PublicWorkoutPage({ params }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b bg-white">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-8">
-          <div className="flex items-center gap-2">
-            <Logo />
-            <p className="text-sm text-neutral-500">Viewing a shared workout</p>
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0D0D0D]">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <Dumbbell className="h-5 w-5 text-orange-500" />
+            <span className="text-[11px] font-black tracking-[0.25em] text-white">WORKOUT</span>
           </div>
-          <a
-            href="/dashboard"
-            className="rounded-full bg-neutral-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700 transition-colors"
-          >
-            Open Workout App
-          </a>
+          <div className="flex items-center gap-4">
+            <p className="hidden text-sm text-[#9CA3AF] sm:block">Viewing a shared workout</p>
+            <a
+              href="/dashboard"
+              className="rounded-lg bg-[#F97316] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#ea6c0a]"
+            >
+              Open Workout App
+            </a>
+          </div>
         </div>
       </header>
     <main className="mx-auto max-w-3xl p-4 sm:p-8">

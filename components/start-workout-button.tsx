@@ -54,14 +54,18 @@ export default function StartWorkoutButton({
   return (
     <>
       <Button
-        className={`w-full ${hasActiveSession ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+        className={`w-full gap-1.5 text-[13px] font-semibold ${
+          hasActiveSession
+            ? "bg-green-600 hover:bg-green-700 text-white"
+            : "bg-orange-500 hover:bg-orange-600 text-white"
+        }`}
         onClick={handleClick}
         disabled={loading}
       >
         {loading ? "Loading…" : hasActiveSession ? (
-          <><ActivitySquare size={15} className="shrink-0" /> View Workout Progress</>
+          <><ActivitySquare size={14} className="shrink-0" /> View Workout Progress</>
         ) : (
-          <><Play size={15} className="shrink-0" /> Start Workout</>
+          <><Play size={14} className="shrink-0" /> Start Workout</>
         )}
       </Button>
 
@@ -75,7 +79,7 @@ export default function StartWorkoutButton({
         {exercises.length > 0 && (
           <ul className="mb-6 space-y-2">
             {exercises.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
+              <li key={item.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
                 <Dumbbell size={15} className="shrink-0 text-neutral-400" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{item.exercise.title}</p>
@@ -90,10 +94,18 @@ export default function StartWorkoutButton({
         )}
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setModalOpen(false)} disabled={starting}>
+          <Button
+            className="border border-white/10 bg-[#111111] text-white hover:bg-white/5"
+            onClick={() => setModalOpen(false)}
+            disabled={starting}
+          >
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={starting || exercises.length === 0}>
+          <Button
+            className="bg-orange-500 text-white hover:bg-orange-600"
+            onClick={handleConfirm}
+            disabled={starting || exercises.length === 0}
+          >
             {starting ? "Starting…" : "Start Workout"}
           </Button>
         </div>

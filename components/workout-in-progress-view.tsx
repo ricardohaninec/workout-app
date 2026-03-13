@@ -285,7 +285,7 @@ export default function WorkoutInProgressView({
                 {itemSets.map((s, i) => (
                   <div
                     key={`${item.id}-${s.position}`}
-                    className={`flex items-center gap-2 rounded-md px-1 transition-colors ${s.isComplete ? "bg-green-50" : ""}`}
+                    className={`flex items-center gap-2 rounded-md px-1 transition-colors ${s.isComplete ? "bg-orange-500/10" : ""}`}
                   >
                     <span className="w-8 text-sm text-neutral-400">{i + 1}</span>
                     <Input
@@ -293,7 +293,7 @@ export default function WorkoutInProgressView({
                       min={1}
                       value={s.reps}
                       onChange={(e) => updateSet(item.id, s.position, "reps", e.target.value)}
-                      className={`w-20 ${s.isComplete ? "opacity-60" : ""}`}
+                      className={`w-20 bg-transparent ${s.isComplete ? "border-orange-500/30 text-neutral-400" : ""}`}
                     />
                     <Input
                       type="number"
@@ -301,9 +301,9 @@ export default function WorkoutInProgressView({
                       step={0.5}
                       value={s.weight}
                       onChange={(e) => updateSet(item.id, s.position, "weight", e.target.value)}
-                      className={`w-24 ${s.isComplete ? "opacity-60" : ""}`}
+                      className={`w-24 bg-transparent ${s.isComplete ? "border-orange-500/30 text-neutral-400" : ""}`}
                     />
-                    <span className={`w-16 text-sm text-neutral-500 ${s.isComplete ? "opacity-60" : ""}`}>
+                    <span className={`w-16 text-sm ${s.isComplete ? "text-neutral-500" : "text-neutral-500"}`}>
                       {s.rest_seconds}s
                     </span>
                     <div className="flex w-8 justify-center">
@@ -342,10 +342,10 @@ export default function WorkoutInProgressView({
 
       {/* Bottom actions */}
       <div className="mt-8 flex justify-between">
-        <Button variant="outline" onClick={() => setCancelConfirm(true)} disabled={completing || cancelling}>
+        <Button variant="outline" onClick={() => setCancelConfirm(true)} disabled={completing || cancelling} className="border-white/20 bg-transparent text-neutral-300 hover:bg-white/5 hover:text-white">
           Cancel Session
         </Button>
-        <Button onClick={completeSession} disabled={completing || saveStatus === "saving"}>
+        <Button onClick={completeSession} disabled={completing || saveStatus === "saving"} className="bg-orange-500 text-white hover:bg-orange-600">
           {completing ? "Completing…" : "Complete Session"}
         </Button>
       </div>
