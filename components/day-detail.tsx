@@ -166,7 +166,7 @@ export default function DayDetail({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-medium text-white">Meal Type</label>
-            <Select value={mealType} onValueChange={setMealType}>
+            <Select value={mealType} onValueChange={(v) => { if (v) setMealType(v); }}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
