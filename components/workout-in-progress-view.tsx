@@ -270,30 +270,36 @@ export default function WorkoutInProgressView({
                     <PlaceholderImage size={24} />
                   </div>
                 )}
-                <span className="font-semibold">{item.exercise.title}</span>
+                <div>
+                  <span className="font-semibold">{item.exercise.title}</span>
+                  {item.note && (
+                    <p className="mt-1 text-sm text-neutral-400">{item.note}</p>
+                  )}
+                </div>
               </div>
 
               {/* Set rows */}
               <div className="mb-2 flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-neutral-400">
-                  <span className="w-8">Set</span>
-                  <span className="w-20">Reps</span>
-                  <span className="w-24">Weight (lb)</span>
-                  <span className="w-16">Rest (s)</span>
-                  <span className="w-8 text-center">Done</span>
+                <div className="grid grid-cols-[1.5rem_1fr_1fr_2.5rem_2rem_1.5rem] sm:flex sm:gap-2 gap-1.5 items-center text-xs font-medium text-neutral-400 px-1">
+                  <span>#</span>
+                  <span>Reps</span>
+                  <span>Weight</span>
+                  <span className="text-center">Rest</span>
+                  <span className="text-center">Done</span>
+                  <span />
                 </div>
                 {itemSets.map((s, i) => (
                   <div
                     key={`${item.id}-${s.position}`}
-                    className={`flex items-center gap-2 rounded-md px-1 transition-colors ${s.isComplete ? "bg-orange-500/10" : ""}`}
+                    className={`grid grid-cols-[1.5rem_1fr_1fr_2.5rem_2rem_1.5rem] sm:flex sm:gap-2 gap-1.5 items-center rounded-md px-1 transition-colors ${s.isComplete ? "bg-orange-500/10" : ""}`}
                   >
-                    <span className="w-8 text-sm text-neutral-400">{i + 1}</span>
+                    <span className="text-sm text-neutral-400">{i + 1}</span>
                     <Input
                       type="number"
                       min={1}
                       value={s.reps}
                       onChange={(e) => updateSet(item.id, s.position, "reps", e.target.value)}
-                      className={`w-20 bg-transparent ${s.isComplete ? "border-orange-500/30 text-neutral-400" : ""}`}
+                      className={`w-full sm:w-20 bg-transparent ${s.isComplete ? "border-orange-500/30 text-neutral-400" : ""}`}
                     />
                     <Input
                       type="number"
@@ -301,27 +307,27 @@ export default function WorkoutInProgressView({
                       step={0.5}
                       value={s.weight}
                       onChange={(e) => updateSet(item.id, s.position, "weight", e.target.value)}
-                      className={`w-24 bg-transparent ${s.isComplete ? "border-orange-500/30 text-neutral-400" : ""}`}
+                      className={`w-full sm:w-24 bg-transparent ${s.isComplete ? "border-orange-500/30 text-neutral-400" : ""}`}
                     />
-                    <span className={`w-16 text-sm ${s.isComplete ? "text-neutral-500" : "text-neutral-500"}`}>
+                    <span className="text-center text-sm text-neutral-500">
                       {s.rest_seconds}s
                     </span>
-                    <div className="flex w-8 justify-center">
+                    <div className="flex justify-center">
                       <Checkbox
                         checked={s.isComplete}
                         onCheckedChange={() => toggleSetComplete(item.id, s.position)}
                         aria-label={s.isComplete ? "Mark set incomplete" : "Mark set complete"}
                       />
                     </div>
-                    {itemSets.length > 1 && (
+                    {itemSets.length > 1 ? (
                       <button
                         type="button"
                         onClick={() => setPendingRemove({ itemId: item.id, position: s.position, setNumber: i + 1 })}
-                        className="ml-1 text-xs text-neutral-400 hover:text-red-500"
+                        className="text-xs text-neutral-400 hover:text-red-500"
                       >
                         ✕
                       </button>
-                    )}
+                    ) : <span />}
                   </div>
                 ))}
               </div>
@@ -341,7 +347,7 @@ export default function WorkoutInProgressView({
       </ul>
 
       {/* Bottom actions */}
-      <div className="mt-8 flex justify-between">
+      <div className="mt-8 flex flex-wrap justify-between gap-3">
         <Button variant="outline" onClick={() => setCancelConfirm(true)} disabled={completing || cancelling} className="border-white/20 bg-transparent text-neutral-300 hover:bg-white/5 hover:text-white">
           Cancel Session
         </Button>

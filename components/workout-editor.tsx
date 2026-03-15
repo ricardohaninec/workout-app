@@ -493,7 +493,7 @@ export default function WorkoutEditor({
           <Label className="block">Sets</Label>
           <div className="flex flex-col gap-2">
             {editSets.map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div key={i} className="grid grid-cols-[1fr_auto_1fr_1fr_auto] items-center gap-1.5 sm:flex sm:gap-2">
                 <Input
                   type="number"
                   min={1}
@@ -502,7 +502,7 @@ export default function WorkoutEditor({
                     setEditSets(editSets.map((r, j) => j === i ? { ...r, reps: e.target.value } : r))
                   }
                   placeholder="Reps"
-                  className="w-20"
+                  className="w-full sm:w-20"
                 />
                 <span className="text-sm text-neutral-400">×</span>
                 <Input
@@ -514,32 +514,33 @@ export default function WorkoutEditor({
                     setEditSets(editSets.map((r, j) => j === i ? { ...r, weight: e.target.value } : r))
                   }
                   placeholder="lb"
-                  className="w-24"
+                  className="w-full sm:w-24"
                 />
-                <span className="text-xs text-neutral-400">lb</span>
-                <Input
-                  type="number"
-                  min={0}
-                  step={5}
-                  value={s.rest_seconds}
-                  onChange={(e) =>
-                    setEditSets(editSets.map((r, j) => j === i ? { ...r, rest_seconds: e.target.value } : r))
-                  }
-                  placeholder="60"
-                  className="w-16"
-                />
-                <span className="text-xs text-neutral-400">s rest</span>
-                {editSets.length > 1 && (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    min={0}
+                    step={5}
+                    value={s.rest_seconds}
+                    onChange={(e) =>
+                      setEditSets(editSets.map((r, j) => j === i ? { ...r, rest_seconds: e.target.value } : r))
+                    }
+                    placeholder="60"
+                    className="w-full sm:w-16"
+                  />
+                  <span className="text-xs text-neutral-400 whitespace-nowrap">s</span>
+                </div>
+                {editSets.length > 1 ? (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => setEditSets(editSets.filter((_, j) => j !== i))}
-                    className="ml-auto text-neutral-400 hover:text-red-500"
+                    className="text-neutral-400 hover:text-red-500"
                   >
                     ✕
                   </Button>
-                )}
+                ) : <span />}
               </div>
             ))}
           </div>

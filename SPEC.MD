@@ -1,11 +1,11 @@
 # Technical Specification – Note Taking / Workout Web App
-> Version 2.0 — Updated March 2026
+> Version 3.0 — Updated March 2026
 
 ---
 
 ## 1. Overview
 
-A web application where authenticated users can create, view, edit, delete, and publicly share workouts. Workouts are created with custom components and stored as JSON in a SQLite database, and rendered in the browser.
+A web application where authenticated users can create, view, edit, delete, and publicly share workouts, and log their daily food intake. Workouts are created with custom components and stored as JSON in a SQLite database, and rendered in the browser.
 
 ### 1.1 Core Features
 
@@ -16,6 +16,7 @@ A web application where authenticated users can create, view, edit, delete, and 
 - Exercises are reusable templates (title only — no sets stored on the exercise itself)
 - Public sharing of workouts via a public URL (toggle on/off)
 - Workout sessions tracked via WorkoutInProgress — multiple sessions per workout, one active at a time
+- Daily diet logging: track meals and food intake by day with nutritional summaries (calories, protein, carbs, fat)
 
 ### 1.2 Tech Stack
 
@@ -91,6 +92,16 @@ A WorkoutInProgress represents a live or completed session of performing a speci
 - Each session stores per-set performance via `workout_in_progress_set` records
 - Sessions are scoped to the authenticated user — no cross-user access
 - The `/workout-in-progress/[workoutId]` page shows all workout items for the workout and allows updating them within the active session
+
+### 3.5 Daily Diet (Authenticated)
+
+Users can log their food intake with a hierarchical structure: one day → many meals → many food items.
+
+- Log multiple meals per day (Breakfast, Lunch, Dinner, Snacks, etc.)
+- Add foods by selecting from a reusable Food library or via manual (ephemeral) entry
+- Manual food entries are stored only on that meal log — they are NOT saved to the Food library
+- View per-meal and daily total nutritional summaries (Calories, Protein, Carbs, Fat)
+- A user may only have one day record per calendar date (unique constraint on `user_id + date`)
 
 ---
 
@@ -307,6 +318,70 @@ CREATE TABLE IF NOT EXISTS workout_in_progress_set (
 
 ---
 
+---
+
+#### Daily Diet Tables
+
+Four tables implement the diet feature. Relationships: `users (1) → (*) days → (*) meals → (*) meal_foods ← (*) foods`
+
+```sql
+CREATE TABLE IF NOT EXISTS days (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  date DATE NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+  UNIQUE (user_id, date)
+);
+
+CREATE TABLE IF NOT EXISTS meals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  day_id UUID NOT NULL,
+  meal_type VARCHAR(100) NOT NULL,
+  meal_time TIME,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (day_id) REFERENCES days(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS foods (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  calories_per_g DECIMAL(8,4) NOT NULL,
+  protein_per_g DECIMAL(8,4) NOT NULL,
+  carbs_per_g DECIMAL(8,4) NOT NULL,
+  fat_per_g DECIMAL(8,4) NOT NULL,
+  unit VARCHAR(50) NOT NULL DEFAULT 'g',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS meal_foods (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  meal_id UUID NOT NULL,
+  food_id UUID,
+  food_name VARCHAR(255) NOT NULL,
+  quantity_grams DECIMAL(8,2) NOT NULL,
+  calories DECIMAL(8,2) NOT NULL,
+  protein DECIMAL(8,2) NOT NULL,
+  carbs DECIMAL(8,2) NOT NULL,
+  fat DECIMAL(8,2) NOT NULL,
+  is_manual BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE,
+  FOREIGN KEY (food_id) REFERENCES foods(id)
+);
+```
+
+> **Denormalized storage:** When `food_id` is present, macros are calculated at insert time as `quantity_grams * value_per_g` and stored on `meal_foods`. This protects historical accuracy if a food in the library is later edited. When `food_id` is NULL (`is_manual = TRUE`), the user-supplied macro values are stored directly.
+
+---
+
 ### 5.2 Indexes
 
 ```sql
@@ -327,6 +402,13 @@ CREATE INDEX IF NOT EXISTS idx_wip_user_id ON workout_in_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_wip_is_active ON workout_in_progress(is_active);
 CREATE INDEX IF NOT EXISTS idx_wip_set_wip_id ON workout_in_progress_set(workout_in_progress_id);
 CREATE INDEX IF NOT EXISTS idx_wip_set_item_id ON workout_in_progress_set(workout_item_id);
+
+CREATE INDEX IF NOT EXISTS idx_days_user_id ON days(user_id);
+CREATE INDEX IF NOT EXISTS idx_days_date ON days(date);
+CREATE INDEX IF NOT EXISTS idx_meals_day_id ON meals(day_id);
+CREATE INDEX IF NOT EXISTS idx_foods_user_id ON foods(user_id);
+CREATE INDEX IF NOT EXISTS idx_meal_foods_meal_id ON meal_foods(meal_id);
+CREATE INDEX IF NOT EXISTS idx_meal_foods_food_id ON meal_foods(food_id);
 ```
 
 ### 5.3 DB Initialization Scripts
@@ -336,6 +418,7 @@ CREATE INDEX IF NOT EXISTS idx_wip_set_item_id ON workout_in_progress_set(workou
 - `scripts/migrate-add-item-note.ts` — migration adding `note TEXT` column to `workout_item`
 - `scripts/migrate-add-set-complete.ts` — migration adding `is_complete BOOLEAN` column to `workout_in_progress_set`
 - `scripts/migrate-add-rest-seconds.ts` — migration adding `rest_seconds INTEGER DEFAULT 60` column to `workout_item_set`
+- `scripts/migrate-add-diet.ts` — migration adding `days`, `meals`, `foods`, and `meal_foods` tables
 
 ---
 
@@ -734,6 +817,114 @@ Delete a WorkoutInProgress session and all its sets (cascades to `workout_in_pro
 
 ---
 
+### 7.7 Daily Diet Endpoints
+
+All endpoints require authentication and are scoped to the authenticated user.
+
+#### Days
+
+##### GET /api/days
+
+Returns all days for the user, sorted by date descending. Each day includes `totalCalories` and `mealCount` aggregated from its meals.
+
+**Response 200:**
+```json
+{
+  "days": [
+    { "id": "uuid", "date": "2025-03-15", "notes": "Cheat day", "totalCalories": 2450, "mealCount": 3, "createdAt": "..." }
+  ]
+}
+```
+
+##### POST /api/days
+
+Creates a new day. Returns `409` if a day already exists for that date.
+
+**Request Body:** `{ "date": "2025-03-15", "notes": "Optional" }`
+
+##### PATCH /api/days/:id
+
+Updates the `notes` field of a day.
+
+##### DELETE /api/days/:id
+
+Deletes a day and cascades to all its meals and `meal_foods` records.
+
+---
+
+#### Meals
+
+##### GET /api/days/:dayId/meals
+
+Returns all meals for a day, each including their food items and per-meal nutritional totals. Also returns `dayTotals`.
+
+**Response 200:**
+```json
+{
+  "meals": [
+    {
+      "id": "meal-uuid", "dayId": "day-uuid", "mealType": "Breakfast", "mealTime": "08:30", "notes": null,
+      "foods": [{ "id": "mf-uuid", "foodName": "Oatmeal", "quantityGrams": 80, "calories": 312, "protein": 10.5, "carbs": 54.4, "fat": 5.6, "isManual": false }],
+      "totals": { "calories": 312, "protein": 10.5, "carbs": 54.4, "fat": 5.6 }
+    }
+  ],
+  "dayTotals": { "calories": 2100, "protein": 142, "carbs": 230, "fat": 65 }
+}
+```
+
+##### POST /api/days/:dayId/meals
+
+Creates a new meal under a day. Required: `mealType`. Optional: `mealTime`, `notes`.
+
+##### PATCH /api/meals/:id
+
+Updates meal metadata: `mealType`, `mealTime`, or `notes`.
+
+##### DELETE /api/meals/:id
+
+Deletes a meal and all its `meal_foods` records.
+
+---
+
+#### Meal Foods
+
+##### POST /api/meals/:mealId/foods
+
+Adds a food to a meal. Two modes:
+
+- **Library food:** pass `foodId` + `quantityGrams`. Server looks up the food, computes macros (`quantity_grams * value_per_g`), and stores them denormalized.
+- **Manual entry:** omit `foodId`, pass `foodName`, `quantityGrams`, `calories`, `protein`, `carbs`, `fat`. Sets `is_manual = TRUE`; food is NOT saved to the `foods` table.
+
+##### PATCH /api/meal-foods/:id
+
+Updates a food entry. If linked to a `food_id`, only `quantityGrams` is editable — macros are recalculated server-side. Manual entries allow editing all fields.
+
+##### DELETE /api/meal-foods/:id
+
+Removes a food item from a meal.
+
+---
+
+#### Foods (Library)
+
+##### GET /api/foods
+
+Returns all foods in the user's library. Supports optional `?search=` query param.
+
+##### POST /api/foods
+
+Creates a new food. Required fields: `name`, `caloriesPerG`, `proteinPerG`, `carbsPerG`, `fatPerG`. Optional: `unit` (defaults to `g`).
+
+##### PATCH /api/foods/:id
+
+Updates an existing food's details.
+
+##### DELETE /api/foods/:id
+
+Removes a food from the library. Does NOT affect historical `meal_foods` records (values are stored denormalized).
+
+---
+
 ## 8. Frontend – Pages & Components
 
 ### 8.1 Routes
@@ -746,6 +937,9 @@ Delete a WorkoutInProgress session and all its sets (cascades to `workout_in_pro
 | `/p/[slug]` | Public | Read-only public workout page |
 | `/workout-in-progress/[workoutId]` | Auth | Active session page: view items, log sets, complete session |
 | `/history` | Auth | Completed session history with per-session detail modal |
+| `/days` | Auth | Lists all logged diet days; create a new day entry |
+| `/days/[dayId]` | Auth | Day detail: meals, food items, per-meal and daily nutritional summaries |
+| `/foods` | Auth | Food library: searchable list with create, edit, delete |
 
 ### 8.2 Layout & Navigation
 
@@ -800,6 +994,21 @@ Renders the list of completed sessions on `/history`. Clicking a session row ope
 
 **components/start-workout-button.tsx**
 On click, fetches the workout's exercises and shows a confirmation modal listing all exercises and their sets before starting. Calls `POST /api/workouts/:id/sessions` on confirm and navigates to `/workout-in-progress/[workoutId]`.
+
+**components/days-list.tsx**
+Props: `days: Day[]`. Renders logged days sorted by date descending. Each row shows date, meal count, and total calories. Includes a create-day form (date picker + optional note). Clicking a row navigates to `/days/[dayId]`.
+
+**components/day-detail.tsx**
+Props: `dayId`. Shows date and optional day note at the top. Lists each meal as a card with its `mealType`, `mealTime`, food items, and per-meal nutritional totals. Includes a daily total summary at the bottom. Allows adding a new meal and expanding/editing meals inline.
+
+**components/meal-card.tsx**
+Props: `meal: Meal`. Displays meal type, time, food item list (name, quantity, macros), and totals. Includes controls to add/remove food items and delete the meal.
+
+**components/add-food-to-meal-modal.tsx**
+Two-tab modal (Library / Manual Entry). Library tab: searchable food list, enter `quantityGrams` and confirm. Manual tab: collect `foodName`, `quantityGrams`, `calories`, `protein`, `carbs`, `fat`. Calls `POST /api/meals/:mealId/foods` on confirm.
+
+**components/foods-library.tsx**
+Props: none (fetches from `/api/foods`). Searchable table of user foods. Supports create, inline edit, and delete. Deleting a food does not affect historical meal logs.
 
 ### 8.4 shadcn/ui Components (`components/ui/`)
 
@@ -872,3 +1081,4 @@ bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress
 | 2.0 | March 2026 | Added WorkoutInProgress feature: new DB tables (`workout_in_progress`, `workout_in_progress_set`), new API endpoints (§7.6), new route `/workout-in-progress/[workoutId]`, new components (`workout-in-progress-view`, `start-session-button`), updated security and indexes sections |
 | 2.1 | March 2026 | Migrated DB from SQLite (`bun:sqlite`) to PostgreSQL (`pg`); added `image_url` to `workout` table; added `note TEXT` to `workout_item`; added `is_complete BOOLEAN` to `workout_in_progress_set`; updated all SQL to use PostgreSQL types (`BOOLEAN`, `TIMESTAMPTZ`) |
 | 2.2 | March 2026 | Added `rest_seconds INTEGER DEFAULT 60` to `workout_item_set`; rest time read-only in session view, sourced from template; rest countdown timer on set completion with `sessionStorage` persistence and floating footer UI; "Get ready" modal on timer end; start-workout confirmation modal; session history detail modal; animated side-nav drawer replacing inline header nav; scrollable modals (max 90vh); Complete Session disabled while saving |
+| 3.0 | March 2026 | Added Daily Diet feature: new DB tables (`days`, `meals`, `foods`, `meal_foods`), new API endpoints (§7.7), new routes (`/days`, `/days/[dayId]`, `/foods`), new components (`days-list`, `day-detail`, `meal-card`, `add-food-to-meal-modal`, `foods-library`); supports library and manual food entries with denormalized macro storage |

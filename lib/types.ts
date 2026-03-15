@@ -63,6 +63,53 @@ export type WorkoutInProgressSet = {
   updated_at: string;
 };
 
+export type Day = {
+  id: string;
+  user_id: string;
+  date: string;
+  notes: string | null;
+  total_calories: number;
+  meal_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Meal = {
+  id: string;
+  day_id: string;
+  meal_type: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Food = {
+  id: string;
+  user_id: string;
+  name: string;
+  calories_per_g: number;
+  protein_per_g: number;
+  carbs_per_g: number;
+  fat_per_g: number;
+  unit: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MealFood = {
+  id: string;
+  meal_id: string;
+  food_id: string | null;
+  food_name: string;
+  quantity_grams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  is_manual: boolean;
+  created_at: string;
+};
+
 export type PendingWorkoutItem = {
   tempId: string;
   exerciseTitle: string;
