@@ -66,33 +66,35 @@ export default function MealCard({
           {meal.foods.map((food: MealFood) => (
             <div
               key={food.id}
-              className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-white/[0.02]"
+              className="flex flex-col gap-0.5 rounded-lg px-3 py-2 hover:bg-white/[0.02]"
             >
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-[13px] font-medium text-white">{food.food_name}</span>
-                <span className="shrink-0 text-[12px] text-neutral-500">{Number(food.quantity_grams)}g</span>
-                {food.is_manual && (
-                  <span className="shrink-0 rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] text-neutral-500">
-                    manual
-                  </span>
-                )}
-              </div>
-              <div className="ml-2 flex shrink-0 items-center gap-3">
-                <div className="flex items-center gap-2 text-[12px]">
-                  <span className="text-neutral-400">{Math.round(Number(food.calories))} kcal</span>
-                  <span className="text-neutral-600">·</span>
-                  <span className="text-blue-400/80">{Number(food.protein).toFixed(1)}g P</span>
-                  <span className="text-neutral-600">·</span>
-                  <span className="text-yellow-400/80">{Number(food.carbs).toFixed(1)}g C</span>
-                  <span className="text-neutral-600">·</span>
-                  <span className="text-purple-400/80">{Number(food.fat).toFixed(1)}g F</span>
+              {/* Name row */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="truncate text-[13px] font-medium text-white">{food.food_name}</span>
+                  <span className="shrink-0 text-[12px] text-neutral-500">{Number(food.quantity_grams)}g</span>
+                  {food.is_manual && (
+                    <span className="shrink-0 rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] text-neutral-500">
+                      manual
+                    </span>
+                  )}
                 </div>
                 <button
-                  className="flex h-5 w-5 items-center justify-center rounded text-neutral-600 hover:text-red-400"
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-neutral-600 hover:text-red-400"
                   onClick={() => onDeleteFood(food.id)}
                 >
                   <X size={12} />
                 </button>
+              </div>
+              {/* Macros row */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px]">
+                <span className="text-neutral-400">{Math.round(Number(food.calories))} kcal</span>
+                <span className="text-neutral-600">·</span>
+                <span className="text-blue-400/80">{Number(food.protein).toFixed(1)}g P</span>
+                <span className="text-neutral-600">·</span>
+                <span className="text-yellow-400/80">{Number(food.carbs).toFixed(1)}g C</span>
+                <span className="text-neutral-600">·</span>
+                <span className="text-purple-400/80">{Number(food.fat).toFixed(1)}g F</span>
               </div>
             </div>
           ))}
