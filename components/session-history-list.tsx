@@ -42,7 +42,7 @@ export default function SessionHistoryList({ initialSessions }: { initialSession
   const [pendingDelete, setPendingDelete] = useState<SessionHistoryItem | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
-  const { data: detailSession, isPending: loadingDetail } = useQuery({
+  const { data: detailSession, isFetching: loadingDetail } = useQuery({
     queryKey: sessionKeys.detail(selectedSessionId ?? ""),
     queryFn: () => fetchSessionDetail(selectedSessionId!),
     enabled: !!selectedSessionId,
