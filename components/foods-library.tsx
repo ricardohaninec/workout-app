@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Food } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/modal";
+import { fetchFoods, createFood, updateFood, deleteFood as deleteFoodApi } from "@/lib/api/foods";
+import { foodKeys } from "@/lib/queryKeys";
 
 type FoodForm = {
   name: string;
@@ -27,13 +30,35 @@ const emptyForm: FoodForm = {
 };
 
 export default function FoodsLibrary({ foods: initial }: { foods: Food[] }) {
-  const [foods, setFoods] = useState(initial);
+  const queryClient = useQueryClient();
+  const { data: foods = [] } = useQuery({
+    queryKey: foodKeys.all,
+    queryFn: () => fetchFoods(),
+    initialData: initial,
+    initialDataUpdatedAt: () => Date.now(),
+  });
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editFood, setEditFood] = useState<Food | null>(null);
   const [deleteFood, setDeleteFood] = useState<Food | null>(null);
   const [form, setForm] = useState<FoodForm>(emptyForm);
-  const [loading, setLoading] = useState(false);
+
+  const invalidateFoods = () => queryClient.invalidateQueries({ queryKey: foodKeys.all });
+
+  const createMutation = useMutation({
+    mutationFn: createFood,
+    onSuccess: () => { invalidateFoods(); setCreateOpen(false); },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateFood,
+    onSuccess: () => { invalidateFoods(); setEditFood(null); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteFoodApi,
+    onSuccess: () => { invalidateFoods(); setDeleteFood(null); },
+  });
 
   const filtered = foods.filter((f) =>
     f.name.toLowerCase().includes(search.toLowerCase())
@@ -61,58 +86,33 @@ export default function FoodsLibrary({ foods: initial }: { foods: Food[] }) {
     setEditFood(null);
   }
 
-  async function handleCreate() {
-    setLoading(true);
-    const res = await fetch("/api/foods", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        caloriesPerG: Number(form.caloriesPerG),
-        proteinPerG: Number(form.proteinPerG),
-        carbsPerG: Number(form.carbsPerG),
-        fatPerG: Number(form.fatPerG),
-        unit: form.unit || "g",
-      }),
+  function handleCreate() {
+    createMutation.mutate({
+      name: form.name,
+      caloriesPerG: Number(form.caloriesPerG),
+      proteinPerG: Number(form.proteinPerG),
+      carbsPerG: Number(form.carbsPerG),
+      fatPerG: Number(form.fatPerG),
+      unit: form.unit || "g",
     });
-    setLoading(false);
-    if (!res.ok) return;
-    const food = await res.json();
-    setFoods((prev) => [...prev, food].sort((a, b) => a.name.localeCompare(b.name)));
-    setCreateOpen(false);
   }
 
-  async function handleEdit() {
+  function handleEdit() {
     if (!editFood) return;
-    setLoading(true);
-    const res = await fetch(`/api/foods/${editFood.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        caloriesPerG: Number(form.caloriesPerG),
-        proteinPerG: Number(form.proteinPerG),
-        carbsPerG: Number(form.carbsPerG),
-        fatPerG: Number(form.fatPerG),
-        unit: form.unit || "g",
-      }),
+    updateMutation.mutate({
+      id: editFood.id,
+      name: form.name,
+      caloriesPerG: Number(form.caloriesPerG),
+      proteinPerG: Number(form.proteinPerG),
+      carbsPerG: Number(form.carbsPerG),
+      fatPerG: Number(form.fatPerG),
+      unit: form.unit || "g",
     });
-    setLoading(false);
-    if (!res.ok) return;
-    const updated = await res.json();
-    setFoods((prev) =>
-      prev.map((f) => (f.id === updated.id ? updated : f)).sort((a, b) => a.name.localeCompare(b.name))
-    );
-    setEditFood(null);
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!deleteFood) return;
-    setLoading(true);
-    await fetch(`/api/foods/${deleteFood.id}`, { method: "DELETE" });
-    setLoading(false);
-    setFoods((prev) => prev.filter((f) => f.id !== deleteFood.id));
-    setDeleteFood(null);
+    deleteMutation.mutate(deleteFood.id);
   }
 
   const formValid =
@@ -220,9 +220,9 @@ export default function FoodsLibrary({ foods: initial }: { foods: Food[] }) {
           <Button
             className="bg-orange-500 font-semibold text-white hover:bg-orange-600"
             onClick={editFood ? handleEdit : handleCreate}
-            disabled={!formValid || loading}
+            disabled={!formValid || createMutation.isPending || updateMutation.isPending}
           >
-            {loading ? "Saving…" : editFood ? "Save" : "Add Food"}
+            {createMutation.isPending || updateMutation.isPending ? "Saving…" : editFood ? "Save" : "Add Food"}
           </Button>
         </div>
       </Modal>
@@ -239,9 +239,9 @@ export default function FoodsLibrary({ foods: initial }: { foods: Food[] }) {
           <Button
             className="bg-red-500 font-semibold text-white hover:bg-red-600"
             onClick={handleDelete}
-            disabled={loading}
+            disabled={deleteMutation.isPending}
           >
-            {loading ? "Deleting…" : "Delete"}
+            {deleteMutation.isPending ? "Deleting…" : "Delete"}
           </Button>
         </div>
       </Modal>

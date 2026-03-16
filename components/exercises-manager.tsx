@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import PlaceholderImage from "@/components/icons/placeholder-image";
 import type { Exercise } from "@/lib/types";
 import Modal from "@/components/modal";
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { fetchExercises, createExercise, updateExercise, deleteExercise } from "@/lib/api/exercises";
+import { exerciseKeys } from "@/lib/queryKeys";
 
 async function uploadImage(file: File): Promise<string> {
   const fd = new FormData();
@@ -57,14 +60,41 @@ function ImageUpload({ value, onChange }: { value: string | null; onChange: (url
 }
 
 export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
-  const [exercises, setExercises] = useState(initial);
+  const queryClient = useQueryClient();
+  const { data: exercises = [] } = useQuery({
+    queryKey: exerciseKeys.all,
+    queryFn: fetchExercises,
+    initialData: initial,
+    initialDataUpdatedAt: () => Date.now(),
+  });
   const [search, setSearch] = useState("");
+
+  const invalidateExercises = () => queryClient.invalidateQueries({ queryKey: exerciseKeys.all });
+
+  const createMutation = useMutation({
+    mutationFn: createExercise,
+    onSuccess: () => { invalidateExercises(); closeCreate(); },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateExercise,
+    onSuccess: () => { invalidateExercises(); setEditTarget(null); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteExercise,
+    onSuccess: () => { invalidateExercises(); setDeleteTarget(null); },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => Promise.all(ids.map(deleteExercise)),
+    onSuccess: () => { invalidateExercises(); setSelected(new Set()); setBulkDeleteOpen(false); setSelecting(false); },
+  });
 
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
   const [createTitle, setCreateTitle] = useState("");
   const [createImageUrl, setCreateImageUrl] = useState<string | null>(null);
-  const [createLoading, setCreateLoading] = useState(false);
 
   function closeCreate() {
     setCreateOpen(false);
@@ -72,35 +102,23 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
     setCreateImageUrl(null);
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    setCreateLoading(true);
-    const res = await fetch("/api/exercises", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: createTitle.trim() || "Untitled Exercise", image_url: createImageUrl }),
-    });
-    const created: Exercise = await res.json();
-    setExercises((prev) => [...prev, created].sort((a, b) => a.title.localeCompare(b.title)));
-    setCreateLoading(false);
-    closeCreate();
+    createMutation.mutate({ title: createTitle.trim() || "Untitled Exercise", image_url: createImageUrl });
   }
 
   // Selection state
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   // Edit state
   const [editTarget, setEditTarget] = useState<Exercise | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
-  const [editLoading, setEditLoading] = useState(false);
 
   // Single delete state
   const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -123,16 +141,8 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
     setSelected(new Set());
   }
 
-  async function handleBulkDelete() {
-    setBulkDeleteLoading(true);
-    await Promise.all(
-      [...selected].map((id) => fetch(`/api/exercises/${id}`, { method: "DELETE" }))
-    );
-    setExercises((prev) => prev.filter((ex) => !selected.has(ex.id)));
-    setSelected(new Set());
-    setBulkDeleteLoading(false);
-    setBulkDeleteOpen(false);
-    setSelecting(false);
+  function handleBulkDelete() {
+    bulkDeleteMutation.mutate([...selected]);
   }
 
   function openEdit(ex: Exercise) {
@@ -141,28 +151,15 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
     setEditImageUrl(ex.image_url);
   }
 
-  async function handleSaveEdit(e: React.FormEvent) {
+  function handleSaveEdit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!editTarget) return;
-    setEditLoading(true);
-    const res = await fetch(`/api/exercises/${editTarget.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: editTitle.trim() || editTarget.title, image_url: editImageUrl }),
-    });
-    const updated: Exercise = await res.json();
-    setExercises((prev) => prev.map((ex) => (ex.id === updated.id ? updated : ex)));
-    setEditLoading(false);
-    setEditTarget(null);
+    updateMutation.mutate({ id: editTarget.id, title: editTitle.trim() || editTarget.title, image_url: editImageUrl });
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!deleteTarget) return;
-    setDeleteLoading(true);
-    await fetch(`/api/exercises/${deleteTarget.id}`, { method: "DELETE" });
-    setExercises((prev) => prev.filter((ex) => ex.id !== deleteTarget.id));
-    setDeleteLoading(false);
-    setDeleteTarget(null);
+    deleteMutation.mutate(deleteTarget.id);
   }
 
   const filtered = search.trim()
@@ -285,8 +282,8 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
             <Label>Image <span className="text-neutral-400">(optional)</span></Label>
             <ImageUpload value={createImageUrl} onChange={setCreateImageUrl} />
           </div>
-          <Button type="submit" disabled={createLoading} className="bg-orange-500 text-white hover:bg-orange-600">
-            {createLoading ? "Creating…" : "Create"}
+          <Button type="submit" disabled={createMutation.isPending} className="bg-orange-500 text-white hover:bg-orange-600">
+            {createMutation.isPending ? "Creating…" : "Create"}
           </Button>
         </form>
       </Modal>
@@ -302,8 +299,8 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
           <Button onClick={() => setBulkDeleteOpen(false)} className="border border-white/10 bg-[#111111] text-white hover:bg-white/5">
             Cancel
           </Button>
-          <Button onClick={handleBulkDelete} disabled={bulkDeleteLoading} className="bg-red-600 text-white hover:bg-red-700">
-            {bulkDeleteLoading ? "Deleting…" : `Delete ${selected.size}`}
+          <Button onClick={handleBulkDelete} disabled={bulkDeleteMutation.isPending} className="bg-red-600 text-white hover:bg-red-700">
+            {bulkDeleteMutation.isPending ? "Deleting…" : `Delete ${selected.size}`}
           </Button>
         </div>
       </Modal>
@@ -323,8 +320,8 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
             <Label>Image <span className="text-neutral-400">(optional)</span></Label>
             <ImageUpload value={editImageUrl} onChange={setEditImageUrl} />
           </div>
-          <Button type="submit" disabled={editLoading} className="bg-orange-500 text-white hover:bg-orange-600">
-            {editLoading ? "Saving…" : "Save"}
+          <Button type="submit" disabled={updateMutation.isPending} className="bg-orange-500 text-white hover:bg-orange-600">
+            {updateMutation.isPending ? "Saving…" : "Save"}
           </Button>
         </form>
       </Modal>
@@ -340,8 +337,8 @@ export default function ExercisesManager({ initial }: { initial: Exercise[] }) {
           <Button onClick={() => setDeleteTarget(null)} className="border border-white/10 bg-[#111111] text-white hover:bg-white/5">
             Cancel
           </Button>
-          <Button onClick={handleDelete} disabled={deleteLoading} className="bg-red-600 text-white hover:bg-red-700">
-            {deleteLoading ? "Deleting…" : "Delete"}
+          <Button onClick={handleDelete} disabled={deleteMutation.isPending} className="bg-red-600 text-white hover:bg-red-700">
+            {deleteMutation.isPending ? "Deleting…" : "Delete"}
           </Button>
         </div>
       </Modal>

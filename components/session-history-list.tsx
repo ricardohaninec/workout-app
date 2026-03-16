@@ -3,12 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import type { SessionHistoryItem } from "@/app/api/sessions/route";
 import type { SessionDetail } from "@/app/api/sessions/[id]/route";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Modal from "@/components/modal";
 import PlaceholderImage from "@/components/icons/placeholder-image";
+import { fetchSessionDetail, deleteSession } from "@/lib/api/sessions";
+import { sessionKeys } from "@/lib/queryKeys";
 
 function formatDuration(seconds: number | null) {
   if (seconds == null) return "—";
@@ -37,28 +40,25 @@ export default function SessionHistoryList({ initialSessions }: { initialSession
   const router = useRouter();
   const [sessions, setSessions] = useState(initialSessions);
   const [pendingDelete, setPendingDelete] = useState<SessionHistoryItem | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [detailSession, setDetailSession] = useState<SessionDetail | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
-  async function openDetail(s: SessionHistoryItem) {
-    setLoadingDetail(true);
-    setDetailSession(null);
-    const res = await fetch(`/api/sessions/${s.id}`);
-    if (res.ok) setDetailSession(await res.json());
-    setLoadingDetail(false);
-  }
+  const { data: detailSession, isPending: loadingDetail } = useQuery({
+    queryKey: sessionKeys.detail(selectedSessionId ?? ""),
+    queryFn: () => fetchSessionDetail(selectedSessionId!),
+    enabled: !!selectedSessionId,
+  });
 
-  async function handleDelete() {
-    if (!pendingDelete) return;
-    setDeleting(true);
-    await fetch(`/api/workouts/${pendingDelete.workout_id}/sessions/${pendingDelete.id}`, {
-      method: "DELETE",
-    });
-    setSessions((prev) => prev.filter((s) => s.id !== pendingDelete.id));
-    setPendingDelete(null);
-    setDeleting(false);
-    router.refresh();
+  const deleteMutation = useMutation({
+    mutationFn: deleteSession,
+    onSuccess: (_, { sessionId }) => {
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+      setPendingDelete(null);
+      router.refresh();
+    },
+  });
+
+  function openDetail(s: SessionHistoryItem) {
+    setSelectedSessionId(s.id);
   }
 
   if (sessions.length === 0) {
@@ -123,7 +123,7 @@ export default function SessionHistoryList({ initialSessions }: { initialSession
       {/* Session detail modal */}
       <Modal
         open={loadingDetail || !!detailSession}
-        onClose={() => { setDetailSession(null); setLoadingDetail(false); }}
+        onClose={() => setSelectedSessionId(null)}
         title={detailSession?.workout_title ?? "Loading…"}
       >
         {loadingDetail && <p className="py-8 text-center text-sm text-neutral-400">Loading…</p>}
@@ -141,11 +141,16 @@ export default function SessionHistoryList({ initialSessions }: { initialSession
           from {pendingDelete ? formatDate(pendingDelete.completed_at) : ""}? This cannot be undone.
         </p>
         <div className="mt-4 flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => setPendingDelete(null)} disabled={deleting} className="text-foreground">
+          <Button variant="outline" size="sm" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending} className="text-foreground">
             Cancel
           </Button>
-          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
-            {deleting ? "Deleting…" : "Delete"}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => pendingDelete && deleteMutation.mutate({ workoutId: pendingDelete.workout_id, sessionId: pendingDelete.id })}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? "Deleting…" : "Delete"}
           </Button>
         </div>
       </Modal>

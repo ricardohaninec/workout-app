@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Food, MealFood } from "@/lib/types";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { fetchFoods, addFoodToMeal } from "@/lib/api/foods";
+import { foodKeys } from "@/lib/queryKeys";
 
 export default function AddFoodToMealModal({
   mealId,
@@ -21,7 +24,7 @@ export default function AddFoodToMealModal({
   onAdded: (food: MealFood) => void;
 }) {
   const [search, setSearch] = useState("");
-  const [foods, setFoods] = useState<Food[]>([]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [qty, setQty] = useState("");
 
@@ -32,17 +35,25 @@ export default function AddFoodToMealModal({
   const [manualCarbs, setManualCarbs] = useState("");
   const [manualFat, setManualFat] = useState("");
 
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
-    if (!open) return;
-    const t = setTimeout(async () => {
-      const res = await fetch(`/api/foods${search ? `?search=${encodeURIComponent(search)}` : ""}`);
-      const data = await res.json();
-      setFoods(data.foods ?? []);
-    }, 200);
+    const t = setTimeout(() => setDebouncedSearch(search), 200);
     return () => clearTimeout(t);
-  }, [search, open]);
+  }, [search]);
+
+  const { data: foods = [] } = useQuery({
+    queryKey: foodKeys.list(debouncedSearch),
+    queryFn: () => fetchFoods(debouncedSearch),
+    enabled: open,
+  });
+
+  const addFoodMutation = useMutation({
+    mutationFn: (data: Parameters<typeof addFoodToMeal>[1]) =>
+      addFoodToMeal(mealId!, data),
+    onSuccess: (food) => {
+      onAdded(food);
+      reset();
+    },
+  });
 
   function reset() {
     setSearch("");
@@ -61,39 +72,21 @@ export default function AddFoodToMealModal({
     onClose();
   }
 
-  async function handleAddLibrary() {
+  function handleAddLibrary() {
     if (!selectedFood || !qty || !mealId) return;
-    setLoading(true);
-    const res = await fetch(`/api/meals/${mealId}/foods`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ foodId: selectedFood.id, quantityGrams: Number(qty) }),
-    });
-    setLoading(false);
-    if (!res.ok) return;
-    onAdded(await res.json());
-    reset();
+    addFoodMutation.mutate({ foodId: selectedFood.id, quantityGrams: Number(qty) });
   }
 
-  async function handleAddManual() {
+  function handleAddManual() {
     if (!foodName || !manualQty || !manualCal || !mealId) return;
-    setLoading(true);
-    const res = await fetch(`/api/meals/${mealId}/foods`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        foodName,
-        quantityGrams: Number(manualQty),
-        calories: Number(manualCal),
-        protein: Number(manualProtein || 0),
-        carbs: Number(manualCarbs || 0),
-        fat: Number(manualFat || 0),
-      }),
+    addFoodMutation.mutate({
+      foodName,
+      quantityGrams: Number(manualQty),
+      calories: Number(manualCal),
+      protein: Number(manualProtein || 0),
+      carbs: Number(manualCarbs || 0),
+      fat: Number(manualFat || 0),
     });
-    setLoading(false);
-    if (!res.ok) return;
-    onAdded(await res.json());
-    reset();
   }
 
   return (
@@ -166,9 +159,9 @@ export default function AddFoodToMealModal({
             <Button
               className="bg-orange-500 font-semibold text-white hover:bg-orange-600"
               onClick={handleAddLibrary}
-              disabled={!selectedFood || !qty || loading}
+              disabled={!selectedFood || !qty || addFoodMutation.isPending}
             >
-              {loading ? "Adding…" : "Add"}
+              {addFoodMutation.isPending ? "Adding…" : "Add"}
             </Button>
           </div>
         </TabsContent>
@@ -211,9 +204,9 @@ export default function AddFoodToMealModal({
             <Button
               className="bg-orange-500 font-semibold text-white hover:bg-orange-600"
               onClick={handleAddManual}
-              disabled={!foodName || !manualQty || !manualCal || loading}
+              disabled={!foodName || !manualQty || !manualCal || addFoodMutation.isPending}
             >
-              {loading ? "Adding…" : "Add"}
+              {addFoodMutation.isPending ? "Adding…" : "Add"}
             </Button>
           </div>
         </TabsContent>

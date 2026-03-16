@@ -25,6 +25,7 @@ A web application where authenticated users can create, view, edit, delete, and 
 - TailwindCSS 4
 - PostgreSQL via `pg` (node-postgres) with raw SQL
 - shadcn/ui component library
+- TanStack Query v5 for client-side data fetching, caching, and mutation management
 
 ---
 
@@ -47,6 +48,7 @@ A web application where authenticated users can create, view, edit, delete, and 
 - TailwindCSS 4 for styling
 - shadcn/ui for UI primitives (Button, Input, Label, Tabs, Checkbox, Dialog, DropdownMenu)
 - lucide-react for icons
+- TanStack Query v5 (`@tanstack/react-query`) for client-side caching, useQuery, and useMutation
 
 **API layer**
 - REST-like JSON endpoints for workouts, exercises, and workout session CRUD
@@ -430,6 +432,22 @@ CREATE INDEX IF NOT EXISTS idx_meal_foods_food_id ON meal_foods(food_id);
 
 - Initialize a `pg` `Pool` using `DATABASE_URL` env var (with SSL for non-local connections)
 - Export helper functions: `query<T>()`, `get<T>()`, `run()`
+
+### 6.2 TanStack Query Setup
+
+**Files:** `app/providers.tsx`, `lib/queryKeys.ts`, `lib/api/*.ts`
+
+- `app/providers.tsx` — Client-side `QueryClientProvider` wrapping the entire app (included in `app/layout.tsx`). `QueryClient` is created via `useState` to avoid sharing state across requests. Default options: `staleTime: 5m`, `gcTime: 10m`. `ReactQueryDevtools` included (dev only).
+- `lib/queryKeys.ts` — Centralized query key factory for all domains (`exerciseKeys`, `foodKeys`, `sessionKeys`). All `useQuery`/`invalidateQueries` calls reference keys from here.
+- `lib/api/exercises.ts` — Typed fetch functions: `fetchExercises`, `createExercise`, `updateExercise`, `deleteExercise`
+- `lib/api/foods.ts` — Typed fetch functions: `fetchFoods`, `createFood`, `updateFood`, `deleteFood`, `addFoodToMeal`
+- `lib/api/sessions.ts` — Typed fetch functions: `fetchSessionDetail`, `deleteSession`
+
+**Caching strategy:**
+- `exercises-manager` and `foods-library` receive SSR data as `initialData` (with `initialDataUpdatedAt: () => Date.now()`), so the cache is pre-populated and treated as fresh for `staleTime` duration. Mutations call `invalidateQueries` to refetch after any CRUD.
+- `add-workout-item-modal` — exercises list fetched with `useQuery` (enabled only when the "Existing exercise" tab is active). Cached across tab switches.
+- `add-food-to-meal-modal` — food search uses `useQuery` keyed by debounced search term. Repeated searches of the same term are served from cache.
+- `session-history-list` — session detail uses `useQuery` (enabled when a session is selected). Re-clicking a session shows cached data instantly.
 
 ---
 
@@ -1077,6 +1095,7 @@ bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress
 
 | Version | Date | Changes |
 |---|---|---|
+| 3.1 | March 2026 | Added TanStack Query v5: `QueryClientProvider` in `app/providers.tsx`; query key factory in `lib/queryKeys.ts`; typed API modules in `lib/api/`; converted `add-workout-item-modal`, `add-food-to-meal-modal`, `exercises-manager`, `foods-library`, and `session-history-list` to use `useQuery`/`useMutation`; `initialData` + `initialDataUpdatedAt` pattern for SSR-populated components; cache invalidation via `invalidateQueries` on all mutations |
 | 1.0 | 2025-01-01 | Initial specification |
 | 2.0 | March 2026 | Added WorkoutInProgress feature: new DB tables (`workout_in_progress`, `workout_in_progress_set`), new API endpoints (§7.6), new route `/workout-in-progress/[workoutId]`, new components (`workout-in-progress-view`, `start-session-button`), updated security and indexes sections |
 | 2.1 | March 2026 | Migrated DB from SQLite (`bun:sqlite`) to PostgreSQL (`pg`); added `image_url` to `workout` table; added `note TEXT` to `workout_item`; added `is_complete BOOLEAN` to `workout_in_progress_set`; updated all SQL to use PostgreSQL types (`BOOLEAN`, `TIMESTAMPTZ`) |

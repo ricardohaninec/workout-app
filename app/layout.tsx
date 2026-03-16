@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Providers from "./providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-[#0D0D0D] text-white antialiased">
-        <TooltipProvider>{children}</TooltipProvider>
+        <Providers>
+          <TooltipProvider>{children}</TooltipProvider>
+        </Providers>
       </body>
     </html>
   );

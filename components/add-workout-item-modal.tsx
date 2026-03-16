@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { Exercise, PendingWorkoutItem } from "@/lib/types";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { PendingWorkoutItem } from "@/lib/types";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { fetchExercises } from "@/lib/api/exercises";
+import { exerciseKeys } from "@/lib/queryKeys";
 
 type Tab = "new" | "existing";
 type SetRow = { reps: string; weight: string };
@@ -24,9 +27,14 @@ export default function AddWorkoutItemModal({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [sets, setSets] = useState<SetRow[]>(DEFAULT_SETS);
   const [note, setNote] = useState("");
-  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<(typeof exercises)[number] | null>(null);
+
+  const { data: exercises = [] } = useQuery({
+    queryKey: exerciseKeys.all,
+    queryFn: fetchExercises,
+    enabled: tab === "existing",
+  });
 
   function close() {
     setOpen(false);
@@ -38,15 +46,6 @@ export default function AddWorkoutItemModal({
     setTab("new");
     setSelectedExercise(null);
   }
-
-  useEffect(() => {
-    if (tab === "existing") {
-      fetch("/api/exercises")
-        .then((r) => r.json())
-        .then(setExercises)
-        .catch(() => setExercises([]));
-    }
-  }, [tab]);
 
   function parsedSets() {
     return sets.map((s) => ({ reps: Number(s.reps) || 1, weight: Number(s.weight) || 0, rest_seconds: 0 }));
