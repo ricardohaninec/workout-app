@@ -27,10 +27,12 @@ export async function POST(request: Request) {
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    system: `You are an expert personal trainer. Given a fitness goal, respond ONLY with a valid JSON object:
+  let message: Awaited<ReturnType<typeof client.messages.create>>;
+  try {
+    message = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      system: `You are an expert personal trainer. Given a fitness goal, respond ONLY with a valid JSON object:
 {
   "title": "<short workout name, max 40 chars>",
   "exercises": [
@@ -38,8 +40,12 @@ export async function POST(request: Request) {
   ]
 }
 Return 4–8 exercises. JSON only, no markdown, no prose.`,
-    messages: [{ role: "user", content: goal }],
-  });
+      messages: [{ role: "user", content: goal }],
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Anthropic API error";
+    return Response.json({ error: msg }, { status: 502 });
+  }
 
   const text = message.content[0].type === "text" ? message.content[0].text : "";
 
