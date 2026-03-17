@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Play, ActivitySquare, Dumbbell } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Modal from "@/components/modal";
 import type { WorkoutItem } from "@/lib/types";
@@ -80,7 +81,19 @@ export default function StartWorkoutButton({
           <ul className="mb-6 space-y-2">
             {exercises.map((item) => (
               <li key={item.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
-                <Dumbbell size={15} className="shrink-0 text-neutral-400" />
+                {item.exercise.image_url ? (
+                  <Image
+                    src={item.exercise.image_url}
+                    alt={item.exercise.title}
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 shrink-0 rounded-md object-cover"
+                  />
+                ) : (
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/10">
+                    <Dumbbell size={15} className="text-neutral-400" />
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{item.exercise.title}</p>
                   <p className="text-xs text-neutral-400">
