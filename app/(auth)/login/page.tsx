@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Dumbbell } from "lucide-react";
@@ -138,12 +137,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-neutral-500">
-            No account?{" "}
-            <Link href="/register" className="font-semibold text-orange-500 hover:text-orange-400">
-              Sign up
-            </Link>
-          </p>
         </div>
       </div>
     </div>

@@ -59,12 +59,6 @@ export default async function HomePage() {
           >
             Log in
           </Link>
-          <Link
-            href="/register"
-            className="rounded-lg border border-white/30 px-8 py-3 text-base font-bold text-white transition-colors hover:border-white/60 hover:bg-white/5"
-          >
-            Sign up
-          </Link>
         </div>
       </div>
     </main>

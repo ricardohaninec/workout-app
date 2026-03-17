@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Providers from "./providers";
+import AiWorkoutFloatingChat from "@/components/ai-workout-floating-chat";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body className="bg-[#0D0D0D] text-white antialiased">
         <Providers>
           <TooltipProvider>{children}</TooltipProvider>
+          <AiWorkoutFloatingChat />
         </Providers>
       </body>
     </html>

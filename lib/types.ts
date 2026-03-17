@@ -110,6 +110,21 @@ export type MealFood = {
   created_at: string;
 };
 
+export type ProposedExercise = {
+  name: string;
+  sets: number;
+  reps: number;
+  rest_seconds: number;
+  note: string | null;
+  image_url: string | null;
+};
+
+export type ProposedWorkout = {
+  title: string;
+  goal: string;
+  exercises: ProposedExercise[];
+};
+
 export type PendingWorkoutItem = {
   tempId: string;
   exerciseTitle: string;

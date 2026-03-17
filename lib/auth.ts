@@ -3,7 +3,7 @@ import { createAuthMiddleware, APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { pool } from "@/lib/db";
 
-const MAX_USERS = 20;
+const MAX_USERS = 1;
 
 export const auth = betterAuth({
   database: pool,
