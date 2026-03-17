@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Modal from "@/components/modal";
 import MealCard from "@/components/meal-card";
 import AddFoodToMealModal from "@/components/add-food-to-meal-modal";
+import EditFoodModal from "@/components/edit-food-modal";
 
 export type Totals = { calories: number; protein: number; carbs: number; fat: number };
 export type MealWithFoods = Meal & { foods: MealFood[]; totals: Totals };
@@ -44,6 +45,7 @@ export default function DayDetail({
   const [mealType, setMealType] = useState("Breakfast");
   const [addMealLoading, setAddMealLoading] = useState(false);
   const [addFoodMealId, setAddFoodMealId] = useState<string | null>(null);
+  const [editingFood, setEditingFood] = useState<{ mealId: string; food: import("@/lib/types").MealFood } | null>(null);
 
   const dayTotals = sumMacros(meals.flatMap((m) => m.foods));
 
@@ -86,6 +88,20 @@ export default function DayDetail({
       prev.map((m) => {
         if (m.id !== mealId) return m;
         const foods = m.foods.filter((f) => f.id !== foodId);
+        return { ...m, foods, totals: sumMacros(foods) };
+      })
+    );
+  }
+
+  function handleFoodUpdated(mealId: string, updated: import("@/lib/types").MealFood) {
+    setMeals((prev) =>
+      prev.map((m) => {
+        if (m.id !== mealId) return m;
+        const foods = m.foods.map((f) =>
+          f.id === updated.id
+            ? { ...updated, quantity_grams: Number(updated.quantity_grams), calories: Number(updated.calories), protein: Number(updated.protein), carbs: Number(updated.carbs), fat: Number(updated.fat) }
+            : f
+        );
         return { ...m, foods, totals: sumMacros(foods) };
       })
     );
@@ -149,6 +165,10 @@ export default function DayDetail({
               onDelete={() => handleDeleteMeal(meal.id)}
               onAddFood={() => setAddFoodMealId(meal.id)}
               onDeleteFood={(foodId) => handleDeleteFood(meal.id, foodId)}
+              onEditFood={(foodId) => {
+                const food = meal.foods.find((f) => f.id === foodId);
+                if (food) setEditingFood({ mealId: meal.id, food });
+              }}
             />
           ))}
 
@@ -199,6 +219,16 @@ export default function DayDetail({
         onAdded={(food) => {
           handleFoodAdded(addFoodMealId!, food);
           setAddFoodMealId(null);
+        }}
+      />
+
+      <EditFoodModal
+        food={editingFood?.food ?? null}
+        open={editingFood !== null}
+        onClose={() => setEditingFood(null)}
+        onUpdated={(updated) => {
+          handleFoodUpdated(editingFood!.mealId, updated);
+          setEditingFood(null);
         }}
       />
 

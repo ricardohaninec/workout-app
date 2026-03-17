@@ -155,8 +155,8 @@ export default function FoodsLibrary({ foods: initial }: { foods: Food[] }) {
               <tr className="border-b border-white/10 bg-white/[0.02]">
                 <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Name</th>
                 <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Cal/g</th>
-                <th className="hidden px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-neutral-500 sm:table-cell">Protein/g</th>
                 <th className="hidden px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-neutral-500 sm:table-cell">Carbs/g</th>
+                <th className="hidden px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-neutral-500 sm:table-cell">Protein/g</th>
                 <th className="hidden px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-neutral-500 sm:table-cell">Fat/g</th>
                 <th className="hidden px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-neutral-500 sm:table-cell">Unit</th>
                 <th className="w-20 px-4 py-3" />
@@ -173,10 +173,10 @@ export default function FoodsLibrary({ foods: initial }: { foods: Food[] }) {
                     {Number(f.calories_per_g).toFixed(3)}
                   </td>
                   <td className="hidden px-4 py-3 text-right text-[13px] text-neutral-300 sm:table-cell">
-                    {Number(f.protein_per_g).toFixed(3)}
+                    {Number(f.carbs_per_g).toFixed(3)}
                   </td>
                   <td className="hidden px-4 py-3 text-right text-[13px] text-neutral-300 sm:table-cell">
-                    {Number(f.carbs_per_g).toFixed(3)}
+                    {Number(f.protein_per_g).toFixed(3)}
                   </td>
                   <td className="hidden px-4 py-3 text-right text-[13px] text-neutral-300 sm:table-cell">
                     {Number(f.fat_per_g).toFixed(3)}
@@ -268,19 +268,19 @@ function FoodFormFields({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
-          <Label>Calories per g</Label>
+          <Label>Calories per {form.unit || "g"}</Label>
           <Input type="number" min="0" step="0.001" placeholder="1.650" value={form.caloriesPerG} onChange={field("caloriesPerG")} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label>Protein per g</Label>
-          <Input type="number" min="0" step="0.001" placeholder="0.310" value={form.proteinPerG} onChange={field("proteinPerG")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label>Carbs per g</Label>
+          <Label>Carbs per {form.unit || "g"}</Label>
           <Input type="number" min="0" step="0.001" placeholder="0.000" value={form.carbsPerG} onChange={field("carbsPerG")} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label>Fat per g</Label>
+          <Label>Protein per {form.unit || "g"}</Label>
+          <Input type="number" min="0" step="0.001" placeholder="0.310" value={form.proteinPerG} onChange={field("proteinPerG")} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label>Fat per {form.unit || "g"}</Label>
           <Input type="number" min="0" step="0.001" placeholder="0.036" value={form.fatPerG} onChange={field("fatPerG")} />
         </div>
       </div>

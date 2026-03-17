@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Plus, X } from "lucide-react";
+import { Trash2, Plus, X, Pencil } from "lucide-react";
 import type { MealFood } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { MacroRow, type MealWithFoods } from "@/components/day-detail";
@@ -11,13 +11,16 @@ export default function MealCard({
   onDelete,
   onAddFood,
   onDeleteFood,
+  onEditFood,
 }: {
   meal: MealWithFoods;
   onDelete: () => void;
   onAddFood: () => void;
   onDeleteFood: (foodId: string) => void;
+  onEditFood: (foodId: string) => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmFoodDelete, setConfirmFoodDelete] = useState<string | null>(null);
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#111111] p-5">
@@ -79,20 +82,45 @@ export default function MealCard({
                     </span>
                   )}
                 </div>
-                <button
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-neutral-600 hover:text-red-400"
-                  onClick={() => onDeleteFood(food.id)}
-                >
-                  <X size={12} />
-                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    className="flex h-5 w-5 items-center justify-center rounded text-neutral-600 hover:text-orange-400"
+                    onClick={() => onEditFood(food.id)}
+                  >
+                    <Pencil size={11} />
+                  </button>
+                  {confirmFoodDelete === food.id ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        className="rounded px-1.5 py-0.5 text-[11px] text-white bg-red-500/80 hover:bg-red-600"
+                        onClick={() => { onDeleteFood(food.id); setConfirmFoodDelete(null); }}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        className="rounded px-1.5 py-0.5 text-[11px] text-neutral-400 hover:text-white"
+                        onClick={() => setConfirmFoodDelete(null)}
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="flex h-5 w-5 items-center justify-center rounded text-neutral-600 hover:text-red-400"
+                      onClick={() => setConfirmFoodDelete(food.id)}
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
               </div>
               {/* Macros row */}
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px]">
                 <span className="text-neutral-400">{Math.round(Number(food.calories))} kcal</span>
                 <span className="text-neutral-600">·</span>
-                <span className="text-blue-400/80">{Number(food.protein).toFixed(1)}g P</span>
-                <span className="text-neutral-600">·</span>
                 <span className="text-yellow-400/80">{Number(food.carbs).toFixed(1)}g C</span>
+                <span className="text-neutral-600">·</span>
+                <span className="text-blue-400/80">{Number(food.protein).toFixed(1)}g P</span>
                 <span className="text-neutral-600">·</span>
                 <span className="text-purple-400/80">{Number(food.fat).toFixed(1)}g F</span>
               </div>

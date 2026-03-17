@@ -34,13 +34,14 @@ export default function AddFoodToMealModal({
   const [manualProtein, setManualProtein] = useState("");
   const [manualCarbs, setManualCarbs] = useState("");
   const [manualFat, setManualFat] = useState("");
+  const [manualUnit, setManualUnit] = useState("g");
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 200);
     return () => clearTimeout(t);
   }, [search]);
 
-  const { data: foods = [] } = useQuery({
+  const { data: foods = [], isLoading: foodsLoading } = useQuery({
     queryKey: foodKeys.list(debouncedSearch),
     queryFn: () => fetchFoods(debouncedSearch),
     enabled: open,
@@ -65,6 +66,7 @@ export default function AddFoodToMealModal({
     setManualProtein("");
     setManualCarbs("");
     setManualFat("");
+    setManualUnit("g");
   }
 
   function handleClose() {
@@ -110,7 +112,9 @@ export default function AddFoodToMealModal({
           </div>
 
           <div className="mb-4 max-h-52 overflow-y-auto rounded-lg border border-white/10">
-            {foods.length === 0 ? (
+            {foodsLoading ? (
+              <p className="p-4 text-center text-[13px] text-neutral-500">Loading…</p>
+            ) : foods.length === 0 ? (
               <p className="p-4 text-center text-[13px] text-neutral-500">
                 {search ? "No results." : "No foods in library yet."}
               </p>
@@ -125,7 +129,7 @@ export default function AddFoodToMealModal({
                 >
                   <span className="font-medium">{f.name}</span>
                   <span className="text-[12px] text-neutral-500">
-                    {Number(f.calories_per_g).toFixed(3)} kcal/g
+                    {Number(f.calories_per_g).toFixed(3)} kcal/{f.unit}
                   </span>
                 </button>
               ))
@@ -134,7 +138,7 @@ export default function AddFoodToMealModal({
 
           {selectedFood && (
             <div className="mb-4 flex flex-col gap-1.5">
-              <Label>Quantity (g)</Label>
+              <Label>Quantity ({selectedFood.unit})</Label>
               <Input
                 type="number"
                 min="0"
@@ -146,8 +150,8 @@ export default function AddFoodToMealModal({
               {qty && Number(qty) > 0 && (
                 <p className="text-[12px] text-neutral-500">
                   ≈ {Math.round(Number(qty) * Number(selectedFood.calories_per_g))} kcal ·{" "}
-                  {(Number(qty) * Number(selectedFood.protein_per_g)).toFixed(1)}p ·{" "}
                   {(Number(qty) * Number(selectedFood.carbs_per_g)).toFixed(1)}c ·{" "}
+                  {(Number(qty) * Number(selectedFood.protein_per_g)).toFixed(1)}p ·{" "}
                   {(Number(qty) * Number(selectedFood.fat_per_g)).toFixed(1)}f
                 </p>
               )}
@@ -176,9 +180,13 @@ export default function AddFoodToMealModal({
                 onChange={(e) => setFoodName(e.target.value)}
               />
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Unit</Label>
+              <Input placeholder="g" value={manualUnit} onChange={(e) => setManualUnit(e.target.value)} />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label>Quantity (g)</Label>
+                <Label>Quantity ({manualUnit || "g"})</Label>
                 <Input type="number" min="0" placeholder="300" value={manualQty} onChange={(e) => setManualQty(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -186,12 +194,12 @@ export default function AddFoodToMealModal({
                 <Input type="number" min="0" placeholder="650" value={manualCal} onChange={(e) => setManualCal(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label>Protein (g)</Label>
-                <Input type="number" min="0" placeholder="38" value={manualProtein} onChange={(e) => setManualProtein(e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-1.5">
                 <Label>Carbs (g)</Label>
                 <Input type="number" min="0" placeholder="70" value={manualCarbs} onChange={(e) => setManualCarbs(e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Protein (g)</Label>
+                <Input type="number" min="0" placeholder="38" value={manualProtein} onChange={(e) => setManualProtein(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>Fat (g)</Label>
