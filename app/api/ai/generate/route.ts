@@ -7,7 +7,7 @@ const ExerciseSchema = z.object({
   name: z.string(),
   sets: z.number().int().positive(),
   reps: z.number().int().positive(),
-  rest_seconds: z.number().int().positive(),
+  rest_seconds: z.number().int().min(0),
   note: z.string().nullable().optional(),
 });
 
