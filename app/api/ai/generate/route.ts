@@ -47,13 +47,14 @@ Return 4–8 exercises. JSON only, no markdown, no prose.`,
     return Response.json({ error: msg }, { status: 502 });
   }
 
-  const text = message.content[0].type === "text" ? message.content[0].text : "";
+  const raw = message.content[0].type === "text" ? message.content[0].text : "";
+  const text = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 
   let parsed: z.infer<typeof ResponseSchema>;
   try {
     parsed = ResponseSchema.parse(JSON.parse(text));
   } catch {
-    return Response.json({ error: "Invalid AI response" }, { status: 502 });
+    return Response.json({ error: "Invalid AI response", raw }, { status: 502 });
   }
 
   const exercises = parsed.exercises.map((ex) => ({
