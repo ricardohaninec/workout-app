@@ -1,5 +1,5 @@
 # Technical Specification – Note Taking / Workout Web App
-> Version 3.0 — Updated March 2026
+> Version 3.2 — Updated March 2026
 
 ---
 
@@ -992,7 +992,7 @@ Props: `workoutId`, `sessionId`, `workoutItems: WorkoutItem[]`, `sets: WorkoutIn
 - Marking a set as **Done** starts a rest countdown timer; only one timer active at a time (last one wins)
 - Rest timer persists across page refreshes via `sessionStorage` (stores end timestamp)
 - Timer shows as a floating fixed footer pill; "Skip" dismisses it early
-- When the timer reaches zero, a **"Get ready for your next set!"** modal appears
+- When the timer reaches zero, a **"Get ready for your next set!"** modal appears and a short alarm sound plays (three-beep pattern synthesized via the Web Audio API — no external files required)
 - Changes auto-save via debounced `PATCH /api/workouts/:id/sessions/:sessionId`
 - **Complete Session** button is disabled while auto-save is in progress
 - Provides a **Complete Session** button that sets `isActive: false`, `completedAt`, and `durationSeconds`
@@ -1095,6 +1095,7 @@ bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress
 
 | Version | Date | Changes |
 |---|---|---|
+| 3.2 | March 2026 | Bug fix: `addSet` in `workout-in-progress-view` now computes position inside the `setSets` functional updater (reads `prev` state) to prevent duplicate set positions from rapid clicks, which previously caused sets to be saved with duplicate positions and appear doubled on refresh. Feature: rest timer end plays a three-beep alarm (880 Hz × 2 + 1100 Hz) synthesized via the Web Audio API — no external file required. |
 | 3.1 | March 2026 | Added TanStack Query v5: `QueryClientProvider` in `app/providers.tsx`; query key factory in `lib/queryKeys.ts`; typed API modules in `lib/api/`; converted `add-workout-item-modal`, `add-food-to-meal-modal`, `exercises-manager`, `foods-library`, and `session-history-list` to use `useQuery`/`useMutation`; `initialData` + `initialDataUpdatedAt` pattern for SSR-populated components; cache invalidation via `invalidateQueries` on all mutations |
 | 1.0 | 2025-01-01 | Initial specification |
 | 2.0 | March 2026 | Added WorkoutInProgress feature: new DB tables (`workout_in_progress`, `workout_in_progress_set`), new API endpoints (§7.6), new route `/workout-in-progress/[workoutId]`, new components (`workout-in-progress-view`, `start-session-button`), updated security and indexes sections |

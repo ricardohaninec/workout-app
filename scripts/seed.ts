@@ -3,10 +3,11 @@
  * Usage: DATABASE_URL=postgresql://postgres:postgres@localhost:5433/workout bun scripts/seed.ts
  *
  * Creates:
- *  - 1 user (password: "password123")
+ *  - 1 user (password: "password")
  *  - 12 exercises
  *  - 4 workouts with items + sets
  *  - 2 completed workout sessions with sets
+ *  - 10 foods + 3 days of diet data (days, meals, meal_foods)
  */
 
 import { Pool } from "pg";
@@ -217,11 +218,131 @@ async function seed() {
       { itemKey: "rdl",      reps: 10, weight: 80,  position: 1 },
     ]);
 
+    // ── Foods ────────────────────────────────────────────────────────────
+    // [name, calories_per_g, protein_per_g, carbs_per_g, fat_per_g, unit]
+    const foods = [
+      ["Chicken Breast",  1.65, 0.310, 0.000, 0.036, "g"],
+      ["White Rice",      1.30, 0.027, 0.280, 0.003, "g"],
+      ["Whole Eggs",      1.43, 0.126, 0.008, 0.099, "g"],
+      ["Oats",            3.89, 0.170, 0.660, 0.070, "g"],
+      ["Banana",          0.89, 0.011, 0.230, 0.003, "g"],
+      ["Whey Protein",    4.00, 0.750, 0.070, 0.035, "g"],
+      ["Greek Yogurt",    0.59, 0.100, 0.036, 0.000, "g"],
+      ["Broccoli",        0.34, 0.028, 0.066, 0.004, "g"],
+      ["Sweet Potato",    0.86, 0.016, 0.200, 0.001, "g"],
+      ["Almonds",         5.79, 0.210, 0.220, 0.490, "g"],
+    ];
+
+    const foodIds: Record<string, string> = {};
+    const foodNames = ["chickenBreast","whiteRice","eggs","oats","banana","wheyProtein","greekYogurt","broccoli","sweetPotato","almonds"];
+
+    for (let i = 0; i < foods.length; i++) {
+      const id = uuid();
+      foodIds[foodNames[i]] = id;
+      const [name, cal, prot, carbs, fat, unit] = foods[i];
+      await client.query(`
+        INSERT INTO foods (id, user_id, name, calories_per_g, protein_per_g, carbs_per_g, fat_per_g, unit, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+        ON CONFLICT (id) DO NOTHING
+      `, [id, USER_ID, name, cal, prot, carbs, fat, unit]);
+    }
+
+    // ── Days + Meals + Meal Foods ────────────────────────────────────────
+    // Helper: compute macros for a food entry
+    function macros(foodKey: string, grams: number) {
+      const idx = foodNames.indexOf(foodKey);
+      const row = foods[idx];
+      const [cal, prot, carbs, fat] = [row[1], row[2], row[3], row[4]] as number[];
+      return {
+        calories: +(cal  * grams).toFixed(2),
+        protein:  +(prot * grams).toFixed(2),
+        carbs:    +(carbs * grams).toFixed(2),
+        fat:      +(fat  * grams).toFixed(2),
+      };
+    }
+
+    async function addMealFood(mealId: string, foodKey: string, grams: number) {
+      const m = macros(foodKey, grams);
+      await client.query(`
+        INSERT INTO meal_foods (id, meal_id, food_id, food_name, quantity_grams, calories, protein, carbs, fat, is_manual, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, FALSE, NOW())
+      `, [uuid(), mealId, foodIds[foodKey], foods[foodNames.indexOf(foodKey)][0], grams, m.calories, m.protein, m.carbs, m.fat]);
+    }
+
+    async function addDay(date: string, note: string | null = null) {
+      const dayId = uuid();
+      await client.query(`
+        INSERT INTO days (id, user_id, date, notes, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
+      `, [dayId, USER_ID, date, note]);
+      return dayId;
+    }
+
+    async function addMeal(dayId: string, mealType: string, mealTime: string) {
+      const mealId = uuid();
+      await client.query(`
+        INSERT INTO meals (id, day_id, meal_type, meal_time, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
+      `, [mealId, dayId, mealType, mealTime]);
+      return mealId;
+    }
+
+    // Day 1 — 2026-03-18
+    const day1 = await addDay("2026-03-18");
+    const d1Breakfast = await addMeal(day1, "Breakfast", "08:00");
+    await addMealFood(d1Breakfast, "oats",       80);
+    await addMealFood(d1Breakfast, "eggs",       150); // ~3 eggs
+    await addMealFood(d1Breakfast, "banana",     120);
+
+    const d1Lunch = await addMeal(day1, "Lunch", "12:30");
+    await addMealFood(d1Lunch, "chickenBreast", 200);
+    await addMealFood(d1Lunch, "whiteRice",     200);
+    await addMealFood(d1Lunch, "broccoli",      150);
+
+    const d1PreWorkout = await addMeal(day1, "Pre-Workout", "16:00");
+    await addMealFood(d1PreWorkout, "wheyProtein", 35);
+    await addMealFood(d1PreWorkout, "banana",      100);
+
+    const d1Dinner = await addMeal(day1, "Dinner", "19:30");
+    await addMealFood(d1Dinner, "chickenBreast", 180);
+    await addMealFood(d1Dinner, "sweetPotato",  200);
+    await addMealFood(d1Dinner, "broccoli",     120);
+
+    // Day 2 — 2026-03-19
+    const day2 = await addDay("2026-03-19", "Rest day — felt sore from leg day");
+    const d2Breakfast = await addMeal(day2, "Breakfast", "08:30");
+    await addMealFood(d2Breakfast, "greekYogurt", 200);
+    await addMealFood(d2Breakfast, "oats",        60);
+    await addMealFood(d2Breakfast, "almonds",     30);
+
+    const d2Lunch = await addMeal(day2, "Lunch", "13:00");
+    await addMealFood(d2Lunch, "chickenBreast", 220);
+    await addMealFood(d2Lunch, "whiteRice",     180);
+    await addMealFood(d2Lunch, "broccoli",      100);
+
+    const d2Dinner = await addMeal(day2, "Dinner", "19:00");
+    await addMealFood(d2Dinner, "eggs",         200);
+    await addMealFood(d2Dinner, "sweetPotato",  250);
+    await addMealFood(d2Dinner, "broccoli",     150);
+
+    // Day 3 — 2026-03-20 (today)
+    const day3 = await addDay("2026-03-20", "Push day today");
+    const d3Breakfast = await addMeal(day3, "Breakfast", "07:45");
+    await addMealFood(d3Breakfast, "oats",        100);
+    await addMealFood(d3Breakfast, "eggs",        150);
+    await addMealFood(d3Breakfast, "banana",      120);
+
+    const d3PreWorkout = await addMeal(day3, "Pre-Workout", "15:30");
+    await addMealFood(d3PreWorkout, "wheyProtein", 35);
+    await addMealFood(d3PreWorkout, "banana",      100);
+    await addMealFood(d3PreWorkout, "almonds",     25);
+
     await client.query("COMMIT");
 
     console.log("✓ Seed complete!");
     console.log("  Login: dev@example.com / password");
     console.log(`  ${exercises.length} exercises, ${workouts.length} workouts, 2 completed sessions`);
+    console.log(`  ${foods.length} foods, 3 days of diet data`);
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Seed failed — rolled back:", err);

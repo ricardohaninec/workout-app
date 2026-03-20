@@ -11,6 +11,34 @@ import PlaceholderImage from "@/components/icons/placeholder-image";
 
 type SetRow = { workoutItemId: string; reps: string; weight: string; rest_seconds: string; position: number; isComplete: boolean };
 
+function playAlarm() {
+  try {
+    const ctx = new AudioContext();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+
+    const beep = (startTime: number, freq: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0.5, startTime);
+      g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+
+    const t = ctx.currentTime;
+    beep(t, 880, 0.18);
+    beep(t + 0.22, 880, 0.18);
+    beep(t + 0.44, 1100, 0.35);
+  } catch {
+    // AudioContext not available (e.g. SSR)
+  }
+}
+
 function formatDuration(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -99,6 +127,11 @@ export default function WorkoutInProgressView({
     }, 500);
   }
 
+  // Play alarm when rest timer ends
+  useEffect(() => {
+    if (restDone) playAlarm();
+  }, [restDone]);
+
   // Restore timer on mount (survives refresh)
   useEffect(() => {
     const stored = sessionStorage.getItem(REST_STORAGE_KEY);
@@ -165,19 +198,21 @@ export default function WorkoutInProgressView({
   }
 
   function addSet(item: WorkoutItem) {
-    const itemSets = getSetsForItem(item.id);
-    const last = itemSets[itemSets.length - 1];
-    setSets((prev) => [
-      ...prev,
-      {
-        workoutItemId: item.id,
-        reps: last?.reps ?? "1",
-        weight: last?.weight ?? "0",
-        rest_seconds: last?.rest_seconds ?? "60",
-        position: itemSets.length,
-        isComplete: false,
-      },
-    ]);
+    setSets((prev) => {
+      const itemSets = prev.filter((s) => s.workoutItemId === item.id).sort((a, b) => a.position - b.position);
+      const last = itemSets[itemSets.length - 1];
+      return [
+        ...prev,
+        {
+          workoutItemId: item.id,
+          reps: last?.reps ?? "1",
+          weight: last?.weight ?? "0",
+          rest_seconds: last?.rest_seconds ?? "60",
+          position: itemSets.length,
+          isComplete: false,
+        },
+      ];
+    });
   }
 
   function removeSet(itemId: string, position: number) {
