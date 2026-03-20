@@ -11,32 +11,17 @@ import PlaceholderImage from "@/components/icons/placeholder-image";
 
 type SetRow = { workoutItemId: string; reps: string; weight: string; rest_seconds: string; position: number; isComplete: boolean };
 
-function playAlarm() {
-  try {
-    const ctx = new AudioContext();
-    const gain = ctx.createGain();
-    gain.connect(ctx.destination);
-
-    const beep = (startTime: number, freq: number, duration: number) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.connect(g);
-      g.connect(ctx.destination);
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.5, startTime);
-      g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-      osc.start(startTime);
-      osc.stop(startTime + duration);
-    };
-
-    const t = ctx.currentTime;
-    beep(t, 880, 0.18);
-    beep(t + 0.22, 880, 0.18);
-    beep(t + 0.44, 1100, 0.35);
-  } catch {
-    // AudioContext not available (e.g. SSR)
-  }
+function beep(ctx: AudioContext, startTime: number, freq: number, duration: number) {
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.type = "sine";
+  osc.frequency.value = freq;
+  g.gain.setValueAtTime(0.5, startTime);
+  g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  osc.start(startTime);
+  osc.stop(startTime + duration);
 }
 
 function formatDuration(seconds: number) {
@@ -99,10 +84,16 @@ export default function WorkoutInProgressView({
   const [restCountdown, setRestCountdown] = useState<number | null>(null);
   const [restDone, setRestDone] = useState(false);
   const restIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const REST_STORAGE_KEY = `rest_end_${sessionId}`;
 
   function startRestTimer(seconds: number) {
     if (restIntervalRef.current) clearInterval(restIntervalRef.current);
+    // Create AudioContext during user gesture so browsers allow it to play later
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+      audioCtxRef.current.resume().catch(() => {});
+    } catch { /* SSR or unsupported */ }
     const endAt = Date.now() + seconds * 1000;
     sessionStorage.setItem(REST_STORAGE_KEY, String(endAt));
     setRestDone(false);
@@ -129,7 +120,15 @@ export default function WorkoutInProgressView({
 
   // Play alarm when rest timer ends
   useEffect(() => {
-    if (restDone) playAlarm();
+    if (!restDone) return;
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+    ctx.resume().then(() => {
+      const t = ctx.currentTime;
+      beep(ctx, t, 880, 0.18);
+      beep(ctx, t + 0.22, 880, 0.18);
+      beep(ctx, t + 0.44, 1100, 0.35);
+    }).catch(() => {});
   }, [restDone]);
 
   // Restore timer on mount (survives refresh)

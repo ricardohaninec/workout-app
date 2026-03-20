@@ -1,5 +1,5 @@
 # Technical Specification – Note Taking / Workout Web App
-> Version 3.2 — Updated March 2026
+> Version 3.3 — Updated March 2026
 
 ---
 
@@ -1095,6 +1095,7 @@ bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress
 
 | Version | Date | Changes |
 |---|---|---|
+| 3.3 | March 2026 | Added unit test suite: Vitest + jsdom + @testing-library/react (React 19 compatible). Config: `vitest.config.mts` (jsdom env, globals, path alias via vite-tsconfig-paths), `vitest.setup.ts` (jest-dom matchers, matchMedia/ResizeObserver mocks, RTL cleanup). 93 tests across 8 files covering lib utilities (`cn`, query keys), API modules (exercises, foods, sessions), and components (Modal, WorkoutList, WorkoutInProgressView). Run with `bun run test` / `bun run test:watch`. |
 | 3.2 | March 2026 | Bug fix: `addSet` in `workout-in-progress-view` now computes position inside the `setSets` functional updater (reads `prev` state) to prevent duplicate set positions from rapid clicks, which previously caused sets to be saved with duplicate positions and appear doubled on refresh. Feature: rest timer end plays a three-beep alarm (880 Hz × 2 + 1100 Hz) synthesized via the Web Audio API — no external file required. |
 | 3.1 | March 2026 | Added TanStack Query v5: `QueryClientProvider` in `app/providers.tsx`; query key factory in `lib/queryKeys.ts`; typed API modules in `lib/api/`; converted `add-workout-item-modal`, `add-food-to-meal-modal`, `exercises-manager`, `foods-library`, and `session-history-list` to use `useQuery`/`useMutation`; `initialData` + `initialDataUpdatedAt` pattern for SSR-populated components; cache invalidation via `invalidateQueries` on all mutations |
 | 1.0 | 2025-01-01 | Initial specification |
