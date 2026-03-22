@@ -131,7 +131,7 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
                     </span>
                   )}
                   <span className="text-[11px] text-[#6B7280]">
-                    Updated {new Date(w.updated_at).toLocaleDateString()}
+                    Updated {new Date(w.updated_at).toLocaleDateString("en-US")}
                   </span>
                 </div>
 
