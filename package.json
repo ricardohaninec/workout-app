@@ -77,5 +77,8 @@
     "better-sqlite3",
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "overrides": {
+    "minimatch": "^10.0.0"
+  }
 }
