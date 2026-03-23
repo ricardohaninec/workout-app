@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Food, MealFood } from "@/lib/types";
@@ -24,7 +24,6 @@ export default function AddFoodToMealModal({
   onAdded: (food: MealFood) => void;
 }) {
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [qty, setQty] = useState("");
 
@@ -36,16 +35,15 @@ export default function AddFoodToMealModal({
   const [manualFat, setManualFat] = useState("");
   const [manualUnit, setManualUnit] = useState("g");
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 200);
-    return () => clearTimeout(t);
-  }, [search]);
-
-  const { data: foods = [], isLoading: foodsLoading } = useQuery({
-    queryKey: foodKeys.list(debouncedSearch),
-    queryFn: () => fetchFoods(debouncedSearch),
+  const { data: allFoods = [], isLoading: foodsLoading } = useQuery({
+    queryKey: foodKeys.list(""),
+    queryFn: () => fetchFoods(""),
     enabled: open,
   });
+
+  const foods = allFoods.filter((f) =>
+    f.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   const addFoodMutation = useMutation({
     mutationFn: (data: Parameters<typeof addFoodToMeal>[1]) =>
@@ -111,13 +109,19 @@ export default function AddFoodToMealModal({
             />
           </div>
 
-          <div className="mb-4 max-h-52 overflow-y-auto rounded-lg border border-white/10">
+          <div className="mb-4 h-52 overflow-y-auto rounded-lg border border-white/10">
             {foodsLoading ? (
               <p className="p-4 text-center text-[13px] text-neutral-500">Loading…</p>
             ) : foods.length === 0 ? (
-              <p className="p-4 text-center text-[13px] text-neutral-500">
-                {search ? "No results." : "No foods in library yet."}
-              </p>
+              <div className="flex h-full flex-col items-center justify-center gap-1.5">
+                <span className="text-2xl">🔍</span>
+                <p className="text-[13px] font-medium text-neutral-400">
+                  {search ? "No results." : "No foods in library yet."}
+                </p>
+                {search && (
+                  <p className="text-[12px] text-neutral-600">Try a different search term</p>
+                )}
+              </div>
             ) : (
               foods.map((f) => (
                 <button
