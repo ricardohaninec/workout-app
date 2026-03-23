@@ -22,7 +22,7 @@ export default function Header({ name, email }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0D0D0D]">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0D0D0D] pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-0 sm:px-8">
 
           {/* Brand */}

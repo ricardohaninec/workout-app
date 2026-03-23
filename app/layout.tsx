@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Providers from "./providers";
 import AiWorkoutFloatingChat from "@/components/ai-workout-floating-chat";
 import PwaInstallBanner from "@/components/pwa-install-banner";
+import PullToRefresh from "@/components/pull-to-refresh";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,6 +47,7 @@ export default function RootLayout({
       <body className="bg-[#0D0D0D] text-white antialiased">
         <Providers>
           <TooltipProvider>{children}</TooltipProvider>
+          <PullToRefresh />
           <AiWorkoutFloatingChat />
           <PwaInstallBanner />
         </Providers>
