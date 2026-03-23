@@ -16,7 +16,12 @@ bun dev          # Start development server (http://localhost:3000)
 bun run build    # Build for production
 bun run lint     # Run ESLint
 bun start        # Start production server
+bun run tsc --noEmit  # TypeScript type check (run after every code change)
 ```
+
+## Rules
+
+- **Always run `bun run tsc --noEmit` after making any code changes** to catch type errors before finishing.
 
 ## Architecture
 

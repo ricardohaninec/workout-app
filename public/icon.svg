@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#0D0D0D"/>
+  <!-- Left outer plate -->
+  <rect x="56" y="176" width="56" height="160" rx="20" fill="#f97316"/>
+  <!-- Left inner collar -->
+  <rect x="112" y="208" width="40" height="96" rx="12" fill="#f97316"/>
+  <!-- Bar -->
+  <rect x="152" y="236" width="208" height="40" rx="10" fill="#f97316"/>
+  <!-- Right inner collar -->
+  <rect x="360" y="208" width="40" height="96" rx="12" fill="#f97316"/>
+  <!-- Right outer plate -->
+  <rect x="400" y="176" width="56" height="160" rx="20" fill="#f97316"/>
+</svg>
