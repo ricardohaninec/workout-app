@@ -87,7 +87,7 @@ beforeEach(() => {
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
     json: () => Promise.resolve({ sets: [] }),
-  } as unknown as Response);
+  } as unknown as Response) as unknown as typeof fetch;
 });
 
 afterEach(() => {

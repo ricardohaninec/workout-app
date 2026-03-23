@@ -54,7 +54,7 @@ const makeWorkout = (overrides: Partial<Workout> = {}): Workout => ({
 });
 
 beforeEach(() => {
-  global.fetch = vi.fn();
+  global.fetch = vi.fn() as unknown as typeof fetch;
 });
 
 describe("WorkoutList", () => {

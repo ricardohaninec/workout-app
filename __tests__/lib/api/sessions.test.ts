@@ -7,7 +7,7 @@ const ok = (data: unknown) =>
 const fail = () => ({ ok: false }) as unknown as Response;
 
 beforeEach(() => {
-  global.fetch = vi.fn();
+  global.fetch = vi.fn() as unknown as typeof fetch;
 });
 
 describe("fetchSessionDetail", () => {
