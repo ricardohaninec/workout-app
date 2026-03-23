@@ -96,6 +96,15 @@ export type Food = {
   updated_at: string;
 };
 
+export type ProposedFood = {
+  name: string;
+  query: string;
+  calories_per_100g: number;
+  protein_per_100g: number;
+  carbs_per_100g: number;
+  fat_per_100g: number;
+};
+
 export type MealFood = {
   id: string;
   meal_id: string;

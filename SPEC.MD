@@ -105,6 +105,30 @@ Users can log their food intake with a hierarchical structure: one day → many 
 - View per-meal and daily total nutritional summaries (Calories, Protein, Carbs, Fat)
 - A user may only have one day record per calendar date (unique constraint on `user_id + date`)
 
+### 3.6 AI Workout Refinement (Authenticated)
+
+While reviewing a generated workout proposal, the user can:
+
+- **Remove an exercise**: click the X button on any exercise card — removed instantly, no AI call
+- **Refine via feedback**: type a natural language instruction (e.g. "replace planks with leg raises", "add a bicep exercise") and click **Refine** — Claude updates the proposal in place keeping unchanged exercises intact
+- Multiple refinements can be chained before committing
+- "Create Workout" is disabled when all exercises have been removed
+
+### 3.7 AI Food Lookup (Authenticated)
+
+The AI Assistant floating panel includes a **Nutrition** mode alongside the existing Workout mode.
+
+- User types a food query in natural language (e.g. "nutrients of a walnut")
+- Claude returns per-100g nutrition data: calories, protein, carbs, fat
+- A proposal card appears with:
+  - Per-100g macro breakdown
+  - **Save as** unit selector: `per gram`, `per unit`, `per ml`
+  - If "per unit" is selected: "1 unit = __ g" input for conversion
+  - **Calculator**: enter any amount to instantly see recalculated macros
+  - **Follow-up** input: send a refinement query to Claude (e.g. "roasted vs raw") which updates the proposal
+- Clicking **Save to Library** persists the food to the `foods` table (normalized to per-gram internally)
+- Follow-up queries preserve context so Claude can refine or correct the previous response
+
 ---
 
 ## 4. Non-Functional Requirements

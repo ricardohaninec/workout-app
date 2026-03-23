@@ -1,15 +1,25 @@
-# CHATAI.md — AI Workout Generator
+# CHATAI.md — AI Assistant (Workout + Nutrition)
 
 ## 1. Overview & User Flow
 
-A floating Sparkles button appears in the bottom-right corner of every page. The user:
+A floating Sparkles button appears in the bottom-right corner of every page. The panel has two modes switchable via tabs: **Workout** and **Nutrition**.
 
-1. Clicks the button → panel expands
+### Workout Mode
+1. Clicks the button → panel expands, Workout tab active
 2. Types a fitness goal in natural language (e.g. "core training for lean abs")
 3. Clicks **Generate** → server calls Claude + Pexels, returns a proposal
 4. Reviews the structured workout (title, exercise cards with images, sets/reps/rest)
 5. Clicks **Create Workout** → server writes to DB → redirects to `/workout/[id]`
 6. Or clicks **Start Over** to discard and try a new goal
+
+### Nutrition Mode
+1. Switches to **Nutrition** tab
+2. Types a food query (e.g. "nutrients of a walnut")
+3. Clicks **Look Up** → server calls Claude, returns per-100g nutrition data
+4. Reviews the proposal card: macros, unit selector, live calculator, follow-up input
+5. Optionally: type a follow-up (e.g. "roasted instead of raw") → Claude updates the proposal
+6. Clicks **Save to Library** → food is saved to the `foods` table
+7. Or clicks **Start Over** to discard
 
 ---
 
@@ -18,8 +28,10 @@ A floating Sparkles button appears in the bottom-right corner of every page. The
 ```
 app/layout.tsx
   └── <AiWorkoutFloatingChat />         (client component, fixed bottom-right)
-        ├── POST /api/ai/generate       (server — Claude + Pexels, keys never leave server)
-        └── POST /api/ai/commit         (server — DB writes, returns workoutId)
+        ├── POST /api/ai/generate       (server — Claude + Pexels, returns ProposedWorkout)
+        ├── POST /api/ai/commit         (server — DB writes, returns workoutId)
+        ├── POST /api/ai/food           (server — Claude nutrition lookup, returns ProposedFood)
+        └── POST /api/foods             (server — saves food to foods table, reuses existing endpoint)
 ```
 
 All API keys (`ANTHROPIC_API_KEY`, `PEXELS_API_KEY`) are only accessed via `process.env` inside server-side route handlers. They are **never** referenced in any `"use client"` file.
@@ -31,11 +43,35 @@ All API keys (`ANTHROPIC_API_KEY`, `PEXELS_API_KEY`) are only accessed via `proc
 | Service | Usage | Where |
 |---|---|---|
 | Anthropic Claude (`claude-sonnet-4-6`) | Generate structured workout JSON from a goal string | `app/api/ai/generate/route.ts` |
+| Anthropic Claude (`claude-sonnet-4-6`) | Look up per-100g nutrition data for a food query | `app/api/ai/food/route.ts` |
 | Pexels API | Fetch one square exercise image per exercise name | `lib/image-sourcing.ts` |
 
 ---
 
 ## 4. API Design
+
+### `POST /api/ai/food`
+
+**Request:**
+```json
+{ "query": "string", "previous": ProposedFood | undefined }
+```
+
+**Response:** `ProposedFood`
+```json
+{
+  "name": "Walnut",
+  "query": "nutrients of a walnut",
+  "calories_per_100g": 654,
+  "protein_per_100g": 15.2,
+  "carbs_per_100g": 13.7,
+  "fat_per_100g": 65.2
+}
+```
+
+`previous` is optional — when provided, Claude receives the prior food context so follow-up queries (e.g. "roasted instead") can update the proposal intelligently. Auth required. Returns `401`/`400`/`502` on failure.
+
+---
 
 ### `POST /api/ai/generate`
 
@@ -79,15 +115,33 @@ Auth required. Validates proposal with Zod, creates `workout`, `exercise` (or re
 
 ### `components/ai-workout-floating-chat.tsx`
 
-Client component mounted in the root layout. States:
-- `input` — textarea + Generate button
-- `loading` — spinner + "Finding best exercises…"
-- `review` — `<AiWorkoutProposalModal>` inline (scrollable)
-- `committing` — spinner + "Creating your workout…"
+Client component mounted in the root layout. Has two modes (`workout` | `food`) switchable via tabs.
 
-Uses two TanStack Query `useMutation`s:
+Shared states: `step: "input" | "loading" | "review" | "committing"`, `mode`, `goal`, `error`
+
+**Workout mutations:**
 - `generateMutation` → `generateWorkout(goal)` → sets `proposal` + `step = "review"`
 - `commitMutation` → `commitWorkout(proposal)` → invalidates `workoutKeys.all`, pushes `/workout/[id]`
+
+**Food mutations:**
+- `foodLookupMutation` → `lookupFood(query, previous?)` → sets `foodProposal` + `step = "review"`
+- `foodSaveMutation` → `saveFood(food, unit, gramsPerUnit?)` → saves to food library, closes panel
+
+Mode switching resets all state. The review panel renders `<AiWorkoutProposalModal>` in workout mode and `<AiFoodProposal>` in food mode.
+
+### `components/ai-food-proposal.tsx`
+
+Props: `proposal`, `onConfirm`, `onReject`, `onFollowUp`, `isLoading`
+
+Renders:
+- Food name (orange accent)
+- Per-100g macro breakdown (calories, protein, carbs, fat)
+- **Save as** unit selector: `per gram` | `per unit` | `per ml`
+  - "per unit" reveals a "1 unit = __ g" input
+- **Calculator**: amount input → live macro recalculation (no API call)
+  - Unit → grams conversion: `grams = amount * gramsPerUnit` (if unit mode)
+- **Follow-up** text input → calls `onFollowUp(query)` which re-runs `foodLookupMutation` with `previous` context
+- Footer: "Start Over" (ghost) + "Save to Library" (orange, disabled if unit mode and no grams entered)
 
 ### `components/ai-workout-proposal-modal.tsx`
 
@@ -115,9 +169,26 @@ type ProposedWorkout = {
   goal: string;
   exercises: ProposedExercise[];
 };
+
+type ProposedFood = {
+  name: string;
+  query: string;           // original user query
+  calories_per_100g: number;
+  protein_per_100g: number;
+  carbs_per_100g: number;
+  fat_per_100g: number;
+};
 ```
 
 Defined in `lib/types.ts`.
+
+### Storage normalization
+
+When saving a `ProposedFood` to the `foods` table (via `saveFood()` in `lib/api/ai.ts`):
+- `unit = "g"` or `"ml"` → `calories_per_g = calories_per_100g / 100` (and same for protein/carbs/fat)
+- `unit = "unit"` → `calories_per_g = (calories_per_100g / 100) * gramsPerUnit` — stores macros **per unit**
+
+The `unit` column on `foods` records the display unit (`g`, `unit`, `ml`).
 
 ---
 
