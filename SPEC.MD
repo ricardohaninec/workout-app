@@ -1,5 +1,5 @@
 # Technical Specification – Note Taking / Workout Web App
-> Version 3.3 — Updated March 2026
+> Version 3.4 — Updated March 2026
 
 ---
 
@@ -17,6 +17,8 @@ A web application where authenticated users can create, view, edit, delete, and 
 - Public sharing of workouts via a public URL (toggle on/off)
 - Workout sessions tracked via WorkoutInProgress — multiple sessions per workout, one active at a time
 - Daily diet logging: track meals and food intake by day with nutritional summaries (calories, protein, carbs, fat)
+- Progressive Web App (PWA): installable on mobile home screen, runs fullscreen without browser chrome
+- Rest timer push notifications: system notification fires when rest period ends, works on lock screen
 
 ### 1.2 Tech Stack
 
@@ -26,6 +28,8 @@ A web application where authenticated users can create, view, edit, delete, and 
 - PostgreSQL via `pg` (node-postgres) with raw SQL
 - shadcn/ui component library
 - TanStack Query v5 for client-side data fetching, caching, and mutation management
+- Serwist (`@serwist/next`) for PWA service worker and offline support
+- Web Notifications API for rest timer push notifications
 
 ---
 
@@ -113,6 +117,28 @@ While reviewing a generated workout proposal, the user can:
 - **Refine via feedback**: type a natural language instruction (e.g. "replace planks with leg raises", "add a bicep exercise") and click **Refine** — Claude updates the proposal in place keeping unchanged exercises intact
 - Multiple refinements can be chained before committing
 - "Create Workout" is disabled when all exercises have been removed
+
+### 3.8 PWA & Mobile Experience
+
+The app is a fully installable Progressive Web App.
+
+- **Manifest**: served at `/manifest.webmanifest` — defines `display: standalone`, theme/background color `#0D0D0D`, and a dumbbell SVG icon
+- **Service worker**: powered by Serwist (`@serwist/next`); precaches all pages and enables offline support
+- **Install banner**: appears on first visit on mobile when the app is not yet installed
+  - Android/Chrome: shows an "Install" button that triggers the native `beforeinstallprompt`
+  - iOS/Safari: shows manual "Share → Add to Home Screen" instructions
+  - Dismissed state persisted in `localStorage`; never shown when already running in standalone mode
+- **Build**: must be built with `next build --webpack` (Serwist requires webpack; Turbopack is used for dev via `next dev --turbopack`)
+
+### 3.9 Rest Timer Push Notifications
+
+During an active workout session, the rest timer fires a system push notification when it reaches zero.
+
+- Notification permission is requested during the first "complete set" user gesture (browser requirement)
+- Notification is shown via `ServiceWorkerRegistration.showNotification()` — appears on the lock screen even if the phone is in the user's pocket
+- Only fires when the timer reaches zero — not on start or mid-countdown
+- No backend or third-party service required; uses the browser's native Notification API
+- Supported on: Android Chrome, iOS 16.4+ (PWA installed), desktop browsers
 
 ### 3.7 AI Food Lookup (Authenticated)
 

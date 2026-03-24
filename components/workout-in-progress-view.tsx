@@ -94,6 +94,10 @@ export default function WorkoutInProgressView({
       if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
       audioCtxRef.current.resume().catch(() => {});
     } catch { /* SSR or unsupported */ }
+    // Request notification permission during user gesture
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
     const endAt = Date.now() + seconds * 1000;
     sessionStorage.setItem(REST_STORAGE_KEY, String(endAt));
     setRestDone(false);
@@ -118,17 +122,29 @@ export default function WorkoutInProgressView({
     }, 500);
   }
 
-  // Play alarm when rest timer ends
+  // Play alarm + push notification when rest timer ends
   useEffect(() => {
     if (!restDone) return;
     const ctx = audioCtxRef.current;
-    if (!ctx) return;
-    ctx.resume().then(() => {
-      const t = ctx.currentTime;
-      beep(ctx, t, 880, 0.18);
-      beep(ctx, t + 0.22, 880, 0.18);
-      beep(ctx, t + 0.44, 1100, 0.35);
-    }).catch(() => {});
+    if (ctx) {
+      ctx.resume().then(() => {
+        const t = ctx.currentTime;
+        beep(ctx, t, 880, 0.18);
+        beep(ctx, t + 0.22, 880, 0.18);
+        beep(ctx, t + 0.44, 1100, 0.35);
+      }).catch(() => {});
+    }
+    if (typeof Notification !== "undefined" && Notification.permission === "granted" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.showNotification("Rest Complete! 💪", {
+          body: "Time to start your next set.",
+          icon: "/icon.svg",
+          badge: "/icon.svg",
+          tag: "rest-timer",
+          renotify: true,
+        } as NotificationOptions);
+      }).catch(() => {});
+    }
   }, [restDone]);
 
   // Restore timer on mount (survives refresh)
