@@ -9,10 +9,6 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["better-sqlite3", "bun:sqlite"],
-  webpack(config) {
-    config.output.hashFunction = "sha256";
-    return config;
-  },
 };
 
 export default withSerwist(nextConfig);

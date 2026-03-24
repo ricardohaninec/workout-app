@@ -22,6 +22,7 @@ bun run tsc --noEmit  # TypeScript type check (run after every code change)
 ## Rules
 
 - **Always run `bun run tsc --noEmit` after making any code changes** to catch type errors before finishing.
+- **Always run `bun run build` after completing any feature or significant change** to catch build-time errors (e.g. invalid arguments, missing files, Serwist/webpack issues) that TypeScript alone won't surface.
 
 ## Architecture
 
