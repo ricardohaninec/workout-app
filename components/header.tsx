@@ -86,7 +86,7 @@ export default function Header({ name, email }: Props) {
           }`}
         >
           {/* Drawer header */}
-          <div className="flex items-center justify-between border-b border-white/[0.05] px-5 py-[18px]">
+          <div className="flex items-center justify-between border-b border-white/[0.05] px-5 py-[18px] pt-[calc(env(safe-area-inset-top)+18px)]">
             <Link
               href="/dashboard"
               className="flex items-center gap-2"
