@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Sparkles, X, Loader2, Dumbbell, Apple } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateWorkout, commitWorkout, refineWorkout, lookupFood, saveFood } from "@/lib/api/ai";
@@ -15,7 +15,10 @@ type Step = "input" | "loading" | "review" | "committing";
 
 export default function AiWorkoutFloatingChat() {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
+
+  if (pathname.startsWith("/p/")) return null;
 
   const [open, setOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);

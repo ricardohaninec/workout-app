@@ -71,7 +71,7 @@ export default async function PublicWorkoutPage({ params }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0D0D0D]">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0D0D0D] pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <Dumbbell className="h-5 w-5 text-orange-500" />

@@ -2,7 +2,9 @@
 
 ## 1. Overview & User Flow
 
-A floating Sparkles button appears in the bottom-right corner of every page. The panel has two modes switchable via tabs: **Workout** and **Nutrition**.
+A floating Sparkles button appears in the bottom-right corner of every authenticated page. The panel has two modes switchable via tabs: **Workout** and **Nutrition**.
+
+> **Visibility rule:** The component returns `null` on any route starting with `/p/` (public shared workout pages). Unauthenticated visitors on public routes must not see or interact with the AI panel.
 
 ### Workout Mode
 1. Clicks the button → panel expands, Workout tab active
