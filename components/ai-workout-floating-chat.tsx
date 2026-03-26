@@ -17,9 +17,6 @@ export default function AiWorkoutFloatingChat() {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-
-  if (pathname.startsWith("/p/")) return null;
-
   const [open, setOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const [mode, setMode] = useState<Mode>("workout");
@@ -75,6 +72,8 @@ export default function AiWorkoutFloatingChat() {
     },
     onError: () => { setError("Failed to save food. Please try again."); setStep("review"); },
   });
+
+  if (pathname.startsWith("/p/")) return null;
 
   function resetState() {
     setStep("input");
