@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/auth-server";
 import Header from "@/components/header";
+import AiWorkoutFloatingChat from "@/components/ai-workout-floating-chat";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
@@ -8,6 +9,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     <>
       <Header name={session.user.name} email={session.user.email} />
       {children}
+      <AiWorkoutFloatingChat />
     </>
   );
 }
