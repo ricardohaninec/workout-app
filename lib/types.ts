@@ -5,6 +5,7 @@ export type Workout = {
   image_url: string | null;
   is_public: boolean;
   public_slug: string | null;
+  is_archived: boolean;
   created_at: string;
   updated_at: string;
 };

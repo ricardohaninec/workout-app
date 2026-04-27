@@ -1,26 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, Trash2, TriangleAlert } from "lucide-react";
+import { ArchiveRestore, Trash2, TriangleAlert } from "lucide-react";
 import type { Workout } from "@/lib/types";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import PlaceholderImage from "@/components/icons/placeholder-image";
-import CreateWorkoutButton from "@/components/create-workout-button";
-import StartWorkoutButton from "@/components/start-workout-button";
 
-export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }: { workouts: Workout[]; activeWorkoutIds?: string[] }) {
-  const activeSet = new Set(activeWorkoutIds);
+export default function ArchivedWorkoutList({ workouts: initial }: { workouts: Workout[] }) {
   const router = useRouter();
   const [workouts, setWorkouts] = useState(initial);
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
-  const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false);
+  const [bulkUnarchiveLoading, setBulkUnarchiveLoading] = useState(false);
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -41,20 +37,20 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
     setSelected(new Set());
   }
 
-  async function handleBulkArchive() {
-    setBulkArchiveLoading(true);
+  async function handleBulkUnarchive() {
+    setBulkUnarchiveLoading(true);
     await Promise.all(
       [...selected].map((id) =>
         fetch(`/api/workouts/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ is_archived: true }),
+          body: JSON.stringify({ is_archived: false }),
         })
       )
     );
     setWorkouts((prev) => prev.filter((w) => !selected.has(w.id)));
     setSelected(new Set());
-    setBulkArchiveLoading(false);
+    setBulkUnarchiveLoading(false);
     setSelecting(false);
     router.refresh();
   }
@@ -76,9 +72,8 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
 
   return (
     <>
-      {/* Top row: heading left, actions right */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-white">My Workouts</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-white">Archived Workouts</h1>
         <div className="flex items-center gap-2.5">
           {selecting ? (
             <>
@@ -86,11 +81,11 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
                 <>
                   <Button
                     className="gap-1.5 border border-white/10 bg-[#111111] px-[18px] py-[10px] text-[14px] font-medium text-neutral-400 hover:bg-white/5 hover:text-white"
-                    onClick={handleBulkArchive}
-                    disabled={bulkArchiveLoading}
+                    onClick={handleBulkUnarchive}
+                    disabled={bulkUnarchiveLoading}
                   >
-                    <Archive size={14} className="shrink-0" />
-                    {bulkArchiveLoading ? "Archiving…" : `Archive ${selected.size}`}
+                    <ArchiveRestore size={14} className="shrink-0" />
+                    {bulkUnarchiveLoading ? "Restoring…" : `Restore ${selected.size}`}
                   </Button>
                   <Button variant="destructive" className="px-[18px] py-[10px]" onClick={() => setBulkDeleteOpen(true)}>
                     Delete {selected.size}
@@ -105,18 +100,17 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
               </Button>
             </>
           ) : (
-            <>
-              <CreateWorkoutButton />
+            workouts.length > 0 && (
               <Button className="border border-white/10 bg-[#111111] px-[18px] py-[10px] text-[14px] font-medium text-white hover:bg-white/5" onClick={() => setSelecting(true)}>
                 Select
               </Button>
-            </>
+            )
           )}
         </div>
       </div>
 
       {workouts.length === 0 ? (
-        <p className="text-neutral-500">No workouts yet. Create your first one!</p>
+        <p className="text-neutral-500">No archived workouts.</p>
       ) : (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {workouts.map((w) => (
@@ -127,19 +121,16 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
                 selecting ? "cursor-pointer select-none" : ""
               } ${selecting && selected.has(w.id) ? "border-orange-500/60 ring-2 ring-orange-500/30" : ""}`}
             >
-              {/* Cover image */}
               {w.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={w.image_url} alt={w.title} className="h-48 w-full object-cover" />
+                <img src={w.image_url} alt={w.title} className="h-48 w-full object-cover opacity-60" />
               ) : (
                 <div className="flex h-48 items-center justify-center bg-[#1A1A1A]">
                   <PlaceholderImage />
                 </div>
               )}
 
-              {/* Card body */}
               <div className="flex flex-1 flex-col gap-2.5 p-[14px]">
-                {/* Title row */}
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-[14px] font-semibold leading-tight text-white">{w.title}</span>
                   {selecting && (
@@ -152,31 +143,14 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
                   )}
                 </div>
 
-                {/* Meta row: badge + date */}
                 <div className="flex items-center gap-2">
-                  {w.is_public && (
-                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] font-medium text-[#6B7280]">
-                      Public
-                    </span>
-                  )}
+                  <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] font-medium text-[#6B7280]">
+                    Archived
+                  </span>
                   <span className="text-[11px] text-[#6B7280]">
-                    Updated {new Date(w.updated_at).toLocaleDateString("en-US")}
+                    {new Date(w.updated_at).toLocaleDateString("en-US")}
                   </span>
                 </div>
-
-                {/* Buttons */}
-                {!selecting && (
-                  <div className="mt-auto flex flex-col gap-2 pt-1">
-                    <StartWorkoutButton workoutId={w.id} hasActiveSession={activeSet.has(w.id)} />
-                    {activeSet.has(w.id) ? (
-                      <Button disabled className="w-full border border-white/10 bg-[#111111] text-[13px] font-medium text-white opacity-40 cursor-not-allowed">Update Workout</Button>
-                    ) : (
-                      <Link href={`/workout/${w.id}`}>
-                        <Button className="w-full border border-white/10 bg-[#111111] text-[13px] font-medium text-white hover:bg-white/5">Update Workout</Button>
-                      </Link>
-                    )}
-                  </div>
-                )}
               </div>
             </li>
           ))}
@@ -193,10 +167,7 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
           </span>
         }
       >
-        {/* Divider */}
         <div className="mb-4 h-px w-full bg-white/10" />
-
-        {/* Description */}
         <p className="mb-4 text-[14px] leading-relaxed text-[#6B7280]">
           Are you sure you want to delete{" "}
           <span className="font-medium text-white">
@@ -204,22 +175,14 @@ export default function WorkoutList({ workouts: initial, activeWorkoutIds = [] }
           </span>
           ? This action cannot be undone.
         </p>
-
-        {/* Warning box */}
         <div className="mb-6 flex items-center gap-2.5 rounded-lg border border-orange-500/[0.19] bg-orange-500/[0.063] px-[14px] py-3">
           <TriangleAlert size={16} className="shrink-0 text-orange-500" />
           <span className="text-[13px] font-semibold text-orange-500">
             {selected.size} workout{selected.size !== 1 ? "s" : ""} will be permanently deleted
           </span>
         </div>
-
-        {/* Footer */}
         <div className="flex justify-end gap-2.5">
-          <Button
-            variant="outline"
-            className="h-10 px-5 text-[14px] font-medium"
-            onClick={() => setBulkDeleteOpen(false)}
-          >
+          <Button variant="outline" className="h-10 px-5 text-[14px] font-medium" onClick={() => setBulkDeleteOpen(false)}>
             Cancel
           </Button>
           <Button

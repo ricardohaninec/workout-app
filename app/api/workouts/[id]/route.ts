@@ -76,6 +76,10 @@ export async function PATCH(request: Request, { params }: Params) {
     );
   }
 
+  if (typeof body.is_archived === "boolean") {
+    await run("UPDATE workout SET is_archived = $1, updated_at = NOW() WHERE id = $2", [body.is_archived, id]);
+  }
+
   return Response.json(await get<Workout>("SELECT * FROM workout WHERE id = $1", [id]));
 }
 

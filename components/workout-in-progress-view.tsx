@@ -43,26 +43,41 @@ function buildInitialSets(workoutItems: WorkoutItem[], wipSets: WorkoutInProgres
   }
 
   if (wipSets.length > 0) {
-    return wipSets.map((s) => ({
-      workoutItemId: s.workout_item_id,
-      reps: String(s.reps),
-      weight: String(s.weight),
-      rest_seconds: String(restLookup.get(`${s.workout_item_id}:${s.position}`) ?? 60),
-      position: s.position,
-      isComplete: !!s.is_complete,
-    }));
+    const seen = new Set<string>();
+    return wipSets
+      .filter((s) => {
+        const key = `${s.workout_item_id}:${s.position}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((s) => ({
+        workoutItemId: s.workout_item_id,
+        reps: String(s.reps),
+        weight: String(s.weight),
+        rest_seconds: String(restLookup.get(`${s.workout_item_id}:${s.position}`) ?? 60),
+        position: s.position,
+        isComplete: !!s.is_complete,
+      }));
   }
 
-  return workoutItems.flatMap((item) =>
-    item.sets.map((s) => ({
-      workoutItemId: item.id,
-      reps: String(s.reps),
-      weight: String(s.weight),
-      rest_seconds: String(s.rest_seconds ?? 60),
-      position: s.position,
-      isComplete: false,
-    }))
-  );
+  return workoutItems.flatMap((item) => {
+    const seen = new Set<number>();
+    return item.sets
+      .filter((s) => {
+        if (seen.has(s.position)) return false;
+        seen.add(s.position);
+        return true;
+      })
+      .map((s) => ({
+        workoutItemId: item.id,
+        reps: String(s.reps),
+        weight: String(s.weight),
+        rest_seconds: String(s.rest_seconds ?? 60),
+        position: s.position,
+        isComplete: false,
+      }));
+  });
 }
 
 export default function WorkoutInProgressView({

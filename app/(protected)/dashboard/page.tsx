@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   const session = await requireSession();
 
   const workouts = await query<Workout>(
-    "SELECT * FROM workout WHERE user_id = $1 ORDER BY updated_at DESC",
+    "SELECT * FROM workout WHERE user_id = $1 AND is_archived = FALSE ORDER BY updated_at DESC",
     [session.user.id]
   );
 

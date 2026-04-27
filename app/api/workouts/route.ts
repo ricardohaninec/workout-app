@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const workouts = await query<Workout>(
-    "SELECT * FROM workout WHERE user_id = $1 ORDER BY updated_at DESC",
+    "SELECT * FROM workout WHERE user_id = $1 AND is_archived = FALSE ORDER BY updated_at DESC",
     [session.user.id]
   );
   return Response.json(workouts);

@@ -48,6 +48,7 @@ const makeWorkout = (overrides: Partial<Workout> = {}): Workout => ({
   image_url: null,
   is_public: false,
   public_slug: null,
+  is_archived: false,
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
   ...overrides,

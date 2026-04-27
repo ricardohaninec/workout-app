@@ -30,6 +30,9 @@ export async function PATCH(request: Request, { params }: Params) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    // Serialize concurrent PATCHes for the same session to prevent double-inserts
+    // on empty tables (both DELETEs see 0 rows → no row locks → both INSERT → 2× rows).
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [sessionId]);
 
     const fields: string[] = ["updated_at = NOW()"];
     const vals: unknown[] = [];
@@ -57,12 +60,20 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     if (Array.isArray(body.sets)) {
+      type SetInput = { workoutItemId: string; position: number; reps: number; weight: number; isComplete: boolean };
+      // Deduplicate by (workoutItemId, position) — last entry wins
+      const dedupMap = new Map<string, SetInput>();
+      for (const s of body.sets as SetInput[]) {
+        dedupMap.set(`${s.workoutItemId}:${s.position ?? 0}`, s);
+      }
+      const dedupedSets = [...dedupMap.values()];
+
       // Save session progress sets
       await client.query(
         "DELETE FROM workout_in_progress_set WHERE workout_in_progress_id = $1",
         [sessionId]
       );
-      for (const s of body.sets) {
+      for (const s of dedupedSets) {
         await client.query(
           "INSERT INTO workout_in_progress_set (id, workout_in_progress_id, workout_item_id, reps, weight, position, is_complete) VALUES ($1, $2, $3, $4, $5, $6, $7)",
           [crypto.randomUUID(), sessionId, s.workoutItemId, s.reps ?? 1, s.weight ?? 0, s.position ?? 0, s.isComplete ?? false]
@@ -71,7 +82,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
       // Also write back to workout_item_set so the template reflects the latest values
       const byItem = new Map<string, { reps: number; weight: number; position: number }[]>();
-      for (const s of body.sets) {
+      for (const s of dedupedSets) {
         if (!byItem.has(s.workoutItemId)) byItem.set(s.workoutItemId, []);
         byItem.get(s.workoutItemId)!.push({ reps: s.reps ?? 1, weight: s.weight ?? 0, position: s.position ?? 0 });
       }

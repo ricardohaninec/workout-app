@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Dumbbell, LayoutDashboard, History, Zap, Salad, BookOpen } from "lucide-react";
+import { Menu, X, Dumbbell, LayoutDashboard, History, Zap, Salad, BookOpen, Archive } from "lucide-react";
 import ProfileDropdown from "./profile-dropdown";
 
 type Props = { name: string; email: string };
@@ -14,6 +14,7 @@ const navLinks = [
   { href: "/exercises", label: "My Exercises", icon: Zap },
   { href: "/days", label: "Diet", icon: Salad },
   { href: "/foods", label: "My Foods", icon: BookOpen },
+  { href: "/archived", label: "Archived", icon: Archive },
 ];
 
 export default function Header({ name, email }: Props) {
