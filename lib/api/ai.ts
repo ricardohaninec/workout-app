@@ -49,6 +49,17 @@ export async function lookupFood(query: string, previous?: ProposedFood, signal?
   return res.json();
 }
 
+export async function analyzeFoodPhoto(imageBase64: string, signal?: AbortSignal): Promise<ProposedFood> {
+  const res = await fetch("/api/ai/food", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: imageBase64 }),
+    signal,
+  });
+  if (!res.ok) throw new Error("Failed to analyze photo");
+  return res.json();
+}
+
 export async function saveFood(
   food: ProposedFood,
   unit: "g" | "unit" | "ml",

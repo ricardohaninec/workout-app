@@ -9,7 +9,10 @@ const ResponseSchema = z.object({
   protein_per_100g: z.number().nonnegative(),
   carbs_per_100g: z.number().nonnegative(),
   fat_per_100g: z.number().nonnegative(),
+  estimated_grams: z.number().positive().optional(),
 });
+
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -17,10 +20,18 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => ({}));
   const userQuery = (body.query as string | undefined)?.trim();
-  if (!userQuery) return Response.json({ error: "query is required" }, { status: 400 });
-  if (userQuery.length > 500) return Response.json({ error: "query must be 500 characters or fewer" }, { status: 400 });
-
+  const image = body.image as string | undefined;
   const previous = body.previous as ProposedFood | undefined;
+
+  if (!userQuery && !image) {
+    return Response.json({ error: "query or image is required" }, { status: 400 });
+  }
+  if (userQuery && userQuery.length > 500) {
+    return Response.json({ error: "query must be 500 characters or fewer" }, { status: 400 });
+  }
+  if (image && image.length * 0.75 > MAX_IMAGE_BYTES) {
+    return Response.json({ error: "image is too large" }, { status: 400 });
+  }
 
   const systemPrompt = previous
     ? `You are a nutrition database assistant. Previous food data:
@@ -30,11 +41,23 @@ Per 100g: ${previous.calories_per_100g} kcal, ${previous.protein_per_100g}g prot
 The user has a follow-up request. Update and return the nutritional info per 100g as JSON only:
 { "name": string, "calories_per_100g": number, "protein_per_100g": number, "carbs_per_100g": number, "fat_per_100g": number }
 JSON only, no markdown, no prose.`
-    : `You are a nutrition database assistant. Given a food query, respond ONLY with a valid JSON object with standard nutritional values per 100g (or per 100ml for liquids):
+    : image
+      ? `You are a nutrition database assistant. Identify the food shown in the image and respond ONLY with a valid JSON object with standard nutritional values per 100g, plus a typical serving size for what's shown:
+{ "name": "<food name, Title Case>", "calories_per_100g": number, "protein_per_100g": number, "carbs_per_100g": number, "fat_per_100g": number, "estimated_grams": <your best estimate of the total grams shown in the image> }
+JSON only, no markdown, no prose.`
+      : `You are a nutrition database assistant. Given a food query, respond ONLY with a valid JSON object with standard nutritional values per 100g (or per 100ml for liquids):
 { "name": "<food name, Title Case>", "calories_per_100g": number, "protein_per_100g": number, "carbs_per_100g": number, "fat_per_100g": number }
 JSON only, no markdown, no prose.`;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const userContent: Anthropic.MessageParam["content"] =
+    !previous && image
+      ? [
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
+          { type: "text", text: "Identify this food and estimate its nutrition." },
+        ]
+      : userQuery!;
 
   let message: Awaited<ReturnType<typeof client.messages.create>>;
   try {
@@ -42,7 +65,7 @@ JSON only, no markdown, no prose.`;
       model: "claude-sonnet-4-6",
       max_tokens: 512,
       system: systemPrompt,
-      messages: [{ role: "user", content: userQuery }],
+      messages: [{ role: "user", content: userContent }],
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Anthropic API error";
@@ -61,11 +84,12 @@ JSON only, no markdown, no prose.`;
 
   const proposal: ProposedFood = {
     name: parsed.name,
-    query: userQuery,
+    query: userQuery ?? "",
     calories_per_100g: parsed.calories_per_100g,
     protein_per_100g: parsed.protein_per_100g,
     carbs_per_100g: parsed.carbs_per_100g,
     fat_per_100g: parsed.fat_per_100g,
+    estimated_grams: parsed.estimated_grams,
   };
 
   return Response.json(proposal);

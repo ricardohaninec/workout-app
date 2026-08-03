@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Camera, Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import type { Food, MealFood } from "@/lib/types";
+import type { Food, MealFood, ProposedFood } from "@/lib/types";
 import Modal from "@/components/modal";
+import CameraCaptureModal from "@/components/camera-capture-modal";
+import AiFoodPhotoReview from "@/components/ai-food-photo-review";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { fetchFoods, addFoodToMeal } from "@/lib/api/foods";
+import { analyzeFoodPhoto, lookupFood } from "@/lib/api/ai";
 import { foodKeys } from "@/lib/queryKeys";
 
 export default function AddFoodToMealModal({
@@ -35,6 +38,10 @@ export default function AddFoodToMealModal({
   const [manualFat, setManualFat] = useState("");
   const [manualUnit, setManualUnit] = useState("g");
 
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [photoProposal, setPhotoProposal] = useState<ProposedFood | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
   const { data: allFoods = [], isLoading: foodsLoading } = useQuery({
     queryKey: foodKeys.list(""),
     queryFn: () => fetchFoods(""),
@@ -54,6 +61,18 @@ export default function AddFoodToMealModal({
     },
   });
 
+  const analyzePhotoMutation = useMutation({
+    mutationFn: (imageBase64: string) => analyzeFoodPhoto(imageBase64),
+    onSuccess: (proposal) => setPhotoProposal(proposal),
+    onError: () => setPhotoError("Couldn't analyze that photo. Try again."),
+  });
+
+  const photoFeedbackMutation = useMutation({
+    mutationFn: (feedback: string) => lookupFood(feedback, photoProposal!),
+    onSuccess: (proposal) => setPhotoProposal(proposal),
+    onError: () => setPhotoError("Couldn't process that feedback. Try again."),
+  });
+
   function reset() {
     setSearch("");
     setSelectedFood(null);
@@ -65,6 +84,9 @@ export default function AddFoodToMealModal({
     setManualCarbs("");
     setManualFat("");
     setManualUnit("g");
+    setPhotoProposal(null);
+    setPhotoError(null);
+    setCameraOpen(false);
   }
 
   function handleClose() {
@@ -89,6 +111,17 @@ export default function AddFoodToMealModal({
     });
   }
 
+  function handlePhotoCapture(imageBase64: string) {
+    setPhotoProposal(null);
+    setPhotoError(null);
+    analyzePhotoMutation.mutate(imageBase64);
+  }
+
+  function handleAddPhoto(data: Parameters<typeof addFoodToMeal>[1]) {
+    if (!mealId) return;
+    addFoodMutation.mutate(data);
+  }
+
   return (
     <Modal open={open} onClose={handleClose} title="Add Food">
       <div className="mb-4 h-px w-full bg-white/10" />
@@ -96,6 +129,7 @@ export default function AddFoodToMealModal({
         <TabsList className="mb-4 w-full">
           <TabsTrigger value="library" className="flex-1">Library</TabsTrigger>
           <TabsTrigger value="manual" className="flex-1">Manual</TabsTrigger>
+          <TabsTrigger value="photo" className="flex-1">Photo</TabsTrigger>
         </TabsList>
 
         <TabsContent value="library">
@@ -222,7 +256,42 @@ export default function AddFoodToMealModal({
             </Button>
           </div>
         </TabsContent>
+
+        <TabsContent value="photo">
+          {photoProposal ? (
+            <AiFoodPhotoReview
+              proposal={photoProposal}
+              isLoading={photoFeedbackMutation.isPending || addFoodMutation.isPending}
+              onFeedback={(feedback) => photoFeedbackMutation.mutate(feedback)}
+              onRetake={() => { setPhotoProposal(null); setCameraOpen(true); }}
+              onConfirm={handleAddPhoto}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-white/10 py-10">
+              {analyzePhotoMutation.isPending ? (
+                <p className="text-[13px] text-neutral-400">Analyzing photo…</p>
+              ) : (
+                <>
+                  <Camera size={28} className="text-neutral-600" />
+                  {photoError && <p className="text-[13px] text-red-400">{photoError}</p>}
+                  <Button
+                    className="bg-orange-500 font-semibold text-white hover:bg-orange-600"
+                    onClick={() => setCameraOpen(true)}
+                  >
+                    Take Photo
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+
+      <CameraCaptureModal
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onCapture={handlePhotoCapture}
+      />
     </Modal>
   );
 }

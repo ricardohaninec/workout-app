@@ -104,6 +104,7 @@ export type ProposedFood = {
   protein_per_100g: number;
   carbs_per_100g: number;
   fat_per_100g: number;
+  estimated_grams?: number;
 };
 
 export type MealFood = {
