@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, RotateCcw } from "lucide-react";
+import { Camera, RotateCcw, Upload } from "lucide-react";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
 
@@ -83,7 +83,7 @@ export default function CameraCaptureModal({
     onClose();
   }
 
-  function handleFileFallback(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -104,28 +104,28 @@ export default function CameraCaptureModal({
   }
 
   return (
-    <Modal open={open} onClose={handleClose} title="Take a Photo">
+    <Modal open={open} onClose={handleClose} title="Add a Photo">
       <div className="flex flex-col gap-3">
-        {error ? (
+        {error && (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-white/10 p-6 text-center">
             <p className="text-[13px] text-neutral-400">{error}</p>
             <label className="cursor-pointer rounded-lg bg-white/5 px-4 py-2 text-[13px] font-medium text-white hover:bg-white/10">
               Upload a photo
-              <input type="file" accept="image/*" className="hidden" onChange={handleFileFallback} />
+              <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
             </label>
           </div>
-        ) : preview ? (
+        )}
+        {preview && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview} alt="Captured food" className="w-full rounded-lg border border-white/10" />
-        ) : (
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full rounded-lg border border-white/10 bg-black"
-          />
         )}
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className={`w-full rounded-lg border border-white/10 bg-black ${error || preview ? "hidden" : ""}`}
+        />
 
         <div className="flex justify-end gap-2.5">
           {preview ? (
@@ -138,9 +138,15 @@ export default function CameraCaptureModal({
               </Button>
             </>
           ) : !error ? (
-            <Button className="bg-orange-500 font-semibold text-white hover:bg-orange-600" onClick={handleCapture}>
-              <Camera size={14} className="mr-1.5" /> Capture
-            </Button>
+            <>
+              <label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 bg-transparent px-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10">
+                <Upload size={14} /> Upload Photo
+                <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+              </label>
+              <Button className="bg-orange-500 font-semibold text-white hover:bg-orange-600" onClick={handleCapture}>
+                <Camera size={14} className="mr-1.5" /> Capture
+              </Button>
+            </>
           ) : null}
         </div>
       </div>
