@@ -5,7 +5,7 @@ import { Camera, Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Food, MealFood, ProposedFood } from "@/lib/types";
 import Modal from "@/components/modal";
-import CameraCaptureModal from "@/components/camera-capture-modal";
+import CameraCapture from "@/components/camera-capture";
 import AiFoodPhotoReview from "@/components/ai-food-photo-review";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,6 +128,7 @@ export default function AddFoodToMealModal({
   }
 
   function handlePhotoCapture(imageBase64: string) {
+    setCameraOpen(false);
     setPhotoItems(null);
     setPhotoError(null);
     analyzePhotoMutation.mutate(imageBase64);
@@ -282,6 +283,8 @@ export default function AddFoodToMealModal({
               onRetake={() => { setPhotoItems(null); setCameraOpen(true); }}
               onConfirmAll={handleAddPhotoItems}
             />
+          ) : cameraOpen ? (
+            <CameraCapture onCapture={handlePhotoCapture} onCancel={() => setCameraOpen(false)} />
           ) : (
             <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-white/10 py-10">
               {analyzePhotoMutation.isPending ? (
@@ -302,12 +305,6 @@ export default function AddFoodToMealModal({
           )}
         </TabsContent>
       </Tabs>
-
-      <CameraCaptureModal
-        open={cameraOpen}
-        onClose={() => setCameraOpen(false)}
-        onCapture={handlePhotoCapture}
-      />
     </Modal>
   );
 }

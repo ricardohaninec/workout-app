@@ -186,7 +186,10 @@ export default function AiFoodPhotoReview({
           isLoading={isLoading}
           onGramsChange={(value) => setGrams((prev) => ({ ...prev, [i]: value }))}
           onIncludedChange={(value) => setIncluded((prev) => ({ ...prev, [i]: value }))}
-          onFeedback={(feedback) => onItemFeedback(i, feedback)}
+          onFeedback={(feedback) => {
+            setGrams((prev) => (i in prev ? prev : { ...prev, [i]: gramsFor(i, item) }));
+            onItemFeedback(i, feedback);
+          }}
         />
       ))}
 
