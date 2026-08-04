@@ -39,7 +39,7 @@ export default function AddFoodToMealModal({
   const [manualUnit, setManualUnit] = useState("g");
 
   const [cameraOpen, setCameraOpen] = useState(false);
-  const [photoProposal, setPhotoProposal] = useState<ProposedFood | null>(null);
+  const [photoItems, setPhotoItems] = useState<ProposedFood[] | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
 
   const { data: allFoods = [], isLoading: foodsLoading } = useQuery({
@@ -63,14 +63,30 @@ export default function AddFoodToMealModal({
 
   const analyzePhotoMutation = useMutation({
     mutationFn: (imageBase64: string) => analyzeFoodPhoto(imageBase64),
-    onSuccess: (proposal) => setPhotoProposal(proposal),
+    onSuccess: (result) => setPhotoItems(result.items),
     onError: () => setPhotoError("Couldn't analyze that photo. Try again."),
   });
 
   const photoFeedbackMutation = useMutation({
-    mutationFn: (feedback: string) => lookupFood(feedback, photoProposal!),
-    onSuccess: (proposal) => setPhotoProposal(proposal),
+    mutationFn: ({ index, feedback }: { index: number; feedback: string }) =>
+      lookupFood(feedback, photoItems![index]).then((proposal) => ({ index, proposal })),
+    onSuccess: ({ index, proposal }) =>
+      setPhotoItems((items) => items!.map((item, i) => (i === index ? proposal : item))),
     onError: () => setPhotoError("Couldn't process that feedback. Try again."),
+  });
+
+  const addPhotoItemsMutation = useMutation({
+    mutationFn: async (items: Parameters<typeof addFoodToMeal>[1][]) => {
+      const results = [];
+      for (const item of items) {
+        results.push(await addFoodToMeal(mealId!, item));
+      }
+      return results;
+    },
+    onSuccess: (foods) => {
+      foods.forEach(onAdded);
+      reset();
+    },
   });
 
   function reset() {
@@ -84,7 +100,7 @@ export default function AddFoodToMealModal({
     setManualCarbs("");
     setManualFat("");
     setManualUnit("g");
-    setPhotoProposal(null);
+    setPhotoItems(null);
     setPhotoError(null);
     setCameraOpen(false);
   }
@@ -112,14 +128,14 @@ export default function AddFoodToMealModal({
   }
 
   function handlePhotoCapture(imageBase64: string) {
-    setPhotoProposal(null);
+    setPhotoItems(null);
     setPhotoError(null);
     analyzePhotoMutation.mutate(imageBase64);
   }
 
-  function handleAddPhoto(data: Parameters<typeof addFoodToMeal>[1]) {
+  function handleAddPhotoItems(data: Parameters<typeof addFoodToMeal>[1][]) {
     if (!mealId) return;
-    addFoodMutation.mutate(data);
+    addPhotoItemsMutation.mutate(data);
   }
 
   return (
@@ -258,13 +274,13 @@ export default function AddFoodToMealModal({
         </TabsContent>
 
         <TabsContent value="photo">
-          {photoProposal ? (
+          {photoItems ? (
             <AiFoodPhotoReview
-              proposal={photoProposal}
-              isLoading={photoFeedbackMutation.isPending || addFoodMutation.isPending}
-              onFeedback={(feedback) => photoFeedbackMutation.mutate(feedback)}
-              onRetake={() => { setPhotoProposal(null); setCameraOpen(true); }}
-              onConfirm={handleAddPhoto}
+              items={photoItems}
+              isLoading={photoFeedbackMutation.isPending || addPhotoItemsMutation.isPending}
+              onItemFeedback={(index, feedback) => photoFeedbackMutation.mutate({ index, feedback })}
+              onRetake={() => { setPhotoItems(null); setCameraOpen(true); }}
+              onConfirmAll={handleAddPhotoItems}
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-white/10 py-10">

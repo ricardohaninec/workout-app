@@ -105,6 +105,12 @@ export type ProposedFood = {
   carbs_per_100g: number;
   fat_per_100g: number;
   estimated_grams?: number;
+  preparation_note?: string;
+  portion_reference?: string;
+};
+
+export type PhotoAnalysisResult = {
+  items: ProposedFood[];
 };
 
 export type MealFood = {

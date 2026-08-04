@@ -5,7 +5,7 @@ import { RotateCcw, Upload } from "lucide-react";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
 
-const MAX_DIMENSION = 1024;
+const MAX_DIMENSION = 1568;
 
 export default function CameraCaptureModal({
   open,
@@ -42,7 +42,7 @@ export default function CameraCaptureModal({
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
         canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        setPreview(canvas.toDataURL("image/jpeg", 0.8));
+        setPreview(canvas.toDataURL("image/jpeg", 0.85));
       };
       img.src = reader.result as string;
     };
@@ -60,6 +60,9 @@ export default function CameraCaptureModal({
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 py-12 text-neutral-400 transition-colors hover:border-white/25 hover:text-white">
             <Upload size={24} />
             <span className="text-[13px] font-medium">Take or upload a photo</span>
+            <span className="px-6 text-center text-[11px] text-neutral-500">
+              Tip: include a fork, hand, or standard plate in frame — helps estimate portion size accurately
+            </span>
             <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
           </label>
         )}

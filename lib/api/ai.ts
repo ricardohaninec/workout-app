@@ -1,4 +1,4 @@
-import type { ProposedWorkout, ProposedFood } from "@/lib/types";
+import type { ProposedWorkout, ProposedFood, PhotoAnalysisResult } from "@/lib/types";
 
 export async function generateWorkout(goal: string, signal?: AbortSignal): Promise<ProposedWorkout> {
   const res = await fetch("/api/ai/generate", {
@@ -49,7 +49,7 @@ export async function lookupFood(query: string, previous?: ProposedFood, signal?
   return res.json();
 }
 
-export async function analyzeFoodPhoto(imageBase64: string, signal?: AbortSignal): Promise<ProposedFood> {
+export async function analyzeFoodPhoto(imageBase64: string, signal?: AbortSignal): Promise<PhotoAnalysisResult> {
   const res = await fetch("/api/ai/food", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
