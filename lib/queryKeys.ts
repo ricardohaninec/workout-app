@@ -7,6 +7,10 @@ export const foodKeys = {
   list: (search: string) => ["foods", "list", search] as const,
 };
 
+export const handReferenceKeys = {
+  detail: () => ["hand-reference"] as const,
+};
+
 export const workoutKeys = {
   all: ["workouts"] as const,
 };

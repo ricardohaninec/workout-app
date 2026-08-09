@@ -1,5 +1,5 @@
 # Technical Specification – Note Taking / Workout Web App
-> Version 3.4 — Updated March 2026
+> Version 3.5 — Updated March 2026
 
 ---
 
@@ -434,6 +434,26 @@ CREATE TABLE IF NOT EXISTS meal_foods (
 
 ---
 
+#### Hand Reference (NEW)
+
+Stores a per-user hand measurement (captured via a photo alongside a ruler) used as a precise scale reference during AI food-photo portion estimation.
+
+```sql
+CREATE TABLE IF NOT EXISTS hand_references (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL UNIQUE,
+  hand_length_cm DECIMAL(5,2) NOT NULL,
+  image_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
+);
+```
+
+> **One per user:** `UNIQUE (user_id)` means re-measuring upserts (`ON CONFLICT (user_id) DO UPDATE`) rather than creating a new row.
+
+---
+
 ### 5.2 Indexes
 
 ```sql
@@ -461,6 +481,8 @@ CREATE INDEX IF NOT EXISTS idx_meals_day_id ON meals(day_id);
 CREATE INDEX IF NOT EXISTS idx_foods_user_id ON foods(user_id);
 CREATE INDEX IF NOT EXISTS idx_meal_foods_meal_id ON meal_foods(meal_id);
 CREATE INDEX IF NOT EXISTS idx_meal_foods_food_id ON meal_foods(food_id);
+
+CREATE INDEX IF NOT EXISTS idx_hand_references_user_id ON hand_references(user_id);
 ```
 
 ### 5.3 DB Initialization Scripts
@@ -471,6 +493,7 @@ CREATE INDEX IF NOT EXISTS idx_meal_foods_food_id ON meal_foods(food_id);
 - `scripts/migrate-add-set-complete.ts` — migration adding `is_complete BOOLEAN` column to `workout_in_progress_set`
 - `scripts/migrate-add-rest-seconds.ts` — migration adding `rest_seconds INTEGER DEFAULT 60` column to `workout_item_set`
 - `scripts/migrate-add-diet.ts` — migration adding `days`, `meals`, `foods`, and `meal_foods` tables
+- `scripts/migrate-add-hand-reference.ts` — migration adding the `hand_references` table
 
 ---
 
@@ -993,6 +1016,28 @@ Removes a food from the library. Does NOT affect historical `meal_foods` records
 
 ---
 
+#### Hand Reference (NEW)
+
+##### GET /api/hand-reference
+
+Returns the authenticated user's logged hand reference, or `null` if none exists.
+
+**Response 200:** `{ "handReference": { "id": "uuid", "hand_length_cm": 18.4, ... } | null }`
+
+##### POST /api/hand-reference
+
+Analyzes a photo of the user's hand next to a ruler via Claude, measures hand length in cm using the ruler as ground truth, and upserts the result (one row per user). Returns `422` if no hand + ruler could be confidently detected.
+
+**Request Body:** `{ "image": "<base64 jpeg>" }`
+
+**Response 201:** `{ "handReference": { "id": "uuid", "hand_length_cm": 18.4, ... } }`
+
+##### DELETE /api/hand-reference
+
+Removes the user's logged hand reference. Subsequent food-photo analysis falls back to generic reference-object estimation.
+
+---
+
 ## 8. Frontend – Pages & Components
 
 ### 8.1 Routes
@@ -1078,6 +1123,9 @@ Two-tab modal (Library / Manual Entry). Library tab: searchable food list, enter
 **components/foods-library.tsx**
 Props: none (fetches from `/api/foods`). Searchable table of user foods. Supports create, inline edit, and delete. Deleting a food does not affect historical meal logs.
 
+**components/hand-reference-card.tsx**
+Props: `initialData: HandReference | null`. Rendered at the top of `/foods`. Lets the user capture a photo of their hand next to a ruler (via `CameraCapture`) to log a precise `hand_length_cm` via `POST /api/hand-reference`. When logged, shown value can be retaken or removed. When a hand reference exists, AI food-photo portion estimation (`POST /api/ai/food`) uses it as the primary scale reference whenever a hand is visible in the food photo, instead of guessing from generic objects.
+
 ### 8.4 shadcn/ui Components (`components/ui/`)
 
 - `button.tsx` — variants: default, outline, ghost, destructive
@@ -1145,6 +1193,7 @@ bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress
 
 | Version | Date | Changes |
 |---|---|---|
+| 3.5 | March 2026 | Added Hand Reference feature: new `hand_references` table (one row per user, upsert on re-measure); `POST/GET/DELETE /api/hand-reference`; new component `hand-reference-card` rendered on `/foods`; AI food-photo portion estimation (`app/api/ai/food/route.ts`) now uses the logged hand length as the primary scale reference when a hand is visible in the photo, falling back to generic reference-object estimation otherwise. |
 | 3.3 | March 2026 | Added unit test suite: Vitest + jsdom + @testing-library/react (React 19 compatible). Config: `vitest.config.mts` (jsdom env, globals, path alias via vite-tsconfig-paths), `vitest.setup.ts` (jest-dom matchers, matchMedia/ResizeObserver mocks, RTL cleanup). 93 tests across 8 files covering lib utilities (`cn`, query keys), API modules (exercises, foods, sessions), and components (Modal, WorkoutList, WorkoutInProgressView). Run with `bun run test` / `bun run test:watch`. |
 | 3.2 | March 2026 | Bug fix: `addSet` in `workout-in-progress-view` now computes position inside the `setSets` functional updater (reads `prev` state) to prevent duplicate set positions from rapid clicks, which previously caused sets to be saved with duplicate positions and appear doubled on refresh. Feature: rest timer end plays a three-beep alarm (880 Hz × 2 + 1100 Hz) synthesized via the Web Audio API — no external file required. |
 | 3.1 | March 2026 | Added TanStack Query v5: `QueryClientProvider` in `app/providers.tsx`; query key factory in `lib/queryKeys.ts`; typed API modules in `lib/api/`; converted `add-workout-item-modal`, `add-food-to-meal-modal`, `exercises-manager`, `foods-library`, and `session-history-list` to use `useQuery`/`useMutation`; `initialData` + `initialDataUpdatedAt` pattern for SSR-populated components; cache invalidation via `invalidateQueries` on all mutations |

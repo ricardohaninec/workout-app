@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import type { ProposedFood } from "@/lib/types";
+import { get } from "@/lib/db";
+import type { HandReference, ProposedFood } from "@/lib/types";
 
 const ResponseSchema = z.object({
   name: z.string(),
@@ -45,9 +46,15 @@ const PREP_SYSTEM_PROMPT = `You are Agent 2 of a food analysis pipeline: Prepara
 { "preparation": "<short description, e.g. 'pan-fried in butter'>", "calories_per_100g": number, "protein_per_100g": number, "carbs_per_100g": number, "fat_per_100g": number }
 Values must reflect the prepared dish, not the raw ingredient. JSON only, no markdown, no prose.`;
 
-const PORTION_SYSTEM_PROMPT = `You are Agent 3 of a food analysis pipeline: Portion & Volume Estimator. For the specified food item in the image, estimate its total weight in grams using visual reference objects in frame (standard dinner plate ≈26cm diameter, fork ≈20cm, hand, packaging). Respond ONLY with JSON:
+function buildPortionPrompt(handLengthCm?: number): string {
+  const base = `You are Agent 3 of a food analysis pipeline: Portion & Volume Estimator. For the specified food item in the image, estimate its total weight in grams using visual reference objects in frame (standard dinner plate ≈26cm diameter, fork ≈20cm, hand, packaging).`;
+  const handNote = handLengthCm
+    ? ` The user's hand length has been precisely measured at ${handLengthCm}cm. If a hand is visible in this image, use it as the primary scale reference — it is far more accurate than estimating a generic object — and set "reference_used" to describe it as the logged hand (e.g. "hand (${handLengthCm}cm, logged)"). If no hand is visible, fall back to other reference objects as usual.`
+    : "";
+  return `${base}${handNote} Respond ONLY with JSON:
 { "estimated_grams": number, "reference_used": "<what you used to judge scale>" }
 JSON only, no markdown, no prose.`;
+}
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
@@ -109,12 +116,18 @@ export async function POST(request: Request) {
       return Response.json({ error: "Couldn't identify foods in photo" }, { status: 502 });
     }
 
+    const handReference = await get<HandReference>(
+      "SELECT hand_length_cm FROM hand_references WHERE user_id = $1",
+      [session.user.id]
+    );
+    const portionPrompt = buildPortionPrompt(handReference?.hand_length_cm);
+
     const settled = await Promise.allSettled(
       detected.items.map(async (item): Promise<ProposedFood> => {
         const focus = `Focus only on: "${item.name}" (${item.location_hint}). Ignore other items in the image.`;
         const [prep, portion] = await Promise.all([
           callAgent(client, PrepFatSchema, PREP_SYSTEM_PROMPT, [imageBlock, { type: "text", text: focus }]),
-          callAgent(client, PortionSchema, PORTION_SYSTEM_PROMPT, [imageBlock, { type: "text", text: focus }]),
+          callAgent(client, PortionSchema, portionPrompt, [imageBlock, { type: "text", text: focus }]),
         ]);
         return {
           name: item.name,

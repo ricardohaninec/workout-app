@@ -18,6 +18,7 @@
     "db:migrate-wip-cascade": "bun --env-file=.env.local scripts/migrate-workout-in-progress-set-cascade.ts",
     "db:migrate-set-unique": "bun --env-file=.env.local scripts/migrate-add-set-unique-constraints.ts",
     "db:migrate-archived": "bun --env-file=.env.local scripts/migrate-add-archived.ts",
+    "db:migrate-hand-reference": "bun --env-file=.env.local scripts/migrate-add-hand-reference.ts",
     "db:seed": "bun scripts/seed.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",

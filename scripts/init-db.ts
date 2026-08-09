@@ -99,6 +99,16 @@ await pool.query(`
     FOREIGN KEY (workout_item_id) REFERENCES workout_item(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS hand_references (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT NOT NULL UNIQUE,
+    hand_length_cm DECIMAL(5,2) NOT NULL,
+    image_url TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
+  );
+
   -- Indexes
   CREATE INDEX IF NOT EXISTS idx_workout_user_id ON workout(user_id);
   CREATE INDEX IF NOT EXISTS idx_workout_title ON workout(title);
@@ -111,6 +121,8 @@ await pool.query(`
   CREATE INDEX IF NOT EXISTS idx_workout_item_exercise_id ON workout_item(exercise_id);
 
   CREATE INDEX IF NOT EXISTS idx_workout_item_set_workout_item_id ON workout_item_set(workout_item_id);
+
+  CREATE INDEX IF NOT EXISTS idx_hand_references_user_id ON hand_references(user_id);
 `);
 
 console.log("Database initialised.");

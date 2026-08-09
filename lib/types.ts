@@ -97,6 +97,15 @@ export type Food = {
   updated_at: string;
 };
 
+export type HandReference = {
+  id: string;
+  user_id: string;
+  hand_length_cm: number;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProposedFood = {
   name: string;
   query: string;

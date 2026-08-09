@@ -18,9 +18,11 @@ function drawToJpeg(source: CanvasImageSource, width: number, height: number): s
 export default function CameraCapture({
   onCapture,
   onCancel,
+  tip = "Tip: include a fork, hand, or standard plate in frame — helps estimate portion size accurately",
 }: {
   onCapture: (imageBase64: string) => void;
   onCancel: () => void;
+  tip?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -135,9 +137,7 @@ export default function CameraCapture({
           </p>
         )}
       </div>
-      <p className="text-center text-[11px] text-neutral-500">
-        Tip: include a fork, hand, or standard plate in frame — helps estimate portion size accurately
-      </p>
+      <p className="text-center text-[11px] text-neutral-500">{tip}</p>
       <div className="flex items-center justify-between gap-2.5">
         <Button variant="outline" onClick={onCancel}>
           Cancel
