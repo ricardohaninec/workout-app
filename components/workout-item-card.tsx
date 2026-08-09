@@ -51,6 +51,7 @@ export default function WorkoutItemCard({
                 {s.rest_seconds != null && (
                   <span className="ml-1 text-neutral-400">· {s.rest_seconds}s rest</span>
                 )}
+                {s.is_drop_set && <span className="ml-1 text-orange-400">· drop set</span>}
               </li>
             ))}
           </ul>

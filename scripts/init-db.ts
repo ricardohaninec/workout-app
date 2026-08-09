@@ -96,6 +96,7 @@ await pool.query(`
     reps INTEGER NOT NULL DEFAULT 1,
     weight REAL NOT NULL DEFAULT 0,
     position INTEGER NOT NULL DEFAULT 0,
+    is_drop_set BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (workout_item_id) REFERENCES workout_item(id) ON DELETE CASCADE
   );
 

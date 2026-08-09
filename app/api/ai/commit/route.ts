@@ -40,11 +40,16 @@ export async function POST(request: Request) {
   for (let i = 0; i < proposal.exercises.length; i++) {
     const ex = proposal.exercises[i];
 
-    // Fuzzy match existing exercise
-    const existing = await get<{ id: string }>(
-      "SELECT id FROM exercise WHERE user_id = $1 AND LOWER(title) ILIKE $2 LIMIT 1",
-      [session.user.id, `%${ex.name.toLowerCase()}%`]
-    );
+    // Exact match first (case-insensitive), then fall back to a fuzzy substring match
+    const existing =
+      (await get<{ id: string }>(
+        "SELECT id FROM exercise WHERE user_id = $1 AND LOWER(title) = LOWER($2) LIMIT 1",
+        [session.user.id, ex.name]
+      )) ??
+      (await get<{ id: string }>(
+        "SELECT id FROM exercise WHERE user_id = $1 AND LOWER(title) ILIKE $2 LIMIT 1",
+        [session.user.id, `%${ex.name.toLowerCase()}%`]
+      ));
 
     let exerciseId: string;
     if (existing) {

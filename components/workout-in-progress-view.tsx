@@ -353,12 +353,17 @@ export default function WorkoutInProgressView({
                   <span className="text-center">Done</span>
                   <span />
                 </div>
-                {itemSets.map((s, i) => (
+                {itemSets.map((s, i) => {
+                  const isDropSet = item.sets.find((ts) => ts.position === s.position)?.is_drop_set;
+                  return (
                   <div
                     key={`${item.id}-${s.position}`}
                     className={`grid grid-cols-[1.5rem_1fr_1fr_2.5rem_2rem_1.5rem] sm:flex sm:gap-2 gap-1.5 items-center rounded-md px-1 transition-colors ${s.isComplete ? "bg-orange-500/10" : ""}`}
                   >
-                    <span className="text-sm text-neutral-400">{i + 1}</span>
+                    <span className="text-sm text-neutral-400 flex items-center gap-1">
+                      {i + 1}
+                      {isDropSet && <span className="text-[10px] font-semibold text-orange-400" title="Drop set">DS</span>}
+                    </span>
                     <Input
                       type="number"
                       min={1}
@@ -394,7 +399,8 @@ export default function WorkoutInProgressView({
                       </button>
                     ) : <span />}
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               <Button

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { PendingWorkoutItem } from "@/lib/types";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -12,9 +13,9 @@ import { fetchExercises } from "@/lib/api/exercises";
 import { exerciseKeys } from "@/lib/queryKeys";
 
 type Tab = "new" | "existing";
-type SetRow = { reps: string; weight: string };
+type SetRow = { reps: string; weight: string; dropSet: boolean };
 
-const DEFAULT_SETS: SetRow[] = [{ reps: "", weight: "" }];
+const DEFAULT_SETS: SetRow[] = [{ reps: "", weight: "", dropSet: false }];
 
 export default function AddWorkoutItemModal({
   onAdd,
@@ -48,7 +49,7 @@ export default function AddWorkoutItemModal({
   }
 
   function parsedSets() {
-    return sets.map((s) => ({ reps: Number(s.reps) || 1, weight: Number(s.weight) || 0, rest_seconds: 0 }));
+    return sets.map((s) => ({ reps: Number(s.reps) || 1, weight: Number(s.weight) || 0, rest_seconds: 0, is_drop_set: s.dropSet }));
   }
 
   function handleNew(e: React.FormEvent) {
@@ -235,7 +236,7 @@ function ImageUpload({ value, onChange }: { value: string | null; onChange: (url
   );
 }
 
-function SetsEditor({ sets, onChange }: { sets: { reps: string; weight: string }[]; onChange: (s: { reps: string; weight: string }[]) => void }) {
+function SetsEditor({ sets, onChange }: { sets: SetRow[]; onChange: (s: SetRow[]) => void }) {
   return (
     <div>
       <Label className="mb-2 block">Sets</Label>
@@ -261,6 +262,14 @@ function SetsEditor({ sets, onChange }: { sets: { reps: string; weight: string }
               className="w-24"
             />
             <span className="text-xs text-neutral-400">lb</span>
+            <label className="ml-1 flex items-center gap-1.5 text-xs text-neutral-400">
+              <Checkbox
+                checked={s.dropSet}
+                onCheckedChange={(checked) => onChange(sets.map((r, j) => j === i ? { ...r, dropSet: !!checked } : r))}
+                aria-label="Mark as drop set"
+              />
+              Drop set
+            </label>
             {sets.length > 1 && (
               <Button
                 type="button"
@@ -279,7 +288,7 @@ function SetsEditor({ sets, onChange }: { sets: { reps: string; weight: string }
         type="button"
         variant="ghost"
         size="sm"
-        onClick={() => onChange([...sets, { reps: "", weight: "" }])}
+        onClick={() => onChange([...sets, { reps: "", weight: "", dropSet: false }])}
         className="mt-2 text-neutral-500"
       >
         + Add set

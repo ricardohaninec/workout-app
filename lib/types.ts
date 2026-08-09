@@ -26,6 +26,7 @@ export type WorkoutItemSet = {
   weight: number;
   position: number;
   rest_seconds: number;
+  is_drop_set: boolean;
 };
 
 export type WorkoutItem = {
@@ -155,7 +156,7 @@ export type PendingWorkoutItem = {
   tempId: string;
   exerciseTitle: string;
   exerciseImageUrl: string | null;
-  sets: { reps: number; weight: number; rest_seconds: number }[];
+  sets: { reps: number; weight: number; rest_seconds: number; is_drop_set: boolean }[];
   note: string | null;
 } & (
   | { type: "new" }

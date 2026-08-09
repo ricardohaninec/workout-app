@@ -22,6 +22,7 @@ import type { PendingWorkoutItem, Workout, WorkoutItem } from "@/lib/types";
 import AddWorkoutItemModal from "@/components/add-workout-item-modal";
 import Modal from "@/components/modal";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +74,7 @@ function SortableItem({
   );
 }
 
-type SetRow = { reps: string; weight: string; rest_seconds: string };
+type SetRow = { reps: string; weight: string; rest_seconds: string; is_drop_set: boolean };
 
 async function uploadWorkoutImage(file: File): Promise<string> {
   const fd = new FormData();
@@ -188,6 +189,7 @@ export default function WorkoutEditor({
         reps: String(s.reps),
         weight: String(s.weight),
         rest_seconds: String(s.rest_seconds ?? 60),
+        is_drop_set: !!s.is_drop_set,
       })),
     );
     setEditNote(item.note ?? "");
@@ -205,6 +207,7 @@ export default function WorkoutEditor({
           reps: Number(s.reps) || 1,
           weight: Number(s.weight) || 0,
           rest_seconds: Number(s.rest_seconds) || 60,
+          is_drop_set: s.is_drop_set,
         })),
         note: editNote,
       }),
@@ -436,6 +439,7 @@ export default function WorkoutEditor({
                         {item.sets.map((s, i) => (
                           <li key={i}>
                             Set {i + 1}: {s.reps} reps × {s.weight} lb
+                            {s.is_drop_set && <span className="ml-1 text-orange-400">· drop set</span>}
                           </li>
                         ))}
                       </ul>
@@ -493,7 +497,7 @@ export default function WorkoutEditor({
           <Label className="block">Sets</Label>
           <div className="flex flex-col gap-2">
             {editSets.map((s, i) => (
-              <div key={i} className="grid grid-cols-[1fr_auto_1fr_1fr_auto] items-center gap-1.5 sm:flex sm:gap-2">
+              <div key={i} className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <Input
                   type="number"
                   min={1}
@@ -530,13 +534,23 @@ export default function WorkoutEditor({
                   />
                   <span className="text-xs text-neutral-400 whitespace-nowrap">s</span>
                 </div>
+                <label className="flex items-center gap-1.5 text-xs text-neutral-400">
+                  <Checkbox
+                    checked={s.is_drop_set}
+                    onCheckedChange={(checked) =>
+                      setEditSets(editSets.map((r, j) => j === i ? { ...r, is_drop_set: !!checked } : r))
+                    }
+                    aria-label="Mark as drop set"
+                  />
+                  Drop set
+                </label>
                 {editSets.length > 1 ? (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => setEditSets(editSets.filter((_, j) => j !== i))}
-                    className="text-neutral-400 hover:text-red-500"
+                    className="ml-auto text-neutral-400 hover:text-red-500"
                   >
                     ✕
                   </Button>
@@ -548,7 +562,7 @@ export default function WorkoutEditor({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setEditSets([...editSets, { reps: "", weight: "", rest_seconds: "60" }])}
+            onClick={() => setEditSets([...editSets, { reps: "", weight: "", rest_seconds: "60", is_drop_set: false }])}
             className="self-start text-neutral-500"
           >
             + Add set

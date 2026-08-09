@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { query } from "@/lib/db";
 import type { ProposedWorkout } from "@/lib/types";
 
 const ExerciseSchema = z.object({
@@ -31,18 +32,27 @@ export async function POST(request: Request) {
     .map((ex, i) => `${i + 1}. ${ex.name} — ${ex.sets} sets × ${ex.reps} reps, ${ex.rest_seconds}s rest${ex.note ? ` (${ex.note})` : ""}`)
     .join("\n");
 
+  const existing = await query<{ title: string }>(
+    "SELECT DISTINCT title FROM exercise WHERE user_id = $1 ORDER BY title ASC",
+    [session.user.id]
+  );
+  const existingList = existing.map((e) => e.title);
+
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   let message: Awaited<ReturnType<typeof client.messages.create>>;
   try {
     message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 1024,
+      max_tokens: 1536,
       system: `You are an expert personal trainer. The user has a workout they want to modify.
 
 Current workout: "${proposal.title}" (goal: ${proposal.goal})
 Exercises:
 ${currentExercises}
+
+Exercise library — the user already has these exercises logged:
+${existingList.length > 0 ? existingList.map((t) => `- ${t}`).join("\n") : "(empty — the user has no exercises yet)"}
 
 Apply the user's requested change and return the updated workout as a valid JSON object:
 {
@@ -51,7 +61,11 @@ Apply the user's requested change and return the updated workout as a valid JSON
     { "name": "<Title Case exercise name>", "sets": number, "reps": number, "rest_seconds": number, "note": string|null }
   ]
 }
-Keep exercises not mentioned in the feedback unchanged. JSON only, no markdown, no prose.`,
+Rules:
+1. Keep exercises not mentioned in the feedback unchanged.
+2. When adding or swapping an exercise, reuse a name from the library above (copied EXACTLY) whenever it fits — only invent a new name if nothing in the library covers the needed movement.
+3. Keep sets/reps/rest_seconds programmed sensibly for the stated goal (see current workout for the established rep/rest style).
+JSON only, no markdown, no prose.`,
       messages: [{ role: "user", content: feedback }],
     });
   } catch (err) {
