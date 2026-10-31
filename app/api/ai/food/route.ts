@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { CLAUDE_MODEL } from "@/lib/ai-model";
 import { auth } from "@/lib/auth";
 import { get } from "@/lib/db";
 import type { HandReference, ProposedFood } from "@/lib/types";
@@ -57,6 +58,14 @@ JSON only, no markdown, no prose.`;
 }
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_HINT_LENGTH = 200;
+
+// Hint is untrusted user text: quoted, and the image wins on conflict.
+function hintLine(hint?: string): string {
+  return hint
+    ? ` The user gave this hint about the meal contents (may be wrong; the image takes precedence if they conflict): ${JSON.stringify(hint)}.`
+    : "";
+}
 
 function extractJson(raw: string): string {
   return raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
@@ -69,7 +78,7 @@ async function callAgent<T extends z.ZodTypeAny>(
   content: Anthropic.MessageParam["content"]
 ): Promise<z.infer<T>> {
   const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: CLAUDE_MODEL,
     max_tokens: 512,
     system,
     messages: [{ role: "user", content }],
@@ -86,6 +95,7 @@ export async function POST(request: Request) {
   const userQuery = (body.query as string | undefined)?.trim();
   const image = body.image as string | undefined;
   const previous = body.previous as ProposedFood | undefined;
+  const rawHint = body.hint;
 
   if (!userQuery && !image) {
     return Response.json({ error: "query or image is required" }, { status: 400 });
@@ -96,6 +106,16 @@ export async function POST(request: Request) {
   if (image && image.length * 0.75 > MAX_IMAGE_BYTES) {
     return Response.json({ error: "image is too large" }, { status: 400 });
   }
+
+  if (rawHint !== undefined && typeof rawHint !== "string") {
+    return Response.json({ error: "hint must be a string" }, { status: 400 });
+  }
+  const hint = (rawHint as string | undefined)?.trim() || undefined;
+  if (hint && hint.length > MAX_HINT_LENGTH) {
+    return Response.json({ error: "hint must be 200 characters or fewer" }, { status: 400 });
+  }
+  // Hint only applies to fresh photo analysis; ignored otherwise.
+  const photoHint = image ? hint : undefined;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -110,7 +130,7 @@ export async function POST(request: Request) {
     try {
       detected = await callAgent(client, DetectSchema, DETECT_SYSTEM_PROMPT, [
         imageBlock,
-        { type: "text", text: "Segment and identify each distinct food item visible." },
+        { type: "text", text: `Segment and identify each distinct food item visible.${hintLine(photoHint)}` },
       ]);
     } catch {
       return Response.json({ error: "Couldn't identify foods in photo" }, { status: 502 });
@@ -124,7 +144,7 @@ export async function POST(request: Request) {
 
     const settled = await Promise.allSettled(
       detected.items.map(async (item): Promise<ProposedFood> => {
-        const focus = `Focus only on: "${item.name}" (${item.location_hint}). Ignore other items in the image.`;
+        const focus = `Focus only on: "${item.name}" (${item.location_hint}). Ignore other items in the image.${hintLine(photoHint)}`;
         const [prep, portion] = await Promise.all([
           callAgent(client, PrepFatSchema, PREP_SYSTEM_PROMPT, [imageBlock, { type: "text", text: focus }]),
           callAgent(client, PortionSchema, portionPrompt, [imageBlock, { type: "text", text: focus }]),
@@ -170,7 +190,7 @@ JSON only, no markdown, no prose.`;
   let message: Awaited<ReturnType<typeof client.messages.create>>;
   try {
     message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: CLAUDE_MODEL,
       max_tokens: 512,
       system: systemPrompt,
       messages: [{ role: "user", content: userQuery! }],

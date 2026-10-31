@@ -7,19 +7,19 @@
     "build": "next build --webpack",
     "start": "next start --port 3000",
     "lint": "eslint . --max-warnings 0",
-    "db:init": "bun scripts/init-db.ts",
-    "db:migrate": "bun scripts/migrate-workout-items.ts",
-    "db:test": "bun scripts/test-db.ts",
-    "db:migrate-wip": "bun scripts/migrate-workout-in-progress.ts",
-    "db:migrate-item-note": "bun scripts/migrate-add-item-note.ts",
-    "db:migrate-set-complete": "bun scripts/migrate-add-set-complete.ts",
-    "db:migrate-rest-seconds": "bun scripts/migrate-add-rest-seconds.ts",
-    "db:migrate-diet": "bun scripts/migrate-add-diet.ts",
-    "db:migrate-wip-cascade": "bun --env-file=.env.local scripts/migrate-workout-in-progress-set-cascade.ts",
-    "db:migrate-set-unique": "bun --env-file=.env.local scripts/migrate-add-set-unique-constraints.ts",
-    "db:migrate-archived": "bun --env-file=.env.local scripts/migrate-add-archived.ts",
-    "db:migrate-hand-reference": "bun --env-file=.env.local scripts/migrate-add-hand-reference.ts",
-    "db:seed": "bun scripts/seed.ts",
+    "db:init": "tsx --env-file=.env.local scripts/init-db.ts",
+    "db:migrate": "tsx --env-file=.env.local scripts/migrate-workout-items.ts",
+    "db:test": "tsx --env-file=.env.local scripts/test-db.ts",
+    "db:migrate-wip": "tsx --env-file=.env.local scripts/migrate-workout-in-progress.ts",
+    "db:migrate-item-note": "tsx --env-file=.env.local scripts/migrate-add-item-note.ts",
+    "db:migrate-set-complete": "tsx --env-file=.env.local scripts/migrate-add-set-complete.ts",
+    "db:migrate-rest-seconds": "tsx --env-file=.env.local scripts/migrate-add-rest-seconds.ts",
+    "db:migrate-diet": "tsx --env-file=.env.local scripts/migrate-add-diet.ts",
+    "db:migrate-wip-cascade": "tsx --env-file=.env.local scripts/migrate-workout-in-progress-set-cascade.ts",
+    "db:migrate-set-unique": "tsx --env-file=.env.local scripts/migrate-add-set-unique-constraints.ts",
+    "db:migrate-archived": "tsx --env-file=.env.local scripts/migrate-add-archived.ts",
+    "db:migrate-hand-reference": "tsx --env-file=.env.local scripts/migrate-add-hand-reference.ts",
+    "db:seed": "tsx --env-file=.env.local scripts/seed.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "test": "vitest run",
@@ -35,6 +35,7 @@
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@vercel/blob": "^2.3.1",
+    "barcode-detector": "^3.2.3",
     "better-auth": "^1.5.4",
     "better-sqlite3": "^12.6.2",
     "class-variance-authority": "^0.7.1",
@@ -61,27 +62,22 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
-    "bun-types": "^1.3.10",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "jsdom": "^29.0.1",
     "serwist": "^9.5.7",
     "shadcn": "^4.0.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.0",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.0"
   },
-  "ignoreScripts": [
-    "sharp",
-    "unrs-resolver"
-  ],
-  "trustedDependencies": [
-    "better-sqlite3",
-    "sharp",
-    "unrs-resolver"
-  ],
+  "engines": {
+    "node": ">=20.9"
+  },
   "overrides": {
-    "minimatch": "^10.0.0"
+    "minimatch": "^10.0.0",
+    "eslint-plugin-react-hooks": "7.0.1"
   }
 }

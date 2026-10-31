@@ -9,30 +9,34 @@ Use the DocsExplorer subagent for efficient documentation lookup.
 
 ## Agent Team
 
-For every request that changes code, the main session follows @TEAM.MD as the orchestrator. Skip it only for questions and other requests that change no code, or when the user says to. Agents running inside the team ignore this section and do only their own role.
+For every request that changes code, first ask the user with AskUserQuestion (header "Workflow"): "Work following team standards (planner, coder, reviewer, security, tester), or regular flow?"
+- **Team standards**: the main session follows @TEAM.MD as the orchestrator.
+- **Regular flow**: ignore @TEAM.MD, do not run team agents, and work directly (still follow the Rules below).
+
+Skip the question (and the team) for questions and other requests that change no code. If the user already states the workflow in the prompt (or says to skip the team), use that without asking. Agents running inside the team ignore this section and do only their own role.
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
 
 ```bash
-bun dev          # Start development server (http://localhost:3000)
-bun run build    # Build for production
-bun run lint     # Run ESLint
-bun start        # Start production server
-bun run tsc --noEmit  # TypeScript type check (run after every code change)
+npm run dev      # Start development server (http://localhost:3000)
+npm run build    # Build for production
+npm run lint     # Run ESLint
+npm start      # Start production server
+npx tsc --noEmit  # TypeScript type check (run after every code change)
 ```
 
 ## Rules
 
-- **Always run `bun run tsc --noEmit` after making any code changes** to catch type errors before finishing.
-- **Always run `bun run build` after completing any feature or significant change** to catch build-time errors (e.g. invalid arguments, missing files, Serwist/webpack issues) that TypeScript alone won't surface.
+- **Always run `npx tsc --noEmit` after making any code changes** to catch type errors before finishing.
+- **Always run `npm run build` after completing any feature or significant change** to catch build-time errors (e.g. invalid arguments, missing files, Serwist/webpack issues) that TypeScript alone won't surface.
 
 ## Architecture
 
 This is a Next.js 16 application using the App Router pattern with:
 
-- **Package Manager**: Bun (bun.lock present)
+- **Package Manager**: npm (package-lock.json)
 - **TypeScript**: Strict mode enabled
 - **Styling**: Tailwind CSS 4 with PostCSS
 - **React**: Version 19

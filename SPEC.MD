@@ -22,7 +22,7 @@ A web application where authenticated users can create, view, edit, delete, and 
 
 ### 1.2 Tech Stack
 
-- Next.js (App Router) + Bun runtime
+- Next.js (App Router) + Node.js runtime
 - TypeScript
 - TailwindCSS 4
 - PostgreSQL via `pg` (node-postgres) with raw SQL
@@ -41,7 +41,7 @@ A web application where authenticated users can create, view, edit, delete, and 
   - Server components for data fetching
   - Client components for Workouts, exercises editor, and interactive UI
   - Route Handlers (`app/api/.../route.ts`) for JSON APIs
-- **Runtime:** Bun (for dev & production)
+- **Runtime:** Node.js (for dev & production), npm package manager
 - **Database:** PostgreSQL accessed via `pg` (node-postgres), connection via `DATABASE_URL` env var
 - **Auth:** better-auth integrated into Next.js (middleware + server helpers)
 
@@ -1164,18 +1164,18 @@ Props: `initialData: HandReference | null`. Rendered at the top of `/foods`. Let
 ## 11. Development Workflow
 
 ```bash
-bun dev                          # Start dev server at http://localhost:3000
-bun run build                    # Production build
-bun run lint                     # ESLint
-bun run db:init                  # Initialize DB (scripts/init-db.ts)
-bun run db:migrate-wip           # Add workout_in_progress tables
-bun run db:migrate-item-note     # Add note column to workout_item
-bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress_set
+npm run dev                     # Start dev server at http://localhost:3000
+npm run build                    # Production build
+npm run lint                     # ESLint
+npm run db:init                  # Initialize DB (scripts/init-db.ts)
+npm run db:migrate-wip           # Add workout_in_progress tables
+npm run db:migrate-item-note     # Add note column to workout_item
+npm run db:migrate-set-complete  # Add is_complete column to workout_in_progress_set
 ```
 
 ### 11.1 Setup Order
 
-1. Initialize Next.js app with Bun & TypeScript
+1. Initialize Next.js app with npm & TypeScript
 2. Set up TailwindCSS 4
 3. Install and configure shadcn/ui
 4. Integrate better-auth and session handling
@@ -1194,7 +1194,7 @@ bun run db:migrate-set-complete  # Add is_complete column to workout_in_progress
 | Version | Date | Changes |
 |---|---|---|
 | 3.5 | March 2026 | Added Hand Reference feature: new `hand_references` table (one row per user, upsert on re-measure); `POST/GET/DELETE /api/hand-reference`; new component `hand-reference-card` rendered on `/foods`; AI food-photo portion estimation (`app/api/ai/food/route.ts`) now uses the logged hand length as the primary scale reference when a hand is visible in the photo, falling back to generic reference-object estimation otherwise. |
-| 3.3 | March 2026 | Added unit test suite: Vitest + jsdom + @testing-library/react (React 19 compatible). Config: `vitest.config.mts` (jsdom env, globals, path alias via vite-tsconfig-paths), `vitest.setup.ts` (jest-dom matchers, matchMedia/ResizeObserver mocks, RTL cleanup). 93 tests across 8 files covering lib utilities (`cn`, query keys), API modules (exercises, foods, sessions), and components (Modal, WorkoutList, WorkoutInProgressView). Run with `bun run test` / `bun run test:watch`. |
+| 3.3 | March 2026 | Added unit test suite: Vitest + jsdom + @testing-library/react (React 19 compatible). Config: `vitest.config.mts` (jsdom env, globals, path alias via vite-tsconfig-paths), `vitest.setup.ts` (jest-dom matchers, matchMedia/ResizeObserver mocks, RTL cleanup). 93 tests across 8 files covering lib utilities (`cn`, query keys), API modules (exercises, foods, sessions), and components (Modal, WorkoutList, WorkoutInProgressView). Run with `npm run test` / `npm run test:watch`. |
 | 3.2 | March 2026 | Bug fix: `addSet` in `workout-in-progress-view` now computes position inside the `setSets` functional updater (reads `prev` state) to prevent duplicate set positions from rapid clicks, which previously caused sets to be saved with duplicate positions and appear doubled on refresh. Feature: rest timer end plays a three-beep alarm (880 Hz × 2 + 1100 Hz) synthesized via the Web Audio API — no external file required. |
 | 3.1 | March 2026 | Added TanStack Query v5: `QueryClientProvider` in `app/providers.tsx`; query key factory in `lib/queryKeys.ts`; typed API modules in `lib/api/`; converted `add-workout-item-modal`, `add-food-to-meal-modal`, `exercises-manager`, `foods-library`, and `session-history-list` to use `useQuery`/`useMutation`; `initialData` + `initialDataUpdatedAt` pattern for SSR-populated components; cache invalidation via `invalidateQueries` on all mutations |
 | 1.0 | 2025-01-01 | Initial specification |

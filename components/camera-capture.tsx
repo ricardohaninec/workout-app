@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const MAX_DIMENSION = 1568;
 
@@ -18,10 +19,12 @@ function drawToJpeg(source: CanvasImageSource, width: number, height: number): s
 export default function CameraCapture({
   onCapture,
   onCancel,
+  showHint = false,
   tip = "Tip: include a fork, hand, or standard plate in frame — helps estimate portion size accurately",
 }: {
-  onCapture: (imageBase64: string) => void;
+  onCapture: (imageBase64: string, hint?: string) => void;
   onCancel: () => void;
+  showHint?: boolean;
   tip?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -29,6 +32,7 @@ export default function CameraCapture({
   const [preview, setPreview] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+  const [hint, setHint] = useState("");
 
   useEffect(() => {
     if (preview) return;
@@ -81,8 +85,9 @@ export default function CameraCapture({
 
   function handleUsePhoto() {
     if (!preview) return;
-    onCapture(preview.replace(/^data:image\/jpeg;base64,/, ""));
+    onCapture(preview.replace(/^data:image\/jpeg;base64,/, ""), showHint ? hint.trim() || undefined : undefined);
     setPreview(null);
+    setHint("");
   }
 
   if (preview) {
@@ -90,6 +95,14 @@ export default function CameraCapture({
       <div className="flex flex-col gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={preview} alt="Captured food" className="w-full rounded-lg border border-white/10" />
+        {showHint && (
+          <Input
+            placeholder="Optional hint, e.g. chicken, rice, olive oil"
+            maxLength={200}
+            value={hint}
+            onChange={(e) => setHint(e.target.value)}
+          />
+        )}
         <div className="flex justify-end gap-2.5">
           <Button variant="outline" onClick={() => setPreview(null)}>
             <RotateCcw size={14} className="mr-1.5" /> Retake

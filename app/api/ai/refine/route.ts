@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { CLAUDE_MODEL } from "@/lib/ai-model";
 import { auth } from "@/lib/auth";
 import { query } from "@/lib/db";
 import type { ProposedWorkout } from "@/lib/types";
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
   let message: Awaited<ReturnType<typeof client.messages.create>>;
   try {
     message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: CLAUDE_MODEL,
       max_tokens: 1536,
       system: `You are an expert personal trainer. The user has a workout they want to modify.
 

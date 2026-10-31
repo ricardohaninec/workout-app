@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Search } from "lucide-react";
+import { Camera, ScanBarcode, Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Food, MealFood, ProposedFood } from "@/lib/types";
 import Modal from "@/components/modal";
 import CameraCapture from "@/components/camera-capture";
+import BarcodeScanner from "@/components/barcode-scanner";
 import AiFoodPhotoReview from "@/components/ai-food-photo-review";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { fetchFoods, addFoodToMeal } from "@/lib/api/foods";
-import { analyzeFoodPhoto, lookupFood } from "@/lib/api/ai";
+import { analyzeFoodPhoto, lookupBarcode, lookupFood } from "@/lib/api/ai";
 import { foodKeys } from "@/lib/queryKeys";
 
 export default function AddFoodToMealModal({
@@ -39,6 +40,7 @@ export default function AddFoodToMealModal({
   const [manualUnit, setManualUnit] = useState("g");
 
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [photoItems, setPhotoItems] = useState<ProposedFood[] | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
 
@@ -62,9 +64,16 @@ export default function AddFoodToMealModal({
   });
 
   const analyzePhotoMutation = useMutation({
-    mutationFn: (imageBase64: string) => analyzeFoodPhoto(imageBase64),
+    mutationFn: ({ image, hint }: { image: string; hint?: string }) => analyzeFoodPhoto(image, hint),
     onSuccess: (result) => setPhotoItems(result.items),
     onError: () => setPhotoError("Couldn't analyze that photo. Try again."),
+  });
+
+  const barcodeMutation = useMutation({
+    mutationFn: (code: string) => lookupBarcode(code),
+    onSuccess: (item) => setPhotoItems([{ ...item, source: "barcode" }]),
+    onError: (err) =>
+      setPhotoError(err instanceof Error ? err.message : "Couldn't look up that barcode."),
   });
 
   const photoFeedbackMutation = useMutation({
@@ -103,6 +112,7 @@ export default function AddFoodToMealModal({
     setPhotoItems(null);
     setPhotoError(null);
     setCameraOpen(false);
+    setScannerOpen(false);
   }
 
   function handleClose() {
@@ -127,11 +137,18 @@ export default function AddFoodToMealModal({
     });
   }
 
-  function handlePhotoCapture(imageBase64: string) {
+  function handlePhotoCapture(imageBase64: string, hint?: string) {
     setCameraOpen(false);
     setPhotoItems(null);
     setPhotoError(null);
-    analyzePhotoMutation.mutate(imageBase64);
+    analyzePhotoMutation.mutate({ image: imageBase64, hint });
+  }
+
+  function handleBarcodeDetect(code: string) {
+    setScannerOpen(false);
+    setPhotoItems(null);
+    setPhotoError(null);
+    barcodeMutation.mutate(code);
   }
 
   function handleAddPhotoItems(data: Parameters<typeof addFoodToMeal>[1][]) {
@@ -284,11 +301,15 @@ export default function AddFoodToMealModal({
               onConfirmAll={handleAddPhotoItems}
             />
           ) : cameraOpen ? (
-            <CameraCapture onCapture={handlePhotoCapture} onCancel={() => setCameraOpen(false)} />
+            <CameraCapture showHint onCapture={handlePhotoCapture} onCancel={() => setCameraOpen(false)} />
+          ) : scannerOpen ? (
+            <BarcodeScanner onDetect={handleBarcodeDetect} onCancel={() => setScannerOpen(false)} />
           ) : (
             <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-white/10 py-10">
               {analyzePhotoMutation.isPending ? (
                 <p className="text-[13px] text-neutral-400">Analyzing photo…</p>
+              ) : barcodeMutation.isPending ? (
+                <p className="text-[13px] text-neutral-400">Looking up barcode…</p>
               ) : (
                 <>
                   <Camera size={28} className="text-neutral-600" />
@@ -298,6 +319,9 @@ export default function AddFoodToMealModal({
                     onClick={() => setCameraOpen(true)}
                   >
                     Take Photo
+                  </Button>
+                  <Button variant="outline" onClick={() => { setPhotoError(null); setScannerOpen(true); }}>
+                    <ScanBarcode size={14} className="mr-1.5" /> Scan Barcode
                   </Button>
                 </>
               )}

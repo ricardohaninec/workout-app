@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { CLAUDE_MODEL } from "@/lib/ai-model";
 import { auth } from "@/lib/auth";
 import { get, run } from "@/lib/db";
 import type { HandReference } from "@/lib/types";
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
   let parsed: z.infer<typeof HandMeasureSchema>;
   try {
     const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: CLAUDE_MODEL,
       max_tokens: 256,
       system: HAND_MEASURE_SYSTEM_PROMPT,
       messages: [

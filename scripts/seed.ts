@@ -1,6 +1,6 @@
 /**
  * Seed script — populates the DB with mock data for local development.
- * Usage: DATABASE_URL=postgresql://postgres:postgres@localhost:5433/workout bun scripts/seed.ts
+ * Usage: DATABASE_URL=postgresql://postgres:postgres@localhost:5433/workout npx tsx scripts/seed.ts
  *
  * Creates:
  *  - 1 user (password: "password")

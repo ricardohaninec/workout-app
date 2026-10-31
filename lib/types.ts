@@ -26,7 +26,6 @@ export type WorkoutItemSet = {
   weight: number;
   position: number;
   rest_seconds: number;
-  is_drop_set: boolean;
 };
 
 export type WorkoutItem = {
@@ -117,6 +116,8 @@ export type ProposedFood = {
   estimated_grams?: number;
   preparation_note?: string;
   portion_reference?: string;
+  barcode?: string;
+  source?: "barcode" | "ai";
 };
 
 export type PhotoAnalysisResult = {
@@ -156,7 +157,7 @@ export type PendingWorkoutItem = {
   tempId: string;
   exerciseTitle: string;
   exerciseImageUrl: string | null;
-  sets: { reps: number; weight: number; rest_seconds: number; is_drop_set: boolean }[];
+  sets: { reps: number; weight: number; rest_seconds: number }[];
   note: string | null;
 } & (
   | { type: "new" }

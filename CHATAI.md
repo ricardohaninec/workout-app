@@ -44,8 +44,8 @@ All API keys (`ANTHROPIC_API_KEY`, `PEXELS_API_KEY`) are only accessed via `proc
 
 | Service | Usage | Where |
 |---|---|---|
-| Anthropic Claude (`claude-sonnet-4-6`) | Generate structured workout JSON from a goal string | `app/api/ai/generate/route.ts` |
-| Anthropic Claude (`claude-sonnet-4-6`) | Look up per-100g nutrition data for a food query | `app/api/ai/food/route.ts` |
+| Anthropic Claude (`claude-sonnet-5-5`) | Generate structured workout JSON from a goal string | `app/api/ai/generate/route.ts` |
+| Anthropic Claude (`claude-sonnet-5-5`) | Look up per-100g nutrition data for a food query | `app/api/ai/food/route.ts` |
 | Pexels API | Fetch one square exercise image per exercise name | `lib/image-sourcing.ts` |
 
 ---
@@ -58,6 +58,11 @@ All API keys (`ANTHROPIC_API_KEY`, `PEXELS_API_KEY`) are only accessed via `proc
 ```json
 { "query": "string", "previous": ProposedFood | undefined }
 ```
+Photo request: `{ "image": "<base64 jpeg>", "hint": "optional, max 200 chars" }`. The hint is passed to the detect, prep and portion agents as untrusted text (image wins on conflict); ignored without an image.
+
+### `GET /api/foods/barcode/[code]`
+
+Authed. `code` = 8-14 digits. Server-side lookup on Open Food Facts (per-100g values), returns `ProposedFood`. 400 invalid code, 404 not found / no nutrition data, 503 OFF rate limited (15 reads/min per IP), 502 OFF failure/timeout.
 
 **Response:** `ProposedFood`
 ```json

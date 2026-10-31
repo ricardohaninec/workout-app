@@ -354,7 +354,6 @@ export default function WorkoutInProgressView({
                   <span />
                 </div>
                 {itemSets.map((s, i) => {
-                  const isDropSet = item.sets.find((ts) => ts.position === s.position)?.is_drop_set;
                   return (
                   <div
                     key={`${item.id}-${s.position}`}
@@ -362,7 +361,6 @@ export default function WorkoutInProgressView({
                   >
                     <span className="text-sm text-neutral-400 flex items-center gap-1">
                       {i + 1}
-                      {isDropSet && <span className="text-[10px] font-semibold text-orange-400" title="Drop set">DS</span>}
                     </span>
                     <Input
                       type="number"

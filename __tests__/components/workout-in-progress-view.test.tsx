@@ -33,7 +33,6 @@ const workoutItems: WorkoutItem[] = [
         weight: 80,
         position: 0,
         rest_seconds: 60,
-        is_drop_set: false,
       },
       {
         id: "s2",
@@ -42,7 +41,6 @@ const workoutItems: WorkoutItem[] = [
         weight: 85,
         position: 1,
         rest_seconds: 90,
-        is_drop_set: false,
       },
     ],
     created_at: "2026-01-01T00:00:00Z",

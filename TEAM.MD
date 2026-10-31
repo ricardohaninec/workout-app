@@ -2,27 +2,27 @@
 
 Spec for the agent team that delivers every code change in this project: planner, coder, reviewer, security, tester.
 
-The main session is the **orchestrator**. It runs the agents in `.claude/agents/`, decides what happens next and talks to the user. Agents do not talk directly: they read and write files in `handoff/`, and the orchestrator passes control between them.
+The main session is the **orchestrator**. It runs the agents in `.claude/agents/`, decides what happens next and talks to the user. Agents do not talk directly: they read and write files in their task folder `handoff/<task-id>/`, and the orchestrator passes control between them.
 
 ## Handoff files
 
 | File                         | Written by   | Read by                 |
 | ---------------------------- | ------------ | ----------------------- |
-| `handoff/plan.md`            | planner      | everyone                |
-| `handoff/docs.md`            | orchestrator | coder, reviewer         |
-| `handoff/changes.md`         | coder        | reviewer, security      |
-| `handoff/review.md`          | reviewer     | coder                   |
-| `handoff/security-review.md` | security     | coder                   |
-| `handoff/test-report.md`     | tester       | coder                   |
+| `<task>/plan.md`            | planner      | everyone                |
+| `<task>/docs.md`            | orchestrator | coder, reviewer         |
+| `<task>/changes.md`         | coder        | reviewer, security      |
+| `<task>/review.md`          | reviewer     | coder                   |
+| `<task>/security-review.md` | security     | coder                   |
+| `<task>/test-report.md`     | tester       | coder                   |
 
-`handoff/` is gitignored and holds the current task only.
+`handoff/` is gitignored. Each task (one per orchestrator session) gets its own folder `handoff/<task-id>/`, so parallel sessions never touch each other's files. `<task>` above is that folder.
 
 ## Workflow
 
-1. **Reset.** Delete `handoff/*.md`, so old verdicts cannot leak into the new task.
+1. **Init.** Create `handoff/<task-id>/`, where `<task-id>` is `YYYYMMDD-HHMMSS-<short-slug>`. Never delete or touch other folders. Pass the folder path in every agent prompt.
 2. **Plan.** Run `planner` with the user's request, word for word.
    - If `plan.md` has "Open questions", ask the user, then re-run the planner with the answers.
-3. **Docs.** If `plan.md` has "Docs needed", run `DocsExplorer` and save the result to `handoff/docs.md`. The team agents have no web tools, and CLAUDE.md requires up-to-date docs for third-party libraries.
+3. **Docs.** If `plan.md` has "Docs needed", run `DocsExplorer` and save the result to `<task>/docs.md`. The team agents have no web tools, and CLAUDE.md requires up-to-date docs for third-party libraries.
 4. **Code.** Run `coder`.
    - If `changes.md` says the plan is wrong or impossible, go back to step 2 with that explanation.
 5. **Review.** Run `reviewer`.
@@ -35,6 +35,7 @@ The main session is the **orchestrator**. It runs the agents in `.claude/agents/
    - what changed
    - tests run / passed / failed
    - coverage gaps, minor review and security issues, and anything else left open
+9. **Clean up.** Delete only this session's `handoff/<task-id>/`. On a stop condition, keep it until the user decides.
 
 ## Stop conditions
 
@@ -49,7 +50,7 @@ Never count a task as done by skipping, weakening or ignoring a failing check.
 ## Rules
 
 - Agents run one at a time, because each depends on the previous agent's output.
-- Each agent starts with no memory of the conversation. Everything it needs must be in `handoff/`.
+- Each agent starts with no memory of the conversation. Everything it needs must be in the task folder.
 - The coder is the only agent that edits application code. The tester edits test files only.
 - Nobody commits or pushes unless the user asks.
-- Use `bun run test`, not `bun test`: the project uses Vitest, and `bun test` starts Bun's own test runner.
+- Use `npm run test` (Vitest).
