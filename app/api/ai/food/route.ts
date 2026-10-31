@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { CLAUDE_MODEL } from "@/lib/ai-model";
+import { extractJson, requireText } from "@/lib/ai-json";
 import { auth } from "@/lib/auth";
 import { get } from "@/lib/db";
 import type { HandReference, ProposedFood } from "@/lib/types";
@@ -71,10 +72,6 @@ function hintLine(hint?: string): string {
     : "";
 }
 
-function extractJson(raw: string): string {
-  return raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
-}
-
 let inFlight = 0;
 const waiters: (() => void)[] = [];
 
@@ -103,7 +100,7 @@ async function callAgent<T extends z.ZodTypeAny>(
     const message = await limited(() =>
       client.messages.create({
         model: CLAUDE_MODEL,
-        max_tokens: 1024,
+        max_tokens: 16000, // thinking tokens count toward the cap
         system,
         messages: [{ role: "user", content }],
       })
@@ -111,8 +108,7 @@ async function callAgent<T extends z.ZodTypeAny>(
     if (message.stop_reason === "max_tokens") {
       throw new Error("response truncated (max_tokens)");
     }
-    const raw = message.content[0]?.type === "text" ? message.content[0].text : "";
-    return schema.parse(JSON.parse(extractJson(raw)));
+    return schema.parse(JSON.parse(extractJson(requireText(message))));
   } catch (err) {
     const status = err instanceof Anthropic.APIError ? err.status : undefined;
     console.error(`[ai/food] ${agent} failed`, status, err instanceof Error ? err.message : err);
@@ -248,7 +244,7 @@ JSON only, no markdown, no prose.`;
   try {
     message = await client.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 512,
+      max_tokens: 16000, // thinking tokens count toward the cap
       system: systemPrompt,
       messages: [{ role: "user", content: userQuery! }],
     });
@@ -257,10 +253,10 @@ JSON only, no markdown, no prose.`;
     return Response.json({ error: msg }, { status: 502 });
   }
 
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-
+  let raw = "";
   let parsed: z.infer<typeof ResponseSchema>;
   try {
+    raw = requireText(message as Anthropic.Message);
     parsed = ResponseSchema.parse(JSON.parse(extractJson(raw)));
   } catch {
     return Response.json({ error: "Invalid AI response", raw }, { status: 502 });
