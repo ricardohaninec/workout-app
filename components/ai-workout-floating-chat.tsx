@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Sparkles, X, Loader2, Dumbbell, Apple } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateWorkout, commitWorkout, refineWorkout, lookupFood, saveFood } from "@/lib/api/ai";
-import { workoutKeys } from "@/lib/queryKeys";
+import { foodKeys, workoutKeys } from "@/lib/queryKeys";
 import type { ProposedWorkout, ProposedFood } from "@/lib/types";
 import AiWorkoutProposalModal from "@/components/ai-workout-proposal-modal";
 import AiFoodProposal from "@/components/ai-food-proposal";
@@ -67,6 +67,7 @@ export default function AiWorkoutFloatingChat() {
       saveFood(food, unit, gramsPerUnit),
     onMutate: () => { setStep("committing"); },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: foodKeys.all });
       setOpen(false);
       resetState();
     },

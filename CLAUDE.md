@@ -7,6 +7,10 @@ Keep your replies extremely concise and focus on conveying the key information. 
 Whenever working with any third-party library or something similar, you MUST look up the official documentation to ensure that you're working with up-to-date information.
 Use the DocsExplorer subagent for efficient documentation lookup.
 
+## Agent Team
+
+For every request that changes code, the main session follows @TEAM.MD as the orchestrator. Skip it only for questions and other requests that change no code, or when the user says to. Agents running inside the team ignore this section and do only their own role.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
