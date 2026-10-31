@@ -45,7 +45,7 @@ export default function DayDetail({
   const [mealType, setMealType] = useState("Breakfast");
   const [addMealLoading, setAddMealLoading] = useState(false);
   const [addFoodMealId, setAddFoodMealId] = useState<string | null>(null);
-  const [editingFood, setEditingFood] = useState<{ mealId: string; food: import("@/lib/types").MealFood } | null>(null);
+  const [editingFood, setEditingFood] = useState<{ mealId: string; food: MealFood } | null>(null);
 
   const dayTotals = sumMacros(meals.flatMap((m) => m.foods));
 
@@ -93,7 +93,7 @@ export default function DayDetail({
     );
   }
 
-  function handleFoodUpdated(mealId: string, updated: import("@/lib/types").MealFood) {
+  function handleFoodUpdated(mealId: string, updated: MealFood) {
     setMeals((prev) =>
       prev.map((m) => {
         if (m.id !== mealId) return m;

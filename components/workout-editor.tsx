@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   DndContext,
   closestCenter,
@@ -27,6 +27,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardFooter } from "@/components/ui/card";
 import WorkoutItemCard from "@/components/workout-item-card";
+
+const subscribeNoop = () => () => {};
 
 function SortableItem({
   item,
@@ -132,13 +134,17 @@ export default function WorkoutEditor({
   const [copied, setCopied] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [removeImageOpen, setRemoveImageOpen] = useState(false);
-  const [origin, setOrigin] = useState("");
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
-  useEffect(() => {
+  const origin = useSyncExternalStore(
+    subscribeNoop,
+    () => window.location.origin,
+    () => "",
+  );
+  // Sync local items when the saved items change (adjust state during render)
+  const [prevSavedItems, setPrevSavedItems] = useState(savedItems);
+  if (savedItems !== prevSavedItems) {
+    setPrevSavedItems(savedItems);
     setItems(savedItems);
-  }, [savedItems]);
+  }
 
   // Edit item state
   const [editItem, setEditItem] = useState<WorkoutItem | null>(null);

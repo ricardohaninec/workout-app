@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { MealFood } from "@/lib/types";
 import Modal from "@/components/modal";
@@ -44,7 +44,10 @@ export default function EditFoodModal({
   const [carbs, setCarbs] = useState("");
   const [fat, setFat] = useState("");
 
-  useEffect(() => {
+  // Reset fields when a different food is passed in (adjust state during render)
+  const [prevFood, setPrevFood] = useState(food);
+  if (food !== prevFood) {
+    setPrevFood(food);
     if (food) {
       setQty(String(food.quantity_grams));
       setCalories(String(food.calories));
@@ -52,7 +55,7 @@ export default function EditFoodModal({
       setCarbs(String(food.carbs));
       setFat(String(food.fat));
     }
-  }, [food]);
+  }
 
   const mutation = useMutation({
     mutationFn: () => {

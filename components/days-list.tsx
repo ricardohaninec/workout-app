@@ -121,7 +121,7 @@ export default function DaysList({ days: initial }: { days: Day[] }) {
                   selected={date}
                   onSelect={(d) => { if (d) { setDate(d); setCalendarOpen(false); } }}
                   disabled={{ after: new Date() }}
-                  initialFocus
+                  autoFocus
                 />
               </PopoverContent>
             </Popover>

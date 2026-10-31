@@ -168,7 +168,7 @@ export default function WorkoutInProgressView({
     if (stored) {
       const endAt = Number(stored);
       if (Date.now() < endAt) runCountdown(endAt);
-      else { sessionStorage.removeItem(REST_STORAGE_KEY); setRestDone(true); }
+      else { sessionStorage.removeItem(REST_STORAGE_KEY); runCountdown(endAt); }
     }
     return () => { if (restIntervalRef.current) clearInterval(restIntervalRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -43,6 +43,7 @@ export default function AiWorkoutProposalModal({
           <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 group">
             <div className="w-12 h-12 rounded-md overflow-hidden bg-white/10 flex items-center justify-center shrink-0">
               {ex.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={ex.image_url} alt={ex.name} className="w-full h-full object-cover" />
               ) : (
                 <PlaceholderImage size={24} />

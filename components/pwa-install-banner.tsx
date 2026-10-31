@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { X, Share, Plus } from "lucide-react";
 
 type Mode = "android" | "ios" | null;
@@ -10,50 +10,51 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+const subscribeNoop = () => () => {};
+
+function isInstallable() {
+  // Already installed or already dismissed: don't show
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    ("standalone" in navigator && (navigator as { standalone?: boolean }).standalone === true);
+  return !isStandalone && !localStorage.getItem("pwa-banner-dismissed");
+}
+
+function isIosDevice() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
+}
+
 export default function PwaInstallBanner() {
-  const [mode, setMode] = useState<Mode>(null);
+  const installable = useSyncExternalStore(subscribeNoop, isInstallable, () => false);
+  const isIos = useSyncExternalStore(subscribeNoop, isIosDevice, () => false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    // Already installed — don't show
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      ("standalone" in navigator && (navigator as { standalone?: boolean }).standalone === true);
-    if (isStandalone) return;
-
-    // Already dismissed
-    if (localStorage.getItem("pwa-banner-dismissed")) return;
-
-    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
-
-    if (isIos) {
-      setMode("ios");
-      setVisible(true);
-      return;
-    }
+    if (!installable || isIos) return;
 
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setMode("android");
-      setVisible(true);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [installable, isIos]);
+
+  const mode: Mode = !installable ? null : isIos ? "ios" : deferredPrompt ? "android" : null;
+  const visible = !hidden;
 
   function dismiss() {
     localStorage.setItem("pwa-banner-dismissed", "1");
-    setVisible(false);
+    setHidden(true);
   }
 
   async function install() {
     if (!deferredPrompt) return;
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") setVisible(false);
+    if (outcome === "accepted") setHidden(true);
   }
 
   if (!visible || !mode) return null;
