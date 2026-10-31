@@ -492,21 +492,31 @@ export default function WorkoutEditor({
         <form onSubmit={handleSaveEdit} className="flex flex-col gap-3 pt-1">
           <Label className="block">Sets</Label>
           <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-[1.5rem_1fr_1fr_1fr_2rem] items-center gap-2 text-xs text-neutral-400">
+              <span>Set</span>
+              <span className="text-center">Reps</span>
+              <span className="text-center">Weight (lb)</span>
+              <span className="text-center">Rest (s)</span>
+              <span />
+            </div>
             {editSets.map((s, i) => (
-              <div key={i} className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <div key={i} className="grid grid-cols-[1.5rem_1fr_1fr_1fr_2rem] items-center gap-2">
+                <span className="text-sm text-neutral-400">{i + 1}</span>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   min={1}
                   value={s.reps}
                   onChange={(e) =>
                     setEditSets(editSets.map((r, j) => j === i ? { ...r, reps: e.target.value } : r))
                   }
                   placeholder="Reps"
-                  className="w-full sm:w-20"
+                  aria-label={`Set ${i + 1} reps`}
+                  className="h-9 w-full min-w-0 px-1 text-center"
                 />
-                <span className="text-sm text-neutral-400">×</span>
                 <Input
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   step={0.5}
                   value={s.weight}
@@ -514,29 +524,30 @@ export default function WorkoutEditor({
                     setEditSets(editSets.map((r, j) => j === i ? { ...r, weight: e.target.value } : r))
                   }
                   placeholder="lb"
-                  className="w-full sm:w-24"
+                  aria-label={`Set ${i + 1} weight`}
+                  className="h-9 w-full min-w-0 px-1 text-center"
                 />
-                <div className="flex items-center gap-1">
-                  <Input
-                    type="number"
-                    min={0}
-                    step={5}
-                    value={s.rest_seconds}
-                    onChange={(e) =>
-                      setEditSets(editSets.map((r, j) => j === i ? { ...r, rest_seconds: e.target.value } : r))
-                    }
-                    placeholder="60"
-                    className="w-full sm:w-16"
-                  />
-                  <span className="text-xs text-neutral-400 whitespace-nowrap">s</span>
-                </div>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={5}
+                  value={s.rest_seconds}
+                  onChange={(e) =>
+                    setEditSets(editSets.map((r, j) => j === i ? { ...r, rest_seconds: e.target.value } : r))
+                  }
+                  placeholder="60"
+                  aria-label={`Set ${i + 1} rest seconds`}
+                  className="h-9 w-full min-w-0 px-1 text-center"
+                />
                 {editSets.length > 1 ? (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon-sm"
+                    aria-label={`Remove set ${i + 1}`}
                     onClick={() => setEditSets(editSets.filter((_, j) => j !== i))}
-                    className="ml-auto text-neutral-400 hover:text-red-500"
+                    className="text-neutral-400 hover:text-red-500"
                   >
                     ✕
                   </Button>
@@ -546,10 +557,18 @@ export default function WorkoutEditor({
           </div>
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={() => setEditSets([...editSets, { reps: "", weight: "", rest_seconds: "60" }])}
-            className="self-start text-neutral-500"
+            onClick={() => {
+              const last = editSets[editSets.length - 1];
+              setEditSets([
+                ...editSets,
+                last
+                  ? { reps: last.reps, weight: last.weight, rest_seconds: last.rest_seconds }
+                  : { reps: "", weight: "", rest_seconds: "60" },
+              ]);
+            }}
+            className="w-full text-neutral-300 border-white/10 hover:bg-white/5 hover:text-white"
           >
             + Add set
           </Button>
