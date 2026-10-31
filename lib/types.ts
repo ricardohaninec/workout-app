@@ -122,6 +122,7 @@ export type ProposedFood = {
 
 export type PhotoAnalysisResult = {
   items: ProposedFood[];
+  failed_items?: string[];
 };
 
 export type MealFood = {

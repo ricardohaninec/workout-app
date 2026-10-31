@@ -9,6 +9,8 @@ Use the DocsExplorer subagent for efficient documentation lookup.
 
 ## Agent Team
 
+**Always read @TEAM.MD at the start of every session, before doing anything else**, even for investigations. It defines how the team works; never skip it.
+
 For every request that changes code, first ask the user with AskUserQuestion (header "Workflow"): "Work following team standards (planner, coder, reviewer, security, tester), or regular flow?"
 - **Team standards**: the main session follows @TEAM.MD as the orchestrator.
 - **Regular flow**: ignore @TEAM.MD, do not run team agents, and work directly (still follow the Rules below).

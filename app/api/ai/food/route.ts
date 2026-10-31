@@ -5,6 +5,10 @@ import { auth } from "@/lib/auth";
 import { get } from "@/lib/db";
 import type { HandReference, ProposedFood } from "@/lib/types";
 
+export const maxDuration = 120;
+
+const MAX_CONCURRENT_CALLS = 4;
+
 const ResponseSchema = z.object({
   name: z.string(),
   calories_per_100g: z.number().nonnegative(),
@@ -41,7 +45,7 @@ const PortionSchema = z.object({
 
 const DETECT_SYSTEM_PROMPT = `You are Agent 1 of a food analysis pipeline: Food Segmentation & Identification. Look at the image and identify each visually distinct food item (ignore plates, utensils, garnish sprigs). Respond ONLY with JSON:
 { "items": [{ "name": "<food name, Title Case>", "location_hint": "<brief position in image, e.g. 'top-left of plate'>" }] }
-Max 5 items. JSON only, no markdown, no prose.`;
+List each distinct food separately; do not merge a food with its container or husk/peel (e.g. corn kernels and corn on the cob are two items). Keep location_hint under 8 words. Max 5 items. JSON only, no markdown, no prose.`;
 
 const PREP_SYSTEM_PROMPT = `You are Agent 2 of a food analysis pipeline: Preparation & Hidden Fat Inference. For the specified food item in the image, infer its likely cooking method and any hidden fats/oils/butter/sauce/dressing that increase calorie density beyond the raw ingredient. Respond ONLY with JSON:
 { "preparation": "<short description, e.g. 'pan-fried in butter'>", "calories_per_100g": number, "protein_per_100g": number, "carbs_per_100g": number, "fat_per_100g": number }
@@ -71,20 +75,53 @@ function extractJson(raw: string): string {
   return raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 }
 
+let inFlight = 0;
+const waiters: (() => void)[] = [];
+
+// Simple per-process limiter so one request can't fan out into a burst of calls.
+async function limited<T>(fn: () => Promise<T>): Promise<T> {
+  while (inFlight >= MAX_CONCURRENT_CALLS) {
+    await new Promise<void>((resolve) => waiters.push(resolve));
+  }
+  inFlight++;
+  try {
+    return await fn();
+  } finally {
+    inFlight--;
+    waiters.shift()?.();
+  }
+}
+
 async function callAgent<T extends z.ZodTypeAny>(
   client: Anthropic,
+  agent: string,
   schema: T,
   system: string,
   content: Anthropic.MessageParam["content"]
 ): Promise<z.infer<T>> {
-  const message = await client.messages.create({
-    model: CLAUDE_MODEL,
-    max_tokens: 512,
-    system,
-    messages: [{ role: "user", content }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  return schema.parse(JSON.parse(extractJson(raw)));
+  try {
+    const message = await limited(() =>
+      client.messages.create({
+        model: CLAUDE_MODEL,
+        max_tokens: 1024,
+        system,
+        messages: [{ role: "user", content }],
+      })
+    );
+    if (message.stop_reason === "max_tokens") {
+      throw new Error("response truncated (max_tokens)");
+    }
+    const raw = message.content[0]?.type === "text" ? message.content[0].text : "";
+    return schema.parse(JSON.parse(extractJson(raw)));
+  } catch (err) {
+    const status = err instanceof Anthropic.APIError ? err.status : undefined;
+    console.error(`[ai/food] ${agent} failed`, status, err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+function isBusy(err: unknown): boolean {
+  return err instanceof Anthropic.APIError && (err.status === 429 || err.status === 529);
 }
 
 export async function POST(request: Request) {
@@ -117,7 +154,7 @@ export async function POST(request: Request) {
   // Hint only applies to fresh photo analysis; ignored otherwise.
   const photoHint = image ? hint : undefined;
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 2, timeout: 30_000 });
 
   // Fresh photo: 3-agent parallel pipeline (segment/identify -> per-item prep/hidden-fat + portion/volume, fanned out concurrently).
   if (image && !previous && !userQuery) {
@@ -128,11 +165,14 @@ export async function POST(request: Request) {
 
     let detected: z.infer<typeof DetectSchema>;
     try {
-      detected = await callAgent(client, DetectSchema, DETECT_SYSTEM_PROMPT, [
+      detected = await callAgent(client, "detect", DetectSchema, DETECT_SYSTEM_PROMPT, [
         imageBlock,
         { type: "text", text: `Segment and identify each distinct food item visible.${hintLine(photoHint)}` },
       ]);
-    } catch {
+    } catch (err) {
+      if (isBusy(err)) {
+        return Response.json({ error: "AI service is busy, please try again in a moment" }, { status: 503 });
+      }
       return Response.json({ error: "Couldn't identify foods in photo" }, { status: 502 });
     }
 
@@ -142,12 +182,11 @@ export async function POST(request: Request) {
     );
     const portionPrompt = buildPortionPrompt(handReference?.hand_length_cm);
 
-    const settled = await Promise.allSettled(
-      detected.items.map(async (item): Promise<ProposedFood> => {
+    const analyzeItem = async (item: (typeof detected.items)[number]): Promise<ProposedFood> => {
         const focus = `Focus only on: "${item.name}" (${item.location_hint}). Ignore other items in the image.${hintLine(photoHint)}`;
         const [prep, portion] = await Promise.all([
-          callAgent(client, PrepFatSchema, PREP_SYSTEM_PROMPT, [imageBlock, { type: "text", text: focus }]),
-          callAgent(client, PortionSchema, portionPrompt, [imageBlock, { type: "text", text: focus }]),
+          callAgent(client, "prep", PrepFatSchema, PREP_SYSTEM_PROMPT, [imageBlock, { type: "text", text: focus }]),
+          callAgent(client, "portion", PortionSchema, portionPrompt, [imageBlock, { type: "text", text: focus }]),
         ]);
         return {
           name: item.name,
@@ -160,18 +199,36 @@ export async function POST(request: Request) {
           preparation_note: prep.preparation,
           portion_reference: portion.reference_used,
         };
+    };
+
+    const settled = await Promise.allSettled(
+      detected.items.map(async (item) => {
+        try {
+          return await analyzeItem(item);
+        } catch {
+          return await analyzeItem(item); // retry once
+        }
       })
     );
 
-    const items = settled
-      .filter((r): r is PromiseFulfilledResult<ProposedFood> => r.status === "fulfilled")
-      .map((r) => r.value);
+    const items: ProposedFood[] = [];
+    const failedItems: string[] = [];
+    settled.forEach((r, i) => {
+      if (r.status === "fulfilled") items.push(r.value);
+      else {
+        failedItems.push(detected.items[i].name);
+        console.error("[ai/food] item failed", detected.items[i].name, r.reason);
+      }
+    });
 
     if (items.length === 0) {
-      return Response.json({ error: "Couldn't analyze any food items" }, { status: 502 });
+      const busy = settled.some((r) => r.status === "rejected" && isBusy(r.reason));
+      return busy
+        ? Response.json({ error: "AI service is busy, please try again in a moment" }, { status: 503 })
+        : Response.json({ error: "Couldn't analyze any food items" }, { status: 502 });
     }
 
-    return Response.json({ items });
+    return Response.json(failedItems.length ? { items, failed_items: failedItems } : { items });
   }
 
   // Text lookup or feedback follow-up on a single previously proposed food.

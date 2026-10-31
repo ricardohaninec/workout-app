@@ -56,7 +56,10 @@ export async function analyzeFoodPhoto(imageBase64: string, hint?: string, signa
     body: JSON.stringify({ image: imageBase64, ...(hint ? { hint } : {}) }),
     signal,
   });
-  if (!res.ok) throw new Error("Failed to analyze photo");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? "Failed to analyze photo");
+  }
   return res.json();
 }
 

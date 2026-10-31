@@ -43,6 +43,7 @@ export default function AddFoodToMealModal({
   const [scannerOpen, setScannerOpen] = useState(false);
   const [photoItems, setPhotoItems] = useState<ProposedFood[] | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoNotice, setPhotoNotice] = useState<string | null>(null);
 
   const { data: allFoods = [], isLoading: foodsLoading } = useQuery({
     queryKey: foodKeys.list(""),
@@ -65,8 +66,15 @@ export default function AddFoodToMealModal({
 
   const analyzePhotoMutation = useMutation({
     mutationFn: ({ image, hint }: { image: string; hint?: string }) => analyzeFoodPhoto(image, hint),
-    onSuccess: (result) => setPhotoItems(result.items),
-    onError: () => setPhotoError("Couldn't analyze that photo. Try again."),
+    onSuccess: (result) => {
+      setPhotoItems(result.items);
+      setPhotoNotice(
+        result.failed_items?.length
+          ? `Couldn't analyze: ${result.failed_items.join(", ")}. Retake the photo to retry.`
+          : null
+      );
+    },
+    onError: (err) => setPhotoError(err.message || "Couldn't analyze that photo. Try again."),
   });
 
   const barcodeMutation = useMutation({
@@ -111,6 +119,7 @@ export default function AddFoodToMealModal({
     setManualUnit("g");
     setPhotoItems(null);
     setPhotoError(null);
+    setPhotoNotice(null);
     setCameraOpen(false);
     setScannerOpen(false);
   }
@@ -292,12 +301,13 @@ export default function AddFoodToMealModal({
         </TabsContent>
 
         <TabsContent value="photo">
+          {photoItems && photoNotice && <p className="mb-2 text-[13px] text-amber-400">{photoNotice}</p>}
           {photoItems ? (
             <AiFoodPhotoReview
               items={photoItems}
               isLoading={photoFeedbackMutation.isPending || addPhotoItemsMutation.isPending}
               onItemFeedback={(index, feedback) => photoFeedbackMutation.mutate({ index, feedback })}
-              onRetake={() => { setPhotoItems(null); setCameraOpen(true); }}
+              onRetake={() => { setPhotoItems(null); setPhotoNotice(null); setCameraOpen(true); }}
               onConfirmAll={handleAddPhotoItems}
             />
           ) : cameraOpen ? (
