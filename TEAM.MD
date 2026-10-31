@@ -25,7 +25,7 @@ The main session is the **orchestrator**. It runs the agents in `.claude/agents/
 3. **Docs.** If `plan.md` has "Docs needed", run `DocsExplorer` and save the result to `<task>/docs.md`. The team agents have no web tools, and CLAUDE.md requires up-to-date docs for third-party libraries.
 4. **Code.** Run `coder`.
    - If `changes.md` says the plan is wrong or impossible, go back to step 2 with that explanation.
-5. **Review.** Run `reviewer`.
+5. **Review.** Run `reviewer`. The review must include running `npx tsc --noEmit` and `npm run build` (plus a clean `npm ci` build when dependencies or the lockfile changed). A failing build is blocking.
    - CHANGES REQUESTED: run `coder`, then repeat this step.
 6. **Security.** Run `security`.
    - CHANGES REQUESTED: run `coder`, then go back to step 5.
